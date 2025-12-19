@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { ChevronLeft, ChevronRight, Users, Check, Box, Plus, Pencil, Trash2, X, AlertTriangle, Zap } from 'lucide-react';
 import EscalaCard from './EscalaCard';
-import { EscalaItem, AgendaItem } from '../types';
+import { EscalaItem } from '../types';
 
 const Escala: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, escala: escalaItems, equipments, agenda: appointments } = state;
+  const { instructors, escala: escalaItems, equipments, user } = state;
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
@@ -16,7 +16,7 @@ const Escala: React.FC = () => {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EscalaItem | null>(null);
-  const [formData, setFormData] = useState<EscalaItem>({ id: '', time: '07:00', day: 0, equipment: '', instructor: '', instructorInitials: '', color: 'blue' });
+  const [formData, setFormData] = useState<Omit<EscalaItem, 'id' | 'instructorInitials' | 'color'>>({ time: '07:00', day: 0, equipment: '', instructor: '' });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<EscalaItem | null>(null);
@@ -46,22 +46,12 @@ const Escala: React.FC = () => {
 
   const timeSlots = Array.from({ length: 17 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
-  const getAppointmentsForEscala = (time: string, dayIdx: number) => {
-    const appointmentsInSlot = appointments.filter(a => {
-      const matchTime = a.time === time;
-      const matchDay = a.day === dayIdx;
-      const matchInstructor = selectedInstructor ? a.instructor === selectedInstructor : true;
+  const getEscalaItems = (time: string, dayIdx: number) => {
+    return escalaItems.filter(e => {
+      const matchTime = e.time === time;
+      const matchDay = e.day === dayIdx;
+      const matchInstructor = selectedInstructor ? e.instructor === selectedInstructor : true;
       return matchTime && matchDay && matchInstructor;
-    });
-
-    return appointmentsInSlot.map(appointment => {
-      const equipmentItem = escalaItems.find(
-        e => e.day === appointment.day && e.time === appointment.time && e.instructor === appointment.instructor
-      );
-      return {
-        ...appointment,
-        equipment: equipmentItem ? equipmentItem.equipment : undefined
-      };
     });
   };
 
@@ -89,13 +79,10 @@ const Escala: React.FC = () => {
     } else {
         const defaultInstructor = instructors[0];
         setFormData({
-            id: '',
             time: time || '07:00',
             day: day !== undefined ? day : 0,
             equipment: equipments[0]?.name || '',
             instructor: defaultInstructor?.name || '',
-            instructorInitials: defaultInstructor?.initials || '',
-            color: 'blue'
         });
     }
     setIsModalOpen(true);
@@ -103,30 +90,25 @@ const Escala: React.FC = () => {
 
   const handleSave = () => {
     if(!formData.equipment || !formData.instructor) return;
-
     const selectedInst = instructors.find(i => i.name === formData.instructor);
-    const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {
-        'Ana Silva': 'pink',
-        'Bruno Santos': 'blue',
-        'Carla Dias': 'orange',
-        'Daniel Oliveira': 'green'
-    };
-
-    const newItem: EscalaItem = {
-        ...formData,
-        instructorInitials: selectedInst?.initials || '??',
-        color: colorMap[selectedInst?.name || ''] || 'blue',
-        id: editingItem ? editingItem.id : Date.now().toString(),
-    };
-
-    if(editingItem) {
-        setEscalaItems(escalaItems.map(item => item.id === editingItem.id ? newItem : item));
-    } else {
-        setEscalaItems([...escalaItems, newItem]);
+    const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {'Ana Silva': 'pink','Bruno Santos': 'blue','Carla Dias': 'orange','Daniel Oliveira': 'green'};
+    const newItem: EscalaItem = { ...formData, instructorInitials: selectedInst?.initials || '??', color: colorMap[selectedInst?.name || ''] || 'blue', id: editingItem ? editingItem.id : Date.now().toString() };
+    
+    if(editingItem) { 
+        setEscalaItems(escalaItems.map(item => item.id === editingItem.id ? newItem : item)); 
+    } else { 
+        // Evita duplicados na mesma célula
+        const alreadyExists = escalaItems.some(item => item.day === newItem.day && item.time === newItem.time && item.instructor === newItem.instructor && item.equipment === newItem.equipment);
+        if(!alreadyExists) {
+            setEscalaItems([...escalaItems, newItem]); 
+        }
     }
     setIsModalOpen(false);
   };
   
+  const handleDeleteClick = (item: EscalaItem) => { setIsDeleteModalOpen(true); setItemToDelete(item); };
+  const executeDelete = () => { if(itemToDelete) { setEscalaItems(escalaItems.filter(item => item.id !== itemToDelete.id)); setIsDeleteModalOpen(false); setItemToDelete(null); }};
+
   const handleSaveBulk = () => {
     const { day, instructor, equipment, startTime, endTime } = bulkFormData;
     if (!instructor || !equipment) return;
@@ -138,44 +120,19 @@ const Escala: React.FC = () => {
     if (!instructorDetails) return;
 
     const newItems: EscalaItem[] = [];
+    const existingItems = new Set(escalaItems.map(item => `${item.day}-${item.time}-${item.instructor}`));
+
     for (let hour = startHour; hour < endHour; hour++) {
       const time = `${hour.toString().padStart(2, '0')}:00`;
-      
-      const alreadyExists = escalaItems.some(
-        item => item.day === day && item.time === time && item.instructor === instructor
-      );
+      const key = `${day}-${time}-${instructor}`;
 
-      if (!alreadyExists) {
-          const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {
-              'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'
-          };
-          newItems.push({
-              id: `${day}-${time}-${instructor}-${Math.random()}`,
-              day,
-              time,
-              instructor,
-              equipment,
-              instructorInitials: instructorDetails.initials,
-              color: colorMap[instructor as keyof typeof colorMap] || 'blue'
-          });
+      if (!existingItems.has(key)) {
+          const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'};
+          newItems.push({ id: `${key}-${Math.random()}`, day, time, instructor, equipment, instructorInitials: instructorDetails.initials, color: colorMap[instructor as keyof typeof colorMap] || 'blue' });
       }
     }
-
     setEscalaItems([...escalaItems, ...newItems]);
     setIsBulkModalOpen(false);
-  };
-
-  const handleDeleteClick = (item: EscalaItem) => {
-      setItemToDelete(item);
-      setIsDeleteModalOpen(true);
-  };
-
-  const executeDelete = () => {
-      if(itemToDelete) {
-          setEscalaItems(escalaItems.filter(item => item.id !== itemToDelete.id));
-          setIsDeleteModalOpen(false);
-          setItemToDelete(null);
-      }
   };
 
   const renderDaily = () => {
@@ -185,27 +142,21 @@ const Escala: React.FC = () => {
     return (
       <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="grid grid-cols-[80px_1fr]">
-          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex flex-col items-center justify-center">
-            <span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span>
-            <span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span>
-          </div>
-          <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex items-center">
-            <Box className="text-sky-500 mr-2" size={16} />
-            <h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Distribuição de Aparelhos</h3>
-          </div>
+          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex flex-col items-center justify-center"><span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span><span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span></div>
+          <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex items-center"><Box className="text-sky-500 mr-2" size={16} /><h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Distribuição de Aparelhos</h3></div>
           {timeSlots.map((time) => (
             <React.Fragment key={time}>
-              <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center">
-                <span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span>
-              </div>
+              <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
               <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {getAppointmentsForEscala(time, dayIdx).map((item) => (
-                    <EscalaCard key={item.id} item={item} onEdit={() => {}} onDelete={() => {}} />
+                  {getEscalaItems(time, dayIdx).map((item) => (
+                    <EscalaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
                   ))}
                 </div>
-                <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white"><Plus size={16} /></div>
+                <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white">
+                    <Plus size={16} />
+                  </div>
                 </button>
               </div>
             </React.Fragment>
@@ -221,70 +172,44 @@ const Escala: React.FC = () => {
     const diff = current.getDate() - day + (day === 0 ? -6 : 1);
     const monday = new Date(current.setDate(diff));
 
-    const weekDays = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return {
-        name: getDayName(d),
-        date: d.getDate(),
-        fullDate: d,
-        active: d.toDateString() === currentDate.toDateString()
-      };
-    });
+    const weekDays = Array.from({ length: 6 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return { name: getDayName(d), date: d.getDate(), fullDate: d, active: d.toDateString() === currentDate.toDateString() }; });
 
     return (
       <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="overflow-x-auto">
-          <div className="min-w-[800px]">
-            <div className="grid grid-cols-[80px_repeat(6,1fr)]">
-              <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20"></div>
-              {weekDays.map((day, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => setCurrentDate(day.fullDate)}
-                  className={`p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 ${
-                    day.active ? 'bg-sky-500/10' : 'bg-slate-50 dark:bg-gray-900/20'
-                  }`}
-                >
-                  <span className={`text-[10px] font-bold tracking-wider mb-1 ${day.active ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>
-                    {day.name}
-                  </span>
-                  <span className={`text-xl font-bold ${day.active ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-gray-300'}`}>
-                    {day.date}
-                  </span>
-                  {day.active && <div className="mt-2 w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]"></div>}
+        <div className="overflow-x-auto"><div className="min-w-[800px]"><div className="grid grid-cols-[80px_repeat(6,1fr)]">
+          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20"></div>
+          {weekDays.map((day, idx) => (
+            <div key={idx} onClick={() => setCurrentDate(day.fullDate)} className={`p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 ${day.active ? 'bg-sky-500/10' : 'bg-slate-50 dark:bg-gray-900/20'}`}>
+              <span className={`text-[10px] font-bold tracking-wider mb-1 ${day.active ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>{day.name}</span><span className={`text-xl font-bold ${day.active ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-gray-300'}`}>{day.date}</span>{day.active && <div className="mt-2 w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]"></div>}
+            </div>
+          ))}
+          {timeSlots.map((time) => (
+            <React.Fragment key={time}>
+              <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
+              {[0, 1, 2, 3, 4, 5].map((dayIdx) => (
+                <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[80px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
+                  <div className="flex flex-col gap-1.5 h-full">
+                    {getEscalaItems(time, dayIdx).map((item) => (
+                      <EscalaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
+                    ))}
+                  </div>
+                  <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white">
+                      <Plus size={16} />
+                    </div>
+                  </button>
                 </div>
               ))}
-
-              {timeSlots.map((time) => (
-                <React.Fragment key={time}>
-                  <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center">
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span>
-                  </div>
-                  {[0, 1, 2, 3, 4, 5].map((dayIdx) => (
-                    <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[100px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
-                       <div className="flex flex-col gap-1.5 h-full">
-                        {getAppointmentsForEscala(time, dayIdx).map((item) => (
-                          <EscalaCard key={item.id} item={item} onEdit={() => {}} onDelete={() => {}} />
-                        ))}
-                      </div>
-                       <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                         <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white"><Plus size={16} /></div>
-                       </button>
-                    </div>
-                  ))}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </div>
+            </React.Fragment>
+          ))}
+        </div></div></div>
       </div>
     );
   };
   
   const renderMonthly = () => {
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const startDay = startOfMonth.getDay(); 
+    const startDay = startOfMonth.getDay();
 
     const monthDays = Array.from({ length: 42 }, (_, i) => {
       const day = i - startDay + 1;
@@ -293,12 +218,12 @@ const Escala: React.FC = () => {
         date: d.getDate(),
         fullDate: d,
         isCurrentMonth: d.getMonth() === currentDate.getMonth(),
-        isSelected: d.toDateString() === currentDate.toDateString()
+        isToday: d.toDateString() === currentDate.toDateString()
       };
     });
 
     const dayHeaders = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
-
+    
     const handleDayClick = (day: {fullDate: Date}) => {
       setCurrentDate(day.fullDate);
       setView('daily');
@@ -312,32 +237,29 @@ const Escala: React.FC = () => {
           ))}
         </div>
         <div className="grid grid-cols-7">
-          {monthDays.map((day, idx) => {
-             const dayOfWeek = day.fullDate.getDay();
-             const appDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
-             const itemsForDay = escalaItems.filter(item => item.day === appDayIndex);
-
-            return (
-              <div 
-                key={idx} 
-                onClick={() => handleDayClick(day)}
-                className={`min-h-[60px] md:min-h-[100px] p-2 md:p-3 border-b border-r border-slate-200 dark:border-gray-800 transition-all cursor-pointer flex flex-col gap-2 ${
-                  !day.isCurrentMonth ? 'opacity-30 bg-slate-50 dark:bg-gray-800/20 pointer-events-none' : 'hover:bg-slate-50 dark:hover:bg-white/5'
-                } ${day.isSelected ? 'bg-sky-500/10' : ''}`}
-              >
-                <span className={`text-xs md:text-sm font-bold ${day.isSelected ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>
-                  {day.date}
-                </span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {day.isCurrentMonth && itemsForDay.slice(0, 4).map(item => (
-                     <div key={item.id} className={`h-1.5 w-1.5 rounded-full ${
-                       item.color === 'orange' ? 'bg-orange-500' : item.color === 'blue' ? 'bg-blue-600' : item.color === 'pink' ? 'bg-rose-500' : 'bg-emerald-500'
-                     }`} title={`${item.equipment} - ${item.instructor}`} />
-                  ))}
-                </div>
+          {monthDays.map((day, idx) => (
+            <div 
+              key={idx} 
+              onClick={() => handleDayClick(day)}
+              className={`min-h-[60px] md:min-h-[100px] p-2 md:p-3 border-b border-r border-slate-200 dark:border-gray-800 transition-all cursor-pointer flex flex-col gap-2 ${
+                !day.isCurrentMonth ? 'opacity-30 bg-slate-50 dark:bg-gray-800/20 pointer-events-none' : 'hover:bg-slate-50 dark:hover:bg-white/5'
+              } ${day.isToday ? 'bg-sky-500/10' : ''}`}
+            >
+              <span className={`text-xs md:text-sm font-bold ${day.isToday ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>
+                {day.date}
+              </span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {day.isCurrentMonth && escalaItems.filter(e => {
+                    const matchDay = e.day === (day.fullDate.getDay() === 0 ? 6 : day.fullDate.getDay() - 1);
+                    return matchDay;
+                }).slice(0, 4).map(e => (
+                  <div key={e.id} className={`h-1.5 w-1.5 rounded-full ${
+                    e.color === 'orange' ? 'bg-orange-500' : e.color === 'blue' ? 'bg-blue-600' : e.color === 'pink' ? 'bg-rose-500' : 'bg-emerald-500'
+                  }`} title={`${e.instructor} - ${e.equipment}`} />
+                ))}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -356,15 +278,12 @@ const Escala: React.FC = () => {
     }
     return getFullMonthName(currentDate);
   };
-
-  const viewOptions = [
-    { value: 'daily', label: 'Diário' },
-    { value: 'weekly', label: 'Semanal' },
-    { value: 'monthly', label: 'Mensal' },
-  ];
+  
+  const viewOptions = [ { value: 'daily', label: 'Diário' }, { value: 'weekly', label: 'Semanal' }, { value: 'monthly', label: 'Mensal' }];
 
   return (
     <div className="space-y-6 pt-24 lg:pt-8">
+      {/* Header and Filters */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
           <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">
@@ -386,10 +305,7 @@ const Escala: React.FC = () => {
               </div>
             )}
           </div>
-          <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center gap-2 bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 px-4 py-2.5 rounded-lg text-sm text-slate-700 dark:text-gray-300 hover:border-sky-500/50 hover:text-sky-500 transition-all font-medium shadow-sm">
-            <Zap size={16} />
-            Alocação Rápida
-          </button>
+          <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center gap-2 bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 px-4 py-2.5 rounded-lg text-sm text-slate-700 dark:text-gray-300 hover:border-sky-500/50 hover:text-sky-500 transition-all font-medium shadow-sm"><Zap size={16} /> Alocação Rápida</button>
         </div>
         <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">
           {viewOptions.map(v => <button key={v.value} onClick={() => setView(v.value as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v.value ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300'}`}>{v.label}</button>)}
@@ -400,15 +316,19 @@ const Escala: React.FC = () => {
         {view === 'weekly' && renderWeekly()}
         {view === 'monthly' && renderMonthly()}
       </div>
+
+      {/* MODAL para alocação de aparelho */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{editingItem ? 'Editar Alocação' : 'Nova Alocação'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
             <div className="p-6 space-y-4">
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label><select value={formData.day} onChange={e => setFormData({...formData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={formData.equipment} onChange={e => setFormData({...formData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia</label><select value={formData.day} onChange={e => setFormData({...formData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
+                  <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
+              </div>
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label><select value={formData.instructor} onChange={e => setFormData({...formData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={formData.equipment} onChange={e => setFormData({...formData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
             </div>
             <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
@@ -417,59 +337,33 @@ const Escala: React.FC = () => {
           </div>
         </div>
       )}
+
       {isBulkModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center">
-                <div>
-                    <h3 className="font-bold text-slate-800 dark:text-gray-100">Alocação Rápida de Aparelhos</h3>
-                    <p className="text-xs text-slate-500 dark:text-gray-400">Preencha a escala de um dia para um instrutor.</p>
-                </div>
-                <button onClick={() => setIsBulkModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button>
-            </div>
+          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">Alocação Rápida em Lote</h3><button onClick={() => setIsBulkModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
             <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label>
-                        <select value={bulkFormData.day} onChange={e => setBulkFormData({...bulkFormData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select>
-                    </div>
-                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label>
-                        <select value={bulkFormData.instructor} onChange={e => setBulkFormData({...bulkFormData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select>
-                    </div>
-                </div>
-                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho (será repetido)</label>
-                    <select value={bulkFormData.equipment} onChange={e => setBulkFormData({...bulkFormData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário de Início</label>
-                        <input type="time" step="3600" value={bulkFormData.startTime} onChange={e => setBulkFormData({...bulkFormData, startTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/>
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário de Fim</label>
-                        <input type="time" step="3600" value={bulkFormData.endTime} onChange={e => setBulkFormData({...bulkFormData, endTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/>
-                    </div>
-                </div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label><select value={bulkFormData.day} onChange={e => setBulkFormData({...bulkFormData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Do Horário</label><input type="time" step="3600" value={bulkFormData.startTime} onChange={e => setBulkFormData({...bulkFormData, startTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
+                  <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Até o Horário</label><input type="time" step="3600" value={bulkFormData.endTime} onChange={e => setBulkFormData({...bulkFormData, endTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
+              </div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label><select value={bulkFormData.instructor} onChange={e => setBulkFormData({...bulkFormData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={bulkFormData.equipment} onChange={e => setBulkFormData({...bulkFormData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
             </div>
             <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setIsBulkModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
-              <button onClick={handleSaveBulk} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Alocar Horários</button>
+              <button onClick={handleSaveBulk} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Alocar em Lote</button>
             </div>
           </div>
         </div>
       )}
+
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-3xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="p-8 text-center"><div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6"><AlertTriangle size={32} /></div><h3 className="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">Remover Alocação?</h3><p className="text-sm text-slate-500 dark:text-gray-400">Esta ação é irreversível. Deseja remover a alocação do aparelho <span className="font-bold text-slate-700 dark:text-gray-200">{itemToDelete?.equipment}</span>?</p></div>
-            <div className="p-6 bg-slate-50 dark:bg-gray-800/50 flex gap-3">
-              <button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 uppercase tracking-widest">Cancelar</button>
-              <button onClick={executeDelete} className="flex-1 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 uppercase tracking-widest text-xs">Sim, Remover</button>
-            </div>
-          </div>
-        </div>
+         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"><div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+          <div className="p-8 text-center"><div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6"><AlertTriangle size={32} /></div><h3 className="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">Remover Alocação?</h3><p className="text-sm text-slate-500 dark:text-gray-400">Deseja remover a alocação do aparelho <span className="font-bold text-slate-700 dark:text-gray-200">{itemToDelete?.equipment}</span>?</p></div>
+          <div className="p-6 bg-slate-50 dark:bg-gray-800/50 flex gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 uppercase tracking-widest">Cancelar</button><button onClick={executeDelete} className="flex-1 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg shadow-rose-600/20 uppercase tracking-widest text-xs">Sim, Remover</button></div>
+        </div></div>
       )}
     </div>
   );

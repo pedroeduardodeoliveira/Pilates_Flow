@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { ChevronLeft, ChevronRight, Users, Clock, Check, Plus, AlertTriangle, X } from 'lucide-react';
-import AgendaCard from './AgendaCard';
+import GroupedAgendaCard from './GroupedAgendaCard';
 import { AgendaItem } from '../types';
 
 const Agenda: React.FC = () => {
@@ -159,23 +158,31 @@ const Agenda: React.FC = () => {
             <Clock className="text-sky-500 mr-2" size={16} />
             <h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Cronograma do Dia</h3>
           </div>
-          {timeSlots.map((time) => (
-            <React.Fragment key={time}>
-              <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center">
-                <span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span>
-              </div>
-              <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {getFilteredAppointments(time, dayIdx).map((item) => (
-                    <AgendaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick}/>
-                  ))}
-                </div>
-                <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white"><Plus size={16} /></div>
-                </button>
-              </div>
-            </React.Fragment>
-          ))}
+          {timeSlots.map((time) => {
+              const appointmentsInSlot = getFilteredAppointments(time, dayIdx);
+              const groupedByInstructor = appointmentsInSlot.reduce<Record<string, AgendaItem[]>>((acc, appointment) => {
+                  (acc[appointment.instructor] = acc[appointment.instructor] || []).push(appointment);
+                  return acc;
+              }, {});
+
+              return (
+                <React.Fragment key={time}>
+                  <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center">
+                    <span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span>
+                  </div>
+                  <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {Object.values(groupedByInstructor).map((items) => (
+                        <GroupedAgendaCard key={items[0].instructor} items={items} onEdit={handleOpenModal} onDelete={handleDeleteClick}/>
+                      ))}
+                    </div>
+                    <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white"><Plus size={16} /></div>
+                    </button>
+                  </div>
+                </React.Fragment>
+              );
+          })}
         </div>
       </div>
     );
@@ -227,18 +234,26 @@ const Agenda: React.FC = () => {
                   <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center">
                     <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span>
                   </div>
-                  {[0, 1, 2, 3, 4, 5].map((dayIdx) => (
-                    <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[100px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
-                      <div className="flex flex-col gap-1.5 h-full">
-                        {getFilteredAppointments(time, dayIdx).map((item) => (
-                          <AgendaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick}/>
-                        ))}
-                      </div>
-                      <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                         <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white"><Plus size={16} /></div>
-                      </button>
-                    </div>
-                  ))}
+                  {[0, 1, 2, 3, 4, 5].map((dayIdx) => {
+                    const appointmentsInSlot = getFilteredAppointments(time, dayIdx);
+                    const groupedByInstructor = appointmentsInSlot.reduce<Record<string, AgendaItem[]>>((acc, appointment) => {
+                        (acc[appointment.instructor] = acc[appointment.instructor] || []).push(appointment);
+                        return acc;
+                    }, {});
+
+                    return (
+                        <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[100px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
+                          <div className="flex flex-col gap-1.5">
+                            {Object.values(groupedByInstructor).map((items) => (
+                                <GroupedAgendaCard key={items[0].instructor} items={items} onEdit={handleOpenModal} onDelete={handleDeleteClick}/>
+                            ))}
+                          </div>
+                          <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white"><Plus size={16} /></div>
+                          </button>
+                        </div>
+                    )
+                  })}
                 </React.Fragment>
               ))}
             </div>
