@@ -90,15 +90,11 @@ const Agenda: React.FC = () => {
         setFormData(item);
     } else {
         const defaultInstructor = !isAdmin ? instructors.find(i => i.name === user?.name) : instructors[0];
-        const defaultStudent = students.find(s => {
-            if (!isAdmin) return s.status === 'Ativo' && s.instructor === user?.name;
-            return s.status === 'Ativo';
-        });
         setFormData({
             id: '',
             time: time || '07:00',
             day: day !== undefined ? day : 0,
-            student: defaultStudent?.name || '',
+            student: '',
             instructor: defaultInstructor?.name || '',
             instructorInitials: defaultInstructor?.initials || '',
             color: 'blue'
@@ -108,23 +104,36 @@ const Agenda: React.FC = () => {
   };
   
   const handleSave = () => {
-    if(!formData.student || !formData.instructor) return;
+    if (!formData.student || !formData.instructor) return;
 
     const selectedInst = instructors.find(i => i.name === formData.instructor);
-    const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {
+    const colorMap: { [key: string]: 'orange' | 'blue' | 'pink' | 'green' } = {
         'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'
     };
 
-    const newItem: AgendaItem = {
-        ...formData,
-        instructorInitials: selectedInst?.initials || '??',
-        color: colorMap[selectedInst?.name || ''] || 'blue',
-        id: editingItem ? editingItem.id : Date.now().toString(),
-    };
-
-    if(editingItem) {
-        setAppointments(appointments.map(item => item.id === editingItem.id ? newItem : item));
+    if (editingItem) {
+        // Ação de Reposição/Remarcação
+        const updatedAppointments = appointments.map(item =>
+            item.id === editingItem.id ? { ...item, status: 'rescheduled_source' as const } : item
+        );
+        const rescheduledClass: AgendaItem = {
+            ...formData,
+            id: Date.now().toString(),
+            instructorInitials: selectedInst?.initials || '??',
+            color: colorMap[selectedInst?.name || ''] || 'blue',
+            status: 'rescheduled_target',
+            originalId: editingItem.id
+        };
+        setAppointments([...updatedAppointments, rescheduledClass]);
     } else {
+        // Ação de Criar nova aula (Experimental)
+        const newItem: AgendaItem = {
+            ...formData,
+            instructorInitials: selectedInst?.initials || '??',
+            color: colorMap[selectedInst?.name || ''] || 'blue',
+            id: Date.now().toString(),
+            status: 'scheduled'
+        };
         setAppointments([...appointments, newItem]);
     }
     setIsModalOpen(false);
@@ -136,11 +145,28 @@ const Agenda: React.FC = () => {
   };
 
   const executeDelete = () => {
-      if(itemToDelete) {
-          setAppointments(appointments.filter(item => item.id !== itemToDelete.id));
-          setIsDeleteModalOpen(false);
-          setItemToDelete(null);
-      }
+    if (!itemToDelete) return;
+
+    let updatedAppointments = [...appointments];
+
+    if (itemToDelete.status === 'rescheduled_target' && itemToDelete.originalId) {
+        // Excluir reposição: reverte a original e remove a reposição
+        updatedAppointments = updatedAppointments
+            .map(item => item.id === itemToDelete.originalId ? { ...item, status: 'scheduled' } : item)
+            .filter(item => item.id !== itemToDelete.id);
+    } else if (itemToDelete.status === 'rescheduled_source') {
+        // Excluir original remarcada: remove a original e sua reposição
+        updatedAppointments = updatedAppointments.filter(
+            item => item.id !== itemToDelete.id && item.originalId !== itemToDelete.id
+        );
+    } else {
+        // Excluir aula normal
+        updatedAppointments = updatedAppointments.filter(item => item.id !== itemToDelete.id);
+    }
+
+    setAppointments(updatedAppointments);
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
   };
 
   const renderDaily = () => {
@@ -342,6 +368,13 @@ const Agenda: React.FC = () => {
     { value: 'monthly', label: 'Mensal' },
   ];
 
+  const getModalTitle = () => {
+    if (editingItem) {
+        return `Repor / Remarcar: ${editingItem.student}`;
+    }
+    return 'Agendar Aula Experimental';
+  };
+
   return (
     <div className="space-y-6 pt-24 lg:pt-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -381,17 +414,23 @@ const Agenda: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{editingItem ? 'Repor / Remarcar Aula' : 'Nova Aula'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{getModalTitle()}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
             <div className="p-6 space-y-4">
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label><select value={formData.day} onChange={e => setFormData({...formData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aluno</label>
-              <select value={formData.student} onChange={e => setFormData({...formData, student: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">
-                {students.filter(s => {
-                    if (!isAdmin) return s.status === 'Ativo' && s.instructor === user?.name;
-                    return s.status === 'Ativo';
-                }).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-              </select></div>
+              <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aluno</label>
+                  {editingItem ? (
+                      <div className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-500 dark:text-gray-400 text-sm font-medium">{formData.student}</div>
+                  ) : (
+                      <input
+                          value={formData.student}
+                          onChange={e => setFormData({ ...formData, student: e.target.value })}
+                          placeholder="Nome do aluno (experimental)"
+                          className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"
+                      />
+                  )}
+              </div>
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label>
               <select 
                 value={formData.instructor} 

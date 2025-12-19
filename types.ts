@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export interface NavItem {
@@ -33,6 +32,8 @@ export interface AgendaItem {
   instructorInitials: string;
   color: 'orange' | 'blue' | 'pink' | 'green';
   equipment?: string;
+  status?: 'scheduled' | 'rescheduled_source' | 'rescheduled_target';
+  originalId?: string;
 }
 
 export interface EscalaItem {

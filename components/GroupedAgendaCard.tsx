@@ -49,11 +49,29 @@ const GroupedAgendaCard: React.FC<GroupedAgendaCardProps> = ({ items, onEdit, on
               <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                       <div className={`w-2 h-2 rounded-full ${theme.dot} flex-shrink-0`}></div>
-                      <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.student}>{item.student}</span>
+                      
+                      {item.status === 'rescheduled_source' ? (
+                        <span className="text-[11px] text-rose-500/90 dark:text-rose-500/80 font-medium truncate line-through" title={`${item.student} (Aula remarcada)`}>
+                            {item.student}
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-1 min-w-0">
+                           {item.status === 'rescheduled_target' && <History size={10} className="text-sky-500 flex-shrink-0" title="Aula de reposição" />}
+                           <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.student}>
+                               {item.student}
+                           </span>
+                        </div>
+                      )}
                   </div>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                      <button onClick={() => onEdit(item)} title="Repor / Remarcar Aula" className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><History size={12} /></button>
-                      <button onClick={() => onDelete(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
+                      {/* Botão "Repor": visível para qualquer aula que não seja a "origem" de uma reposição. */}
+                      {item.status !== 'rescheduled_source' && (
+                          <button onClick={() => onEdit(item)} title="Repor / Remarcar Aula" className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><History size={12} /></button>
+                      )}
+                      {/* Botão "Remover": visível APENAS para aulas de reposição. */}
+                      {item.status === 'rescheduled_target' && (
+                          <button onClick={() => onDelete(item)} title="Remover Aula de Reposição" className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
+                      )}
                   </div>
               </div>
             </div>
