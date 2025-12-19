@@ -1,6 +1,6 @@
 import React from 'react';
 import { AgendaItem } from '../types';
-import { Pencil, Trash2, Box } from 'lucide-react';
+import { History, Trash2, Box } from 'lucide-react';
 
 interface GroupedAgendaCardProps {
   items: AgendaItem[];
@@ -52,7 +52,7 @@ const GroupedAgendaCard: React.FC<GroupedAgendaCardProps> = ({ items, onEdit, on
                       <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.student}>{item.student}</span>
                   </div>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                      <button onClick={() => onEdit(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><Pencil size={12} /></button>
+                      <button onClick={() => onEdit(item)} title="Repor / Remarcar Aula" className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><History size={12} /></button>
                       <button onClick={() => onDelete(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
                   </div>
               </div>
