@@ -62,6 +62,7 @@ export interface Student {
   regDate?: string;
   planType?: string;
   image?: string | null;
+  observations?: string;
   address?: {
     cep: string;
     street: string;

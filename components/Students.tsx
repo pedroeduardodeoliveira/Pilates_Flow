@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 import { AppContext } from '../AppContext';
-import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, MapPin, Calendar, CreditCard, Info, Camera, Clock, PlusCircle, AlertTriangle, Filter, Layers, Activity } from 'lucide-react';
+import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, MapPin, Calendar, CreditCard, Info, Camera, Clock, PlusCircle, AlertTriangle, Filter, Layers, Activity, FileText } from 'lucide-react';
 import StudentCard from './StudentCard';
 import { Student, AgendaItem } from '../types';
 import * as XLSX from 'xlsx';
@@ -65,7 +64,8 @@ const Students: React.FC = () => {
     planType: '1x na semana', 
     level: 'Iniciante' as any, 
     instructor: !isAdmin ? user?.name || '' : '', 
-    schedule: [] as string[]
+    schedule: [] as string[],
+    observations: ''
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -140,6 +140,7 @@ const Students: React.FC = () => {
       expiryDate: formattedExpiry || '01/01/2026', daysToExpiry: 30, instructor: formData.instructor,
       phone: formData.phone, schedule: formData.schedule, birthDate: formData.birthDate, cpf: formData.cpf,
       regDate: formData.regDate, planType: formData.planType, image: formData.image,
+      observations: formData.observations,
       address: { cep: formData.cep, street: formData.street, number: formData.number, neighborhood: formData.neighborhood, city: formData.city, state: formData.state, complement: formData.complement }
     };
 
@@ -186,7 +187,8 @@ const Students: React.FC = () => {
       complement: s.address?.complement || '', image: s.image || null,
       regDate: s.regDate || new Date().toISOString().split('T')[0],
       expiryDate: s.expiryDate.split('/').reverse().join('-'),
-      planType: s.planType || '1x na semana', level: s.level, instructor: s.instructor, schedule: s.schedule
+      planType: s.planType || '1x na semana', level: s.level, instructor: s.instructor, schedule: s.schedule,
+      observations: s.observations || ''
     });
     setIsModalOpen(true);
   };
@@ -406,6 +408,20 @@ const Students: React.FC = () => {
                   </select>
                 </div></div></div>
                 <div className="space-y-4"><div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Clock size={14} /> Horários das Aulas</div><div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-4 space-y-4"><div className="flex gap-2"><select value={tempDay} onChange={e => setTempDay(e.target.value)} className="flex-1 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 dark:text-gray-300 outline-none focus:border-sky-500">{weekDays.map(d => <option key={d} value={d}>{d}</option>)}</select><input type="time" value={tempTime} onChange={e => setTempTime(e.target.value)} className="w-24 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 dark:text-gray-300 outline-none focus:border-sky-500" /><button onClick={addSchedule} className="w-10 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl flex items-center justify-center transition-colors"><PlusCircle size={20} /></button></div><div className="flex flex-wrap gap-2">{formData.schedule.length === 0 ? <p className="text-[10px] text-slate-500 dark:text-gray-400 italic py-2">Nenhum horário definido...</p> : formData.schedule.map((entry, idx) => (<div key={idx} className="bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-700 px-3 py-1.5 rounded-lg text-[10px] font-bold text-sky-500 flex items-center gap-2">{entry}<button onClick={() => removeSchedule(idx)} className="text-slate-400 dark:text-gray-400 hover:text-rose-500"><X size={12} /></button></div>))}</div></div></div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest">
+                  <FileText size={14} /> Observações
+                </div>
+                <div className="space-y-1.5">
+                  <textarea
+                    value={formData.observations}
+                    onChange={e => setFormData({ ...formData, observations: e.target.value })}
+                    rows={4}
+                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 transition-colors resize-none"
+                    placeholder="Adicione observações importantes sobre o aluno, como lesões, limitações ou objetivos específicos..."
+                  />
+                </div>
               </div>
             </div>
             <div className="p-8 border-t border-slate-100 dark:border-gray-800 flex justify-end gap-3 bg-white dark:bg-gray-900 rounded-b-3xl">
