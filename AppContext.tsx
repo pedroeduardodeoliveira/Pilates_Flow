@@ -7,6 +7,17 @@ interface SettingsData {
   isDarkMode: boolean;
   appName: string;
   logo: string | null;
+  phone: string;
+  email: string;
+  cnpj: string;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
   plans: { label: string; value: string }[];
   commission: string;
   alertDays: string;
@@ -44,6 +55,17 @@ const initialSettings: SettingsData = {
   isDarkMode: false,
   appName: 'Pilates Flow',
   logo: null,
+  phone: '',
+  email: '',
+  cnpj: '',
+  address: {
+    cep: '',
+    street: '',
+    number: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+  },
   plans: [
     { label: 'Valor para 1 aula por semana', value: '150' },
     { label: 'Valor para 2 aulas por semana', value: '250' },

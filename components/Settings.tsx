@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle } from 'lucide-react';
+import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -9,6 +8,7 @@ const Settings: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const debounceTimeout = useRef<number | null>(null);
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
 
   const showSaveSuccess = () => {
     setSaveSuccess(true);
@@ -37,6 +37,32 @@ const Settings: React.FC = () => {
         handleSettingsChange({ logo: reader.result as string });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const maskPhone = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
+  const maskCEP = (v: string) => v.replace(/\D/g, "").replace(/^(\d{5})(\d)/, "$1-$2");
+  const maskCNPJ = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+  
+  const handleCEPBlur = async () => {
+    const cleaned = settings.address.cep.replace(/\D/g, "");
+    if (cleaned.length === 8) {
+      setIsLoadingCep(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+        const data = await response.json();
+        if (!data.erro) {
+            handleSettingsChange({ 
+                address: {
+                    ...settings.address,
+                    street: data.logradouro,
+                    neighborhood: data.bairro,
+                    city: data.localidade,
+                    state: data.uf
+                }
+            });
+        }
+      } catch (e) { console.error("Erro ao buscar CEP"); } finally { setIsLoadingCep(false); }
     }
   };
   
@@ -108,6 +134,45 @@ const Settings: React.FC = () => {
                 </button>
                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoChange} />
               </div>
+            </div>
+          </div>
+          
+          {/* Contato e Endereço */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
+              <MapPin size={16} className="text-sky-500" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Contato & Endereço</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Telefone / WhatsApp</label><input value={settings.phone} onChange={e => handleSettingsChange({ phone: maskPhone(e.target.value) })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="(00) 00000-0000" maxLength={15} /></div>
+                <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">E-mail de Contato</label><input type="email" value={settings.email} onChange={e => handleSettingsChange({ email: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="contato@seudominio.com"/></div>
+              </div>
+              <div className="grid grid-cols-12 gap-x-4 gap-y-4 pt-4 border-t border-slate-100 dark:border-gray-800">
+                <div className="col-span-12 md:col-span-3 space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex justify-between items-center">CEP {isLoadingCep && <Loader2 size={12} className="animate-spin" />}</label>
+                  <input value={settings.address.cep} onChange={e => handleSettingsChange({ address: { ...settings.address, cep: maskCEP(e.target.value) }})} onBlur={handleCEPBlur} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="00000-000" maxLength={9} />
+                </div>
+                <div className="col-span-12 md:col-span-7 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Rua / Logradouro</label><input value={settings.address.street} onChange={e => handleSettingsChange({ address: { ...settings.address, street: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="Preenchido automaticamente"/></div>
+                <div className="col-span-12 md:col-span-2 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nº</label><input value={settings.address.number} onChange={e => handleSettingsChange({ address: { ...settings.address, number: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="123"/></div>
+                <div className="col-span-12 md:col-span-4 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Bairro</label><input value={settings.address.neighborhood} onChange={e => handleSettingsChange({ address: { ...settings.address, neighborhood: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
+                <div className="col-span-12 md:col-span-5 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Cidade</label><input value={settings.address.city} onChange={e => handleSettingsChange({ address: { ...settings.address, city: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
+                <div className="col-span-12 md:col-span-3 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Estado</label><input value={settings.address.state} onChange={e => handleSettingsChange({ address: { ...settings.address, state: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" maxLength={2} placeholder="SP"/></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Dados Fiscais */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
+                <FileText size={16} className="text-sky-500" />
+                <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Dados Fiscais</h3>
+            </div>
+            <div className="p-6">
+                <div className="space-y-1.5 max-w-sm">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CNPJ</label>
+                    <input value={settings.cnpj} onChange={e => handleSettingsChange({ cnpj: maskCNPJ(e.target.value) })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="00.000.000/0000-00" maxLength={18}/>
+                </div>
             </div>
           </div>
           
