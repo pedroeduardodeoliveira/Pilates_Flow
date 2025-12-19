@@ -1,4 +1,7 @@
 
+// Fix: Import React to resolve 'Cannot find namespace React' errors on ReactNode types.
+import React from 'react';
+
 export interface NavItem {
   id: string;
   label: string;

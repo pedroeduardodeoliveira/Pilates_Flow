@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useContext } from 'react';
 import { 
   LayoutGrid, 
   Calendar, 
@@ -15,6 +14,7 @@ import {
   X,
   LifeBuoy
 } from 'lucide-react';
+import { AppContext } from '../AppContext';
 
 interface SidebarProps {
   appName: string;
@@ -27,6 +27,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isDarkMode, toggleTheme, isOpen, setIsOpen }) => {
+  const { dispatch } = useContext(AppContext);
+
   const mainNav = [
     { id: 'painel', label: 'Painel', icon: <LayoutGrid size={20} /> },
     { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
@@ -36,6 +38,10 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
     { id: 'sala', label: 'Sala / Aparelhos', icon: <Dumbbell size={20} /> },
     { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={20} /> },
   ];
+
+  const handleLogout = () => {
+    dispatch({ type: 'LOGOUT' });
+  };
 
   return (
     <aside className={`fixed left-0 top-0 h-screen w-72 bg-white dark:bg-[#0d121d] border-r border-slate-200 dark:border-gray-800 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
@@ -104,7 +110,10 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
           <span className="text-[15px] font-medium">Suporte</span>
         </a>
 
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group text-rose-500 hover:bg-rose-500/10">
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group text-rose-500 hover:bg-rose-500/10"
+        >
           <span><LogOut size={20} /></span>
           <span className="text-[15px] font-medium">Sair</span>
         </button>

@@ -24,6 +24,7 @@ interface SettingsData {
 }
 
 interface AppState {
+  isAuthenticated: boolean;
   students: Student[];
   instructors: Instructor[];
   rooms: Room[];
@@ -46,7 +47,9 @@ type Action =
   | { type: 'UPDATE_AGENDA'; payload: AgendaItem[] }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
-  | { type: 'TOGGLE_THEME' };
+  | { type: 'TOGGLE_THEME' }
+  | { type: 'LOGIN' }
+  | { type: 'LOGOUT' };
 
 
 interface AppContextType {
@@ -56,7 +59,7 @@ interface AppContextType {
 
 // --- ESTADO INICIAL ---
 const initialSettings: SettingsData = {
-  isDarkMode: false,
+  isDarkMode: true,
   appName: 'Pilates Flow',
   logo: null,
   phone: '',
@@ -82,6 +85,7 @@ const initialSettings: SettingsData = {
 };
 
 const initialState: AppState = {
+  isAuthenticated: false,
   students: mockStudentsData,
   instructors: mockInstructorsData,
   rooms: mockRoomsData,
@@ -90,7 +94,7 @@ const initialState: AppState = {
   escala: mockEscalaData,
   agenda: mockAgendaData,
   settings: initialSettings,
-  activeTab: 'agenda',
+  activeTab: 'painel',
 };
 
 // --- REDUCER ---
@@ -118,6 +122,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, activeTab: action.payload };
     case 'TOGGLE_THEME':
       return { ...state, settings: { ...state.settings, isDarkMode: !state.settings.isDarkMode } };
+    case 'LOGIN':
+      return { ...state, isAuthenticated: true };
+    case 'LOGOUT':
+      return { ...state, isAuthenticated: false, activeTab: 'painel' };
     default:
       return state;
   }
@@ -133,7 +141,6 @@ export const AppContext = createContext<AppContextType>({
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Carregar estado do localStorage na inicialização
   useEffect(() => {
     try {
       const savedState = localStorage.getItem('pilatesFlowData');
@@ -146,7 +153,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  // Salvar estado no localStorage em cada mudança
   useEffect(() => {
     try {
       localStorage.setItem('pilatesFlowData', JSON.stringify(state));
@@ -155,7 +161,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [state]);
 
-  // Aplicar tema (light/dark)
   useEffect(() => {
     if (state.settings.isDarkMode) {
       document.documentElement.classList.add('dark');

@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { AppContext } from './AppContext';
 import Sidebar from './components/Sidebar';
@@ -12,10 +11,11 @@ import RoomsAndEquipment from './components/RoomsAndEquipment';
 import Financial from './components/Financial';
 import Settings from './components/Settings';
 import NeuralNetworkBackground from './components/NeuralNetworkBackground';
+import Login from './components/Login';
 
 const App: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { activeTab, settings } = state;
+  const { activeTab, settings, isAuthenticated } = state;
   const { isDarkMode, appName } = settings;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -38,6 +38,10 @@ const App: React.FC = () => {
     financeiro: 'Controle Financeiro',
     configuracoes: 'Ajustes Gerais',
   };
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
