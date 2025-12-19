@@ -2,16 +2,20 @@ import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 import { AppContext } from '../AppContext';
 import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, MapPin, Calendar, CreditCard, Info, Camera, Clock, PlusCircle, AlertTriangle, Filter, Layers, Activity } from 'lucide-react';
 import StudentCard from './StudentCard';
-import { Student } from '../types';
+import { Student, AgendaItem } from '../types';
 import * as XLSX from 'https://esm.sh/xlsx';
 
 const Students: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { students: mockStudents, instructors } = state;
+  const { students: mockStudents, instructors, agenda } = state;
 
   const setMockStudents = (updater: (prev: Student[]) => Student[]) => {
       const newStudents = updater(mockStudents);
       dispatch({ type: 'UPDATE_STUDENTS', payload: newStudents });
+  };
+  
+  const setAgenda = (newAgenda: AgendaItem[]) => {
+    dispatch({ type: 'UPDATE_AGENDA', payload: newAgenda });
   };
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,7 +127,7 @@ const Students: React.FC = () => {
   };
 
   const handleSaveStudent = () => {
-    if (!formData.name) return;
+    if (!formData.name || !formData.instructor) return;
     const initials = formData.name.split(' ').map(n => n[0]).join('').toUpperCase();
     const formattedExpiry = formData.expiryDate.split('-').reverse().join('/');
     
@@ -135,6 +139,32 @@ const Students: React.FC = () => {
       regDate: formData.regDate, planType: formData.planType, image: formData.image,
       address: { cep: formData.cep, street: formData.street, number: formData.number, neighborhood: formData.neighborhood, city: formData.city, state: formData.state, complement: formData.complement }
     };
+
+    let updatedAgenda = [...agenda];
+    if (editingStudentId) {
+      const originalStudent = mockStudents.find(s => s.id === editingStudentId);
+      if (originalStudent) {
+        updatedAgenda = updatedAgenda.filter(item => item.student !== originalStudent.name);
+      }
+    }
+    const dayMap: { [key: string]: number } = { 'Seg': 0, 'Ter': 1, 'Qua': 2, 'Qui': 3, 'Sex': 4, 'Sáb': 5 };
+    const colorMap: { [key: string]: 'orange' | 'blue' | 'pink' | 'green' } = { 'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green' };
+    const studentInstructor = instructors.find(i => i.name === studentData.instructor);
+    if (studentInstructor) {
+        const newAgendaItems: AgendaItem[] = studentData.schedule.map((scheduleEntry, index) => {
+            const [dayAbbr, time] = scheduleEntry.split(' - ');
+            const dayIndex = dayMap[dayAbbr.trim()];
+            if (dayIndex === undefined || !time) return null;
+            return {
+                id: `${studentData.id}-schedule-${Date.now()}-${index}`,
+                time: time.trim(), day: dayIndex, student: studentData.name,
+                instructor: studentInstructor.name, instructorInitials: studentInstructor.initials,
+                color: colorMap[studentInstructor.name] || 'blue'
+            };
+        }).filter((item): item is AgendaItem => item !== null);
+        updatedAgenda.push(...newAgendaItems);
+        setAgenda(updatedAgenda);
+    }
 
     if (editingStudentId) {
       setMockStudents(prev => prev.map(s => s.id === editingStudentId ? studentData : s));
@@ -157,11 +187,45 @@ const Students: React.FC = () => {
     });
     setIsModalOpen(true);
   };
+  
+  const handleToggleStatus = (studentId: string) => {
+    const student = mockStudents.find(s => s.id === studentId);
+    if (!student) return;
+
+    const newStatus = student.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    setMockStudents(prev => prev.map(st => st.id === studentId ? { ...st, status: newStatus } : st));
+    
+    let updatedAgenda = [...agenda];
+    if (newStatus === 'Inativo') {
+      updatedAgenda = updatedAgenda.filter(item => item.student !== student.name);
+    } else {
+      const dayMap: { [key: string]: number } = { 'Seg': 0, 'Ter': 1, 'Qua': 2, 'Qui': 3, 'Sex': 4, 'Sáb': 5 };
+      const colorMap: { [key: string]: 'orange' | 'blue' | 'pink' | 'green' } = { 'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green' };
+      const studentInstructor = instructors.find(i => i.name === student.instructor);
+      if (studentInstructor) {
+        const newAgendaItems: AgendaItem[] = student.schedule.map((scheduleEntry, index) => {
+            const [dayAbbr, time] = scheduleEntry.split(' - ');
+            const dayIndex = dayMap[dayAbbr.trim()];
+            if (dayIndex === undefined || !time) return null;
+            return {
+                id: `${student.id}-schedule-${Date.now()}-${index}`,
+                time: time.trim(), day: dayIndex, student: student.name,
+                instructor: studentInstructor.name, instructorInitials: studentInstructor.initials,
+                color: colorMap[studentInstructor.name] || 'blue'
+            };
+        }).filter((item): item is AgendaItem => item !== null);
+        updatedAgenda.push(...newAgendaItems);
+      }
+    }
+    setAgenda(updatedAgenda);
+  };
 
   const handleDeleteClick = (student: Student) => { setStudentToDelete(student); setIsDeleteModalOpen(true); };
 
   const executeDelete = () => {
     if (studentToDelete) {
+      const updatedAgenda = agenda.filter(item => item.student !== studentToDelete.name);
+      setAgenda(updatedAgenda);
       setMockStudents(prev => prev.filter(st => st.id !== studentToDelete.id));
       setIsDeleteModalOpen(false); setStudentToDelete(null);
     }
@@ -250,7 +314,7 @@ const Students: React.FC = () => {
             {filteredStudents.map(s => (
               <StudentCard 
                 key={s.id} student={s} onEdit={handleEdit} onDelete={handleDeleteClick} 
-                onToggleStatus={id => setMockStudents(prev => prev.map(st => st.id === id ? {...st, status: st.status === 'Ativo' ? 'Inativo' : 'Ativo'} : st))}
+                onToggleStatus={handleToggleStatus}
                 onMarkAsPaid={handleMarkAsPaid} paymentSuccessId={paymentSuccessId}
               />
             ))}
