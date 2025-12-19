@@ -56,7 +56,7 @@ const GroupedAgendaCard: React.FC<GroupedAgendaCardProps> = ({ items, onEdit, on
                         </span>
                       ) : (
                         <div className="flex items-center gap-1 min-w-0">
-                           {item.status === 'rescheduled_target' && <History size={10} className="text-sky-500 flex-shrink-0" title="Aula de reposição" />}
+                           {item.status === 'rescheduled_target' && <span title="Aula de reposição"><History size={10} className="text-sky-500 flex-shrink-0" /></span>}
                            <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.student}>
                                {item.student}
                            </span>

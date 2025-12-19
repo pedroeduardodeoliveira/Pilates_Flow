@@ -113,8 +113,8 @@ const Agenda: React.FC = () => {
 
     if (editingItem) {
         // Ação de Reposição/Remarcação
-        const updatedAppointments = appointments.map(item =>
-            item.id === editingItem.id ? { ...item, status: 'rescheduled_source' as const } : item
+        const updatedAppointments = appointments.map((item): AgendaItem =>
+            item.id === editingItem.id ? { ...item, status: 'rescheduled_source' } : item
         );
         const rescheduledClass: AgendaItem = {
             ...formData,
@@ -152,7 +152,7 @@ const Agenda: React.FC = () => {
     if (itemToDelete.status === 'rescheduled_target' && itemToDelete.originalId) {
         // Excluir reposição: reverte a original e remove a reposição
         updatedAppointments = updatedAppointments
-            .map(item => item.id === itemToDelete.originalId ? { ...item, status: 'scheduled' } : item)
+            .map((item): AgendaItem => item.id === itemToDelete.originalId ? { ...item, status: 'scheduled' } : item)
             .filter(item => item.id !== itemToDelete.id);
     } else if (itemToDelete.status === 'rescheduled_source') {
         // Excluir original remarcada: remove a original e sua reposição
