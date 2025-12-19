@@ -96,7 +96,7 @@ export const agendaItemsData: AgendaItem[] = [
     { id: '26', time: '20:00', day: 2, student: 'Camila Rocha', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
 ];
 
-export const escalaItemsData: EscalaItem[] = [
+export const mockEscalaData: EscalaItem[] = [
     { id: '1', time: '07:00', day: 0, equipment: 'Reformer 1', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
     { id: '2', time: '07:00', day: 1, equipment: 'Reformer 2', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
     { id: '3', time: '07:00', day: 2, equipment: 'Cadillac', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },

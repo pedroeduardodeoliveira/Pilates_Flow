@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import { Student, Instructor, Room, Equipment, Transaction } from './types';
-import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData } from './mockData';
+import { Student, Instructor, Room, Equipment, Transaction, EscalaItem } from './types';
+import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData } from './mockData';
 
 // --- TIPOS ---
 interface SettingsData {
@@ -29,6 +29,7 @@ interface AppState {
   rooms: Room[];
   equipments: Equipment[];
   transactions: Transaction[];
+  escala: EscalaItem[];
   settings: SettingsData;
   activeTab: string;
 }
@@ -40,6 +41,7 @@ type Action =
   | { type: 'UPDATE_ROOMS'; payload: Room[] }
   | { type: 'UPDATE_EQUIPMENTS'; payload: Equipment[] }
   | { type: 'UPDATE_TRANSACTIONS'; payload: Transaction[] }
+  | { type: 'UPDATE_ESCALA'; payload: EscalaItem[] }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' };
@@ -83,8 +85,9 @@ const initialState: AppState = {
   rooms: mockRoomsData,
   equipments: mockEquipmentsData,
   transactions: mockTransactionsData,
+  escala: mockEscalaData,
   settings: initialSettings,
-  activeTab: 'alunos',
+  activeTab: 'escala',
 };
 
 // --- REDUCER ---
@@ -102,6 +105,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, equipments: action.payload };
     case 'UPDATE_TRANSACTIONS':
       return { ...state, transactions: action.payload };
+    case 'UPDATE_ESCALA':
+      return { ...state, escala: action.payload };
     case 'UPDATE_SETTINGS':
       return { ...state, settings: { ...state.settings, ...action.payload } };
     case 'SET_ACTIVE_TAB':
