@@ -39,10 +39,10 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0b0e14] px-4 py-12 relative overflow-hidden transition-colors duration-300">
-      {/* Fundo Animado */}
+      {/* Fundo Animado Neural */}
       <NeuralNetworkBackground isDarkMode={settings.isDarkMode} />
 
-      {/* Elementos decorativos de fundo com opacidade reduzida para destacar o NeuralLink */}
+      {/* Elementos decorativos de fundo */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-sky-500/5 blur-[120px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/5 blur-[120px] rounded-full pointer-events-none"></div>
 

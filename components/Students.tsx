@@ -3,7 +3,7 @@ import { AppContext } from '../AppContext';
 import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, MapPin, Calendar, CreditCard, Info, Camera, Clock, PlusCircle, AlertTriangle, Filter, Layers, Activity } from 'lucide-react';
 import StudentCard from './StudentCard';
 import { Student, AgendaItem } from '../types';
-import * as XLSX from 'https://esm.sh/xlsx';
+import * as XLSX from 'xlsx';
 
 const Students: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
