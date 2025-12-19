@@ -39,7 +39,7 @@ const GroupedEscalaCard: React.FC<GroupedEscalaCardProps> = ({ items, onEdit, on
       <div className="p-2 flex flex-col justify-start bg-white dark:bg-transparent">
         <div className="space-y-1">
           {items.map(item => (
-            <div key={item.id} className="group/item relative rounded-md -mx-1 px-1 py-0.5 hover:bg-slate-50 dark:hover:bg-white/5">
+            <div key={item.id} className="relative rounded-md -mx-1 px-1 py-0.5 hover:bg-slate-50 dark:hover:bg-white/5">
               <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                       <Box size={12} className={`text-slate-500 dark:text-gray-400 flex-shrink-0`} />
@@ -47,7 +47,7 @@ const GroupedEscalaCard: React.FC<GroupedEscalaCardProps> = ({ items, onEdit, on
                           {item.equipment}
                       </span>
                   </div>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-0.5 transition-opacity">
                       <button onClick={() => onEdit(item)} title="Editar Alocação" className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><Pencil size={12} /></button>
                       <button onClick={() => onDelete(item)} title="Remover Alocação" className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
                   </div>

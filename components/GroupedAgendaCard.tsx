@@ -45,7 +45,7 @@ const GroupedAgendaCard: React.FC<GroupedAgendaCardProps> = ({ items, onEdit, on
         )}
         <div className="space-y-1">
           {items.map(item => (
-            <div key={item.id} className="group/item relative rounded-md -mx-1 px-1 py-0.5 hover:bg-slate-50 dark:hover:bg-white/5">
+            <div key={item.id} className="relative rounded-md -mx-1 px-1 py-0.5 hover:bg-slate-50 dark:hover:bg-white/5">
               <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                       <div className={`w-2 h-2 rounded-full ${theme.dot} flex-shrink-0`}></div>
@@ -63,7 +63,7 @@ const GroupedAgendaCard: React.FC<GroupedAgendaCardProps> = ({ items, onEdit, on
                         </div>
                       )}
                   </div>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-0.5 transition-opacity">
                       {/* Botão "Repor": visível para qualquer aula que não seja a "origem" de uma reposição. */}
                       {item.status !== 'rescheduled_source' && (
                           <button onClick={() => onEdit(item)} title="Repor / Remarcar Aula" className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><History size={12} /></button>
