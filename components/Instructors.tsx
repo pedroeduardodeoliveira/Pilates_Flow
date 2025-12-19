@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, Phone, FileText, Camera, CreditCard, Info, AlertTriangle, MapPin, Calendar, Clock, Timer } from 'lucide-react';
@@ -438,11 +437,11 @@ const Instructors: React.FC = () => {
                 <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome Completo</label>
-                    <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="Nome do instrutor" />
+                    <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm h-[46px]" placeholder="Nome do instrutor" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Telefone / WhatsApp</label>
-                    <input value={formData.phone} onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="(00) 00000-0000" maxLength={15} />
+                    <input value={formData.phone} onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm h-[46px]" placeholder="(00) 00000-0000" maxLength={15} />
                   </div>
                 </div>
               </div>
@@ -451,21 +450,21 @@ const Instructors: React.FC = () => {
                 <div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest">
                   <Info size={14} /> Dados Pessoais
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Data de Nascimento</label>
-                    <input type="date" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" />
+                    <input type="date" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm h-[46px]" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center ml-1">
                       <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase">CPF</label>
                       {cpfError && <span className="text-[9px] font-bold text-rose-500 animate-pulse">CPF INVÁLIDO</span>}
                     </div>
-                    <input value={formData.cpf} onChange={e => setFormData({...formData, cpf: maskCPF(e.target.value)})} className={`w-full bg-slate-50 dark:bg-gray-800 border ${cpfError ? 'border-rose-500' : 'border-slate-200 dark:border-gray-700'} rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm`} placeholder="000.000.000-00" maxLength={14} />
+                    <input value={formData.cpf} onChange={e => setFormData({...formData, cpf: maskCPF(e.target.value)})} className={`w-full bg-slate-50 dark:bg-gray-800 border ${cpfError ? 'border-rose-500' : 'border-slate-200 dark:border-gray-700'} rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm h-[46px]`} placeholder="000.000.000-00" maxLength={14} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Data de Admissão</label>
-                    <input type="date" value={formData.regDate} onChange={e => setFormData({...formData, regDate: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" />
+                    <input type="date" value={formData.regDate} onChange={e => setFormData({...formData, regDate: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm h-[46px]" />
                   </div>
                 </div>
               </div>
