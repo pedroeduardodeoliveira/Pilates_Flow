@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { ChevronLeft, ChevronRight, Users, Check, Box, Plus, Pencil, Trash2, X, AlertTriangle, Zap } from 'lucide-react';
-import EscalaCard from './EscalaCard';
+import GroupedEscalaCard from './GroupedEscalaCard';
 import { EscalaItem } from '../types';
 
 const Escala: React.FC = () => {
@@ -144,23 +144,31 @@ const Escala: React.FC = () => {
         <div className="grid grid-cols-[80px_1fr]">
           <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex flex-col items-center justify-center"><span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span><span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span></div>
           <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex items-center"><Box className="text-sky-500 mr-2" size={16} /><h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Distribuição de Aparelhos</h3></div>
-          {timeSlots.map((time) => (
-            <React.Fragment key={time}>
-              <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
-              <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {getEscalaItems(time, dayIdx).map((item) => (
-                    <EscalaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
-                  ))}
-                </div>
-                <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white">
-                    <Plus size={16} />
+          {timeSlots.map((time) => {
+            const itemsInSlot = getEscalaItems(time, dayIdx);
+            const groupedByInstructor = itemsInSlot.reduce<Record<string, EscalaItem[]>>((acc, item) => {
+              (acc[item.instructor] = acc[item.instructor] || []).push(item);
+              return acc;
+            }, {});
+
+            return (
+              <React.Fragment key={time}>
+                <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
+                <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {Object.values(groupedByInstructor).map((items) => (
+                      <GroupedEscalaCard key={items[0].instructor} items={items} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
+                    ))}
                   </div>
-                </button>
-              </div>
-            </React.Fragment>
-          ))}
+                  <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white">
+                      <Plus size={16} />
+                    </div>
+                  </button>
+                </div>
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
     );
@@ -186,20 +194,28 @@ const Escala: React.FC = () => {
           {timeSlots.map((time) => (
             <React.Fragment key={time}>
               <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
-              {[0, 1, 2, 3, 4, 5].map((dayIdx) => (
-                <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[80px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
-                  <div className="flex flex-col gap-1.5 h-full">
-                    {getEscalaItems(time, dayIdx).map((item) => (
-                      <EscalaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
-                    ))}
-                  </div>
-                  <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white">
-                      <Plus size={16} />
+              {[0, 1, 2, 3, 4, 5].map((dayIdx) => {
+                const itemsInSlot = getEscalaItems(time, dayIdx);
+                const groupedByInstructor = itemsInSlot.reduce<Record<string, EscalaItem[]>>((acc, item) => {
+                  (acc[item.instructor] = acc[item.instructor] || []).push(item);
+                  return acc;
+                }, {});
+
+                return (
+                  <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[80px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
+                    <div className="flex flex-col gap-1.5">
+                      {Object.values(groupedByInstructor).map((items) => (
+                        <GroupedEscalaCard key={items[0].instructor} items={items} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
+                      ))}
                     </div>
-                  </button>
-                </div>
-              ))}
+                    <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="p-2 bg-sky-500/80 rounded-full shadow-lg text-white">
+                        <Plus size={16} />
+                      </div>
+                    </button>
+                  </div>
+                );
+              })}
             </React.Fragment>
           ))}
         </div></div></div>
