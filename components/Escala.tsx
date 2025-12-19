@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { ChevronLeft, ChevronRight, Users, Check, Box, Plus, Pencil, Trash2, X, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Check, Box, Plus, Pencil, Trash2, X, AlertTriangle, Zap } from 'lucide-react';
 import EscalaCard from './EscalaCard';
-import { EscalaItem, Instructor } from '../types';
+import { EscalaItem, AgendaItem } from '../types';
 
 const Escala: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, escala: escalaItems, equipments } = state;
+  const { instructors, escala: escalaItems, equipments, agenda: appointments } = state;
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
@@ -16,11 +16,19 @@ const Escala: React.FC = () => {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EscalaItem | null>(null);
-  // FIX: Explicitly type formData state with EscalaItem to allow for different color values.
   const [formData, setFormData] = useState<EscalaItem>({ id: '', time: '07:00', day: 0, equipment: '', instructor: '', instructorInitials: '', color: 'blue' });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<EscalaItem | null>(null);
+
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkFormData, setBulkFormData] = useState({
+    day: 0,
+    instructor: instructors[0]?.name || '',
+    equipment: equipments[0]?.name || '',
+    startTime: '07:00',
+    endTime: '21:00'
+  });
 
   const setEscalaItems = (items: EscalaItem[]) => {
       dispatch({ type: 'UPDATE_ESCALA', payload: items });
@@ -38,12 +46,22 @@ const Escala: React.FC = () => {
 
   const timeSlots = Array.from({ length: 17 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
-  const getFilteredEscala = (time: string, dayIdx: number) => {
-    return escalaItems.filter(a => {
+  const getAppointmentsForEscala = (time: string, dayIdx: number) => {
+    const appointmentsInSlot = appointments.filter(a => {
       const matchTime = a.time === time;
       const matchDay = a.day === dayIdx;
       const matchInstructor = selectedInstructor ? a.instructor === selectedInstructor : true;
       return matchTime && matchDay && matchInstructor;
+    });
+
+    return appointmentsInSlot.map(appointment => {
+      const equipmentItem = escalaItems.find(
+        e => e.day === appointment.day && e.time === appointment.time && e.instructor === appointment.instructor
+      );
+      return {
+        ...appointment,
+        equipment: equipmentItem ? equipmentItem.equipment : undefined
+      };
     });
   };
 
@@ -109,6 +127,44 @@ const Escala: React.FC = () => {
     setIsModalOpen(false);
   };
   
+  const handleSaveBulk = () => {
+    const { day, instructor, equipment, startTime, endTime } = bulkFormData;
+    if (!instructor || !equipment) return;
+
+    const startHour = parseInt(startTime.split(':')[0]);
+    const endHour = parseInt(endTime.split(':')[0]);
+
+    const instructorDetails = instructors.find(i => i.name === instructor);
+    if (!instructorDetails) return;
+
+    const newItems: EscalaItem[] = [];
+    for (let hour = startHour; hour < endHour; hour++) {
+      const time = `${hour.toString().padStart(2, '0')}:00`;
+      
+      const alreadyExists = escalaItems.some(
+        item => item.day === day && item.time === time && item.instructor === instructor
+      );
+
+      if (!alreadyExists) {
+          const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {
+              'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'
+          };
+          newItems.push({
+              id: `${day}-${time}-${instructor}-${Math.random()}`,
+              day,
+              time,
+              instructor,
+              equipment,
+              instructorInitials: instructorDetails.initials,
+              color: colorMap[instructor as keyof typeof colorMap] || 'blue'
+          });
+      }
+    }
+
+    setEscalaItems([...escalaItems, ...newItems]);
+    setIsBulkModalOpen(false);
+  };
+
   const handleDeleteClick = (item: EscalaItem) => {
       setItemToDelete(item);
       setIsDeleteModalOpen(true);
@@ -144,8 +200,8 @@ const Escala: React.FC = () => {
               </div>
               <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {getFilteredEscala(time, dayIdx).map((item) => (
-                    <EscalaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
+                  {getAppointmentsForEscala(time, dayIdx).map((item) => (
+                    <EscalaCard key={item.id} item={item} onEdit={() => {}} onDelete={() => {}} />
                   ))}
                 </div>
                 <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -207,9 +263,9 @@ const Escala: React.FC = () => {
                   </div>
                   {[0, 1, 2, 3, 4, 5].map((dayIdx) => (
                     <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[100px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group">
-                      <div className="flex flex-col gap-1.5 h-full">
-                        {getFilteredEscala(time, dayIdx).map((item) => (
-                          <EscalaCard key={item.id} item={item} onEdit={handleOpenModal} onDelete={handleDeleteClick} />
+                       <div className="flex flex-col gap-1.5 h-full">
+                        {getAppointmentsForEscala(time, dayIdx).map((item) => (
+                          <EscalaCard key={item.id} item={item} onEdit={() => {}} onDelete={() => {}} />
                         ))}
                       </div>
                        <button onClick={() => handleOpenModal(null, dayIdx, time)} className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -228,7 +284,7 @@ const Escala: React.FC = () => {
   
   const renderMonthly = () => {
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const startDay = startOfMonth.getDay(); // 0 for Sunday, 1 for Monday...
+    const startDay = startOfMonth.getDay(); 
 
     const monthDays = Array.from({ length: 42 }, (_, i) => {
       const day = i - startDay + 1;
@@ -258,7 +314,7 @@ const Escala: React.FC = () => {
         <div className="grid grid-cols-7">
           {monthDays.map((day, idx) => {
              const dayOfWeek = day.fullDate.getDay();
-             const appDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon=0..Sat=5, Sun=6
+             const appDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
              const itemsForDay = escalaItems.filter(item => item.day === appDayIndex);
 
             return (
@@ -330,6 +386,10 @@ const Escala: React.FC = () => {
               </div>
             )}
           </div>
+          <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center gap-2 bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 px-4 py-2.5 rounded-lg text-sm text-slate-700 dark:text-gray-300 hover:border-sky-500/50 hover:text-sky-500 transition-all font-medium shadow-sm">
+            <Zap size={16} />
+            Alocação Rápida
+          </button>
         </div>
         <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">
           {viewOptions.map(v => <button key={v.value} onClick={() => setView(v.value as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v.value ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300'}`}>{v.label}</button>)}
@@ -353,6 +413,49 @@ const Escala: React.FC = () => {
             <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
               <button onClick={handleSave} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center">
+                <div>
+                    <h3 className="font-bold text-slate-800 dark:text-gray-100">Alocação Rápida de Aparelhos</h3>
+                    <p className="text-xs text-slate-500 dark:text-gray-400">Preencha a escala de um dia para um instrutor.</p>
+                </div>
+                <button onClick={() => setIsBulkModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label>
+                        <select value={bulkFormData.day} onChange={e => setBulkFormData({...bulkFormData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select>
+                    </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label>
+                        <select value={bulkFormData.instructor} onChange={e => setBulkFormData({...bulkFormData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select>
+                    </div>
+                </div>
+                 <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho (será repetido)</label>
+                    <select value={bulkFormData.equipment} onChange={e => setBulkFormData({...bulkFormData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário de Início</label>
+                        <input type="time" step="3600" value={bulkFormData.startTime} onChange={e => setBulkFormData({...bulkFormData, startTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário de Fim</label>
+                        <input type="time" step="3600" value={bulkFormData.endTime} onChange={e => setBulkFormData({...bulkFormData, endTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/>
+                    </div>
+                </div>
+            </div>
+            <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
+              <button onClick={() => setIsBulkModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
+              <button onClick={handleSaveBulk} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Alocar Horários</button>
             </div>
           </div>
         </div>

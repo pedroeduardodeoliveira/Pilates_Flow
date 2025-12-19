@@ -6,7 +6,7 @@ import { AgendaItem } from '../types';
 
 const Agenda: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, students, agenda: appointments } = state;
+  const { instructors, students, agenda: appointments, escala: escalaItems } = state;
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
@@ -38,11 +38,21 @@ const Agenda: React.FC = () => {
   const timeSlots = Array.from({ length: 17 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
   const getFilteredAppointments = (time: string, dayIdx: number) => {
-    return appointments.filter(a => {
+    const appointmentsInSlot = appointments.filter(a => {
       const matchTime = a.time === time;
       const matchDay = a.day === dayIdx;
       const matchInstructor = selectedInstructor ? a.instructor === selectedInstructor : true;
       return matchTime && matchDay && matchInstructor;
+    });
+
+    return appointmentsInSlot.map(appointment => {
+      const equipmentItem = escalaItems.find(
+        e => e.day === appointment.day && e.time === appointment.time && e.instructor === appointment.instructor
+      );
+      return {
+        ...appointment,
+        equipment: equipmentItem ? equipmentItem.equipment : undefined
+      };
     });
   };
 

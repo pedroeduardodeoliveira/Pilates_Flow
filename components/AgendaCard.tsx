@@ -1,6 +1,6 @@
 import React from 'react';
 import { AgendaItem } from '../types';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Box } from 'lucide-react';
 
 interface AgendaCardProps {
   item: AgendaItem;
@@ -28,16 +28,24 @@ const AgendaCard: React.FC<AgendaCardProps> = ({ item, onEdit, onDelete }) => {
         <span className="text-[11px] font-bold text-white truncate">{item.instructor}</span>
       </div>
       
-      {/* Body com Aluno */}
-      <div className="p-2 flex items-center justify-between gap-2 bg-white dark:bg-transparent flex-1">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <div className={`w-2 h-2 rounded-full ${theme.dot}`}></div>
-          <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate">{item.student}</span>
+      {/* Body com Aluno e Aparelho */}
+      <div className="p-2 flex flex-col justify-between gap-1 bg-white dark:bg-transparent flex-1">
+        <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 min-w-0">
+                <div className={`w-2 h-2 rounded-full ${theme.dot}`}></div>
+                <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.student}>{item.student}</span>
+            </div>
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => onEdit(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><Pencil size={12} /></button>
+                <button onClick={() => onDelete(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
+            </div>
         </div>
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={() => onEdit(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><Pencil size={12} /></button>
-            <button onClick={() => onDelete(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
-        </div>
+        {item.equipment && (
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-gray-400 font-semibold pl-[14px]">
+                <Box size={10} />
+                <span className="truncate" title={item.equipment}>{item.equipment}</span>
+            </div>
+        )}
       </div>
     </div>
   );

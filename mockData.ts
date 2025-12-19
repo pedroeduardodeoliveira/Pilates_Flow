@@ -1,4 +1,3 @@
-
 import { Student, Instructor, Room, Equipment, Transaction, AgendaItem, EscalaItem } from './types';
 
 export const mockStudentsData: Student[] = [
@@ -85,25 +84,28 @@ export const mockTransactionsData: Transaction[] = [
 
 export const mockAgendaData: AgendaItem[] = [
     { id: '1', time: '07:00', day: 0, student: 'Fernanda Costa', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
-    { id: '2', time: '07:00', day: 1, student: 'Larissa Ferreira', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '2', time: '07:00', day: 1, student: 'Larissa Ferreira', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
     { id: '3', time: '07:00', day: 2, student: 'Fernanda Costa', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
     { id: '4', time: '07:00', day: 3, student: 'Larissa Ferreira', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
-    { id: '7', time: '08:00', day: 1, student: 'Maria Oliveira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '9', time: '08:00', day: 3, student: 'Maria Oliveira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '11', time: '09:00', day: 3, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '18', time: '11:00', day: 3, student: 'Gustavo Lima', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '25', time: '18:00', day: 0, student: 'Rafael Martins', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
-    { id: '26', time: '20:00', day: 2, student: 'Camila Nogueira', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
+    { id: '5', time: '07:00', day: 3, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '6', time: '07:00', day: 3, student: 'Maria Oliveira', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
+    { id: '7', time: '08:00', day: 0, student: 'Maria Oliveira', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
+    { id: '8', time: '08:00', day: 2, student: 'Maria Oliveira', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
+    { id: '9', time: '09:00', day: 1, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '10', time: '09:00', day: 3, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '11', time: '18:00', day: 1, student: 'Carlos Mendes', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
 ];
 
 export const mockEscalaData: EscalaItem[] = [
     { id: '1', time: '07:00', day: 0, equipment: 'Reformer 1', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
-    { id: '2', time: '07:00', day: 1, equipment: 'Reformer 2', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '2', time: '07:00', day: 1, equipment: 'Reformer 2', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
     { id: '3', time: '07:00', day: 2, equipment: 'Cadillac', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
     { id: '4', time: '07:00', day: 3, equipment: 'Reformer 1', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
-    { id: '7', time: '08:00', day: 1, equipment: 'Chair', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '9', time: '08:00', day: 3, equipment: 'Ladder Barrel', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '11', time: '09:00', day: 3, equipment: 'Reformer 2', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '18', time: '11:00', day: 3, equipment: 'Cadillac', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '25', time: '19:00', day: 1, equipment: 'Chair', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '5', time: '07:00', day: 3, equipment: 'Reformer 2', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '6', time: '07:00', day: 3, equipment: 'Chair', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
+    { id: '7', time: '08:00', day: 0, equipment: 'Chair', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
+    { id: '8', time: '08:00', day: 2, equipment: 'Ladder Barrel', instructor: 'Ana Silva', instructorInitials: 'AS', color: 'pink' },
+    { id: '9', time: '09:00', day: 1, equipment: 'Cadillac', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '10', time: '09:00', day: 3, equipment: 'Chair', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '11', time: '18:00', day: 1, equipment: 'Ladder Barrel', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
 ];

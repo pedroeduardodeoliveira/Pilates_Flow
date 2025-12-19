@@ -30,6 +30,7 @@ export interface AgendaItem {
   instructor: string;
   instructorInitials: string;
   color: 'orange' | 'blue' | 'pink' | 'green';
+  equipment?: string;
 }
 
 export interface EscalaItem {
