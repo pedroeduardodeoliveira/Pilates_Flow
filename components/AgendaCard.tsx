@@ -1,12 +1,14 @@
-
 import React from 'react';
 import { AgendaItem } from '../types';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface AgendaCardProps {
   item: AgendaItem;
+  onEdit: (item: AgendaItem) => void;
+  onDelete: (item: AgendaItem) => void;
 }
 
-const AgendaCard: React.FC<AgendaCardProps> = ({ item }) => {
+const AgendaCard: React.FC<AgendaCardProps> = ({ item, onEdit, onDelete }) => {
   const colorMap = {
     orange: { bg: 'bg-orange-500', dot: 'bg-indigo-500' },
     blue: { bg: 'bg-blue-600', dot: 'bg-sky-500' },
@@ -32,9 +34,10 @@ const AgendaCard: React.FC<AgendaCardProps> = ({ item }) => {
           <div className={`w-2 h-2 rounded-full ${theme.dot}`}></div>
           <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate">{item.student}</span>
         </div>
-        <button className="text-[10px] text-sky-600 dark:text-sky-500 hover:text-sky-400 font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          Remarcar
-        </button>
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={() => onEdit(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><Pencil size={12} /></button>
+            <button onClick={() => onDelete(item)} className="p-1 text-slate-400 dark:text-gray-500 hover:text-rose-500"><Trash2 size={12} /></button>
+        </div>
       </div>
     </div>
   );

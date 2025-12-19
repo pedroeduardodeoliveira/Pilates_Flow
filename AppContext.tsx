@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import { Student, Instructor, Room, Equipment, Transaction, EscalaItem } from './types';
-import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData } from './mockData';
+import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem } from './types';
+import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
 
 // --- TIPOS ---
 interface SettingsData {
@@ -30,6 +30,7 @@ interface AppState {
   equipments: Equipment[];
   transactions: Transaction[];
   escala: EscalaItem[];
+  agenda: AgendaItem[];
   settings: SettingsData;
   activeTab: string;
 }
@@ -42,6 +43,7 @@ type Action =
   | { type: 'UPDATE_EQUIPMENTS'; payload: Equipment[] }
   | { type: 'UPDATE_TRANSACTIONS'; payload: Transaction[] }
   | { type: 'UPDATE_ESCALA'; payload: EscalaItem[] }
+  | { type: 'UPDATE_AGENDA'; payload: AgendaItem[] }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' };
@@ -86,8 +88,9 @@ const initialState: AppState = {
   equipments: mockEquipmentsData,
   transactions: mockTransactionsData,
   escala: mockEscalaData,
+  agenda: mockAgendaData,
   settings: initialSettings,
-  activeTab: 'escala',
+  activeTab: 'agenda',
 };
 
 // --- REDUCER ---
@@ -107,6 +110,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, transactions: action.payload };
     case 'UPDATE_ESCALA':
       return { ...state, escala: action.payload };
+    case 'UPDATE_AGENDA':
+        return { ...state, agenda: action.payload };
     case 'UPDATE_SETTINGS':
       return { ...state, settings: { ...state.settings, ...action.payload } };
     case 'SET_ACTIVE_TAB':

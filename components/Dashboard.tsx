@@ -3,11 +3,11 @@ import React, { useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import StatCard from './StatCard';
 import { Users, UserX, Medal, Activity, Cake, Clock, Ban, AlertTriangle } from 'lucide-react';
-import { agendaItemsData } from '../mockData'; // Mantém dados de agenda estáticos por enquanto
 
 const Dashboard: React.FC = () => {
   const { state } = useContext(AppContext);
-  const { students, instructors, transactions } = state;
+  // FIX: Destructured agenda from context state to use dynamic data instead of static mock data, resolving the import error.
+  const { students, instructors, transactions, agenda } = state;
 
   const currentDate = new Date(2025, 11, 18); // Quinta, 18 de Dezembro de 2025
 
@@ -16,10 +16,12 @@ const Dashboard: React.FC = () => {
     const inactiveStudents = students.filter(s => s.status === 'Inativo').length;
     const activeInstructors = instructors.length;
     const todayDayIndex = currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1;
-    const todaysClassesCount = agendaItemsData.filter(a => a.day === todayDayIndex).length;
+    // FIX: Using agenda from context to calculate today's classes count.
+    const todaysClassesCount = agenda.filter(a => a.day === todayDayIndex).length;
     
     return { activeStudents, inactiveStudents, activeInstructors, todaysClassesCount };
-  }, [students, instructors]);
+    // FIX: Added agenda to the dependency array to ensure recalculation on change.
+  }, [students, instructors, agenda]);
   
   const expiringStudents = useMemo(() => {
     return students
@@ -41,10 +43,12 @@ const Dashboard: React.FC = () => {
 
   const todaysClasses = useMemo(() => {
     const todayDayIndex = currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1;
-    return agendaItemsData
+    // FIX: Using agenda from context to get the list of today's classes.
+    return agenda
       .filter(a => a.day === todayDayIndex)
       .sort((a, b) => a.time.localeCompare(b.time));
-  }, []);
+    // FIX: Added agenda to the dependency array to ensure list is updated on change.
+  }, [agenda]);
 
   return (
     <div className="space-y-8 pt-8">

@@ -83,17 +83,17 @@ export const mockTransactionsData: Transaction[] = [
     { id: '7', description: 'Compra de Acessórios (Faixas)', amount: 150, date: '2025-12-18', type: 'Despesa', category: 'Equipamentos', status: 'Pago' },
 ];
 
-export const agendaItemsData: AgendaItem[] = [
+export const mockAgendaData: AgendaItem[] = [
     { id: '1', time: '07:00', day: 0, student: 'Fernanda Costa', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
-    { id: '2', time: '07:00', day: 1, student: 'Gustavo Henrique', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '2', time: '07:00', day: 1, student: 'Larissa Ferreira', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
     { id: '3', time: '07:00', day: 2, student: 'Fernanda Costa', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
-    { id: '4', time: '07:00', day: 3, student: 'Gustavo Henrique', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
-    { id: '7', time: '08:00', day: 1, student: 'Amanda Vieira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '9', time: '08:00', day: 3, student: 'Amanda Vieira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '11', time: '09:00', day: 3, student: 'Juliana Pereira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '18', time: '11:00', day: 3, student: 'Larissa Antunes', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
-    { id: '25', time: '18:00', day: 0, student: 'Ricardo Lima', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
-    { id: '26', time: '20:00', day: 2, student: 'Camila Rocha', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
+    { id: '4', time: '07:00', day: 3, student: 'Larissa Ferreira', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '7', time: '08:00', day: 1, student: 'Maria Oliveira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '9', time: '08:00', day: 3, student: 'Maria Oliveira', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '11', time: '09:00', day: 3, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '18', time: '11:00', day: 3, student: 'Gustavo Lima', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
+    { id: '25', time: '18:00', day: 0, student: 'Rafael Martins', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '26', time: '20:00', day: 2, student: 'Camila Nogueira', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
 ];
 
 export const mockEscalaData: EscalaItem[] = [

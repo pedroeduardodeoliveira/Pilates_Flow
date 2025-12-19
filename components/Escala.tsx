@@ -8,7 +8,7 @@ const Escala: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
   const { instructors, escala: escalaItems, equipments } = state;
   
-  const [view, setView] = useState<'daily' | 'weekly'>('weekly');
+  const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
   const [isInstructorOpen, setIsInstructorOpen] = useState(false);
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
@@ -124,7 +124,7 @@ const Escala: React.FC = () => {
 
   const renderDaily = () => {
     const dayOfWeek = currentDate.getDay();
-    const dayIdx = dayOfWeek === 0 ? 5 : dayOfWeek - 1; 
+    const dayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
 
     return (
       <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -225,6 +225,67 @@ const Escala: React.FC = () => {
       </div>
     );
   };
+  
+  const renderMonthly = () => {
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const startDay = startOfMonth.getDay(); // 0 for Sunday, 1 for Monday...
+
+    const monthDays = Array.from({ length: 42 }, (_, i) => {
+      const day = i - startDay + 1;
+      const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      return {
+        date: d.getDate(),
+        fullDate: d,
+        isCurrentMonth: d.getMonth() === currentDate.getMonth(),
+        isSelected: d.toDateString() === currentDate.toDateString()
+      };
+    });
+
+    const dayHeaders = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+
+    const handleDayClick = (day: {fullDate: Date}) => {
+      setCurrentDate(day.fullDate);
+      setView('daily');
+    };
+
+    return (
+      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20">
+          {dayHeaders.map(h => (
+            <div key={h} className="p-2 md:p-4 text-center text-[10px] font-bold text-slate-500 dark:text-gray-400 tracking-widest uppercase">{h}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {monthDays.map((day, idx) => {
+             const dayOfWeek = day.fullDate.getDay();
+             const appDayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon=0..Sat=5, Sun=6
+             const itemsForDay = escalaItems.filter(item => item.day === appDayIndex);
+
+            return (
+              <div 
+                key={idx} 
+                onClick={() => handleDayClick(day)}
+                className={`min-h-[60px] md:min-h-[100px] p-2 md:p-3 border-b border-r border-slate-200 dark:border-gray-800 transition-all cursor-pointer flex flex-col gap-2 ${
+                  !day.isCurrentMonth ? 'opacity-30 bg-slate-50 dark:bg-gray-800/20 pointer-events-none' : 'hover:bg-slate-50 dark:hover:bg-white/5'
+                } ${day.isSelected ? 'bg-sky-500/10' : ''}`}
+              >
+                <span className={`text-xs md:text-sm font-bold ${day.isSelected ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>
+                  {day.date}
+                </span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {day.isCurrentMonth && itemsForDay.slice(0, 4).map(item => (
+                     <div key={item.id} className={`h-1.5 w-1.5 rounded-full ${
+                       item.color === 'orange' ? 'bg-orange-500' : item.color === 'blue' ? 'bg-blue-600' : item.color === 'pink' ? 'bg-rose-500' : 'bg-emerald-500'
+                     }`} title={`${item.equipment} - ${item.instructor}`} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    );
+  };
 
   const getTitle = () => {
     if (view === 'daily') return currentDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -239,6 +300,12 @@ const Escala: React.FC = () => {
     }
     return getFullMonthName(currentDate);
   };
+
+  const viewOptions = [
+    { value: 'daily', label: 'Diário' },
+    { value: 'weekly', label: 'Semanal' },
+    { value: 'monthly', label: 'Mensal' },
+  ];
 
   return (
     <div className="space-y-6 pt-24 lg:pt-8">
@@ -265,10 +332,14 @@ const Escala: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">
-          {['daily', 'weekly'].map(v => <button key={v} onClick={() => setView(v as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300'}`}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>)}
+          {viewOptions.map(v => <button key={v.value} onClick={() => setView(v.value as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v.value ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300'}`}>{v.label}</button>)}
         </div>
       </div>
-      <div className="relative min-h-[500px]">{view === 'daily' ? renderDaily() : renderWeekly()}</div>
+      <div className="relative min-h-[500px]">
+        {view === 'daily' && renderDaily()}
+        {view === 'weekly' && renderWeekly()}
+        {view === 'monthly' && renderMonthly()}
+      </div>
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
