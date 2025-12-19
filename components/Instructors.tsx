@@ -237,25 +237,32 @@ const Instructors: React.FC = () => {
     if (!formData.name || cpfError) return;
     const initials = formData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-    const instructorData: Partial<Instructor> = {
-      name: formData.name, 
-      initials, 
-      phone: formData.phone,
-      specialties: formData.specialties,
-      avatarColor: formData.avatarColor,
-      studentsCount: 0,
-      workingDays: formData.workingDays,
-      workStart: formData.workStart,
-      workEnd: formData.workEnd,
-      classDuration: formData.classDuration,
-    };
-
     if (editingInstructorId) {
-      setMockInstructors(prev => prev.map(i => i.id === editingInstructorId ? { ...i, ...instructorData } : i));
+      setMockInstructors(prev => prev.map(i => i.id === editingInstructorId ? {
+        ...i,
+        name: formData.name,
+        initials,
+        phone: formData.phone,
+        specialties: formData.specialties,
+        avatarColor: formData.avatarColor,
+        workingDays: formData.workingDays,
+        workStart: formData.workStart,
+        workEnd: formData.workEnd,
+        classDuration: formData.classDuration,
+      } : i));
     } else {
       const newInstructor: Instructor = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...instructorData as Instructor
+        id: Math.random().toString(36).substring(2, 9),
+        name: formData.name,
+        initials,
+        phone: formData.phone,
+        specialties: formData.specialties,
+        avatarColor: formData.avatarColor,
+        studentsCount: 0,
+        workingDays: formData.workingDays,
+        workStart: formData.workStart,
+        workEnd: formData.workEnd,
+        classDuration: formData.classDuration,
       };
       setMockInstructors(prev => [newInstructor, ...prev]);
     }
@@ -461,7 +468,7 @@ const Instructors: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CEP</label>
-                    <input value={formData.cep} onChange={e => setFormData({...formData, cep: maskCEP(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="00000-000" maxLength={9} />
+                    <input value={settings.address.cep} readOnly className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-500 dark:text-gray-400 outline-none text-sm" />
                   </div>
                   <div className="md:col-span-4 space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Rua / Logradouro</label>
