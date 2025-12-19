@@ -32,6 +32,16 @@ export interface AgendaItem {
   color: 'orange' | 'blue' | 'pink' | 'green';
 }
 
+export interface EscalaItem {
+  id: string;
+  time: string;
+  day: number; // 0 (SEG) to 5 (SÁB)
+  equipment: string;
+  instructor: string;
+  instructorInitials: string;
+  color: 'orange' | 'blue' | 'pink' | 'green';
+}
+
 export interface Student {
   id: string;
   name: string;
@@ -44,6 +54,21 @@ export interface Student {
   schedule: string[];
   instructor: string;
   phone: string;
+  // Novos campos adicionados
+  birthDate?: string;
+  cpf?: string;
+  regDate?: string;
+  planType?: string;
+  image?: string | null;
+  address?: {
+    cep: string;
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    complement?: string;
+  };
 }
 
 export interface Instructor {
@@ -54,6 +79,11 @@ export interface Instructor {
   phone: string;
   specialties: string;
   avatarColor: string;
+  schedule?: string[];
+  workingDays?: string[];
+  workStart?: string;
+  workEnd?: string;
+  classDuration?: number;
 }
 
 export interface Room {
@@ -66,4 +96,14 @@ export interface Equipment {
   name: string;
   type: string;
   roomName: string;
+}
+
+export interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  date: string; // YYYY-MM-DD
+  type: 'Receita' | 'Despesa';
+  category: string;
+  status: 'Pago' | 'Pendente';
 }

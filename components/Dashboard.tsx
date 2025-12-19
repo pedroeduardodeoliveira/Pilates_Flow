@@ -1,81 +1,141 @@
 
-import React from 'react';
+import React, { useMemo, useContext } from 'react';
+import { AppContext } from '../AppContext';
 import StatCard from './StatCard';
-import { Users, TrendingUp, Medal, Puzzle, Cake, Clock } from 'lucide-react';
-import ScheduleItem from './ScheduleItem';
+import { Users, UserX, Medal, Activity, Cake, Clock, Ban, AlertTriangle } from 'lucide-react';
+import { agendaItemsData } from '../mockData'; // Mantém dados de agenda estáticos por enquanto
 
-// Define props interface for Dashboard to include notify function
-interface DashboardProps {
-  notify: (message: string, type?: 'success' | 'error') => void;
-}
+const Dashboard: React.FC = () => {
+  const { state } = useContext(AppContext);
+  const { students, instructors, transactions } = state;
 
-const Dashboard: React.FC<DashboardProps> = ({ notify }) => {
-  const classes = [
-    { id: '1', time: '07:00', student: 'Gustavo Henrique', instructor: 'Bruno Santos' },
-    { id: '2', time: '08:00', student: 'Amanda Vieira', instructor: 'Daniel Oliveira' },
-    { id: '3', time: '09:00', student: 'Juliana Pereira', instructor: 'Daniel Oliveira' },
-    { id: '4', time: '10:00', student: 'Lucas Mendes', instructor: 'Mariana Costa' },
-    { id: '5', time: '11:00', student: 'Beatriz Silva', instructor: 'Mariana Costa' },
-  ];
+  const currentDate = new Date(2025, 11, 18); // Quinta, 18 de Dezembro de 2025
+
+  const kpis = useMemo(() => {
+    const activeStudents = students.filter(s => s.status === 'Ativo').length;
+    const inactiveStudents = students.filter(s => s.status === 'Inativo').length;
+    const activeInstructors = instructors.length;
+    const todayDayIndex = currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1;
+    const todaysClassesCount = agendaItemsData.filter(a => a.day === todayDayIndex).length;
+    
+    return { activeStudents, inactiveStudents, activeInstructors, todaysClassesCount };
+  }, [students, instructors]);
+  
+  const expiringStudents = useMemo(() => {
+    return students
+      .filter(s => s.status === 'Ativo' && s.daysToExpiry >= 0 && s.daysToExpiry <= 7)
+      .sort((a, b) => a.daysToExpiry - b.daysToExpiry);
+  }, [students]);
+
+  const expiredStudents = useMemo(() => {
+    return students
+      .filter(s => s.status === 'Ativo' && s.isExpired)
+      .sort((a, b) => a.daysToExpiry - b.daysToExpiry);
+  }, [students]);
+
+  const monthlyBirthdays = useMemo(() => {
+    return students
+      .filter(s => s.birthDate && new Date(s.birthDate).getUTCMonth() === currentDate.getMonth())
+      .sort((a,b) => new Date(a.birthDate!).getUTCDate() - new Date(b.birthDate!).getUTCDate());
+  }, [students]);
+
+  const todaysClasses = useMemo(() => {
+    const todayDayIndex = currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1;
+    return agendaItemsData
+      .filter(a => a.day === todayDayIndex)
+      .sort((a, b) => a.time.localeCompare(b.time));
+  }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pt-8">
       {/* Statistics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          label="Alunos Ativos" 
-          value="18" 
-          icon={<Users size={20} />} 
-          iconBg="bg-sky-500/10" 
-          iconColor="text-sky-600 dark:text-sky-500" 
-        />
-        <StatCard 
-          label="Receita do Mês" 
-          value="R$ 0,00" 
-          icon={<TrendingUp size={20} />} 
-          iconBg="bg-emerald-500/10" 
-          iconColor="text-emerald-600 dark:text-emerald-500" 
-        />
-        <StatCard 
-          label="Instrutores" 
-          value="4" 
-          icon={<Medal size={20} />} 
-          iconBg="bg-amber-500/10" 
-          iconColor="text-amber-600 dark:text-amber-500" 
-        />
-        <StatCard 
-          label="Aparelhos" 
-          value="5" 
-          icon={<Puzzle size={20} />} 
-          iconBg="bg-indigo-500/10" 
-          iconColor="text-indigo-600 dark:text-indigo-500" 
-        />
+        <StatCard label="Alunos Ativos" value={kpis.activeStudents} icon={<Users size={20} />} iconBg="bg-sky-500/10" iconColor="text-sky-500" />
+        <StatCard label="Alunos Inativos" value={kpis.inactiveStudents} icon={<UserX size={20} />} iconBg="bg-rose-500/10" iconColor="text-rose-500" />
+        <StatCard label="Instrutores" value={kpis.activeInstructors} icon={<Medal size={20} />} iconBg="bg-amber-500/10" iconColor="text-amber-500" />
+        <StatCard label="Aulas de Hoje" value={kpis.todaysClassesCount} icon={<Activity size={20} />} iconBg="bg-indigo-500/10" iconColor="text-indigo-500" />
       </div>
 
       {/* Main Grid Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Birthdays Card */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#161b26] rounded-2xl p-6 border border-slate-200 dark:border-gray-800/50 min-h-[400px] flex flex-col shadow-sm dark:shadow-none transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-8">
-            <Cake size={20} className="text-rose-500" />
-            <h3 className="font-semibold text-slate-800 dark:text-gray-200">Aniversariantes do Mês</h3>
-          </div>
-          <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-100 dark:border-gray-800 rounded-xl">
-            <p className="text-slate-400 dark:text-gray-500 text-sm">Nenhum aniversariante este mês.</p>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Payment Alerts Column */}
+        <div className="lg:col-span-2 grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {/* Expiring Soon Card */}
+            <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2"><AlertTriangle size={16} className="text-amber-500" /> Próximos Vencimentos</h3>
+                  <span className="bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-md text-[10px] font-bold">{expiringStudents.length}</span>
+                </div>
+                <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-2">
+                    {expiringStudents.length > 0 ? expiringStudents.map(s => (
+                        <div key={s.id} className="flex items-center justify-between bg-slate-50 dark:bg-white/5 p-2 rounded-lg">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-bold text-sky-400 text-xs flex-shrink-0">{s.initials}</div>
+                                <div className="min-w-0">
+                                    <p className="font-medium text-slate-700 dark:text-gray-200 text-sm truncate">{s.name}</p>
+                                    <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md flex-shrink-0">Vence em {s.daysToExpiry}d</span>
+                        </div>
+                    )) : <p className="text-xs text-slate-500 dark:text-gray-400 italic text-center py-4">Nenhum aluno com vencimento próximo.</p>}
+                </div>
+            </div>
+
+            {/* Expired Payments Card */}
+            <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2"><Ban size={16} className="text-rose-500" /> Pagamentos Vencidos</h3>
+                  <span className="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-md text-[10px] font-bold">{expiredStudents.length}</span>
+                </div>
+                <div className="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-2">
+                    {expiredStudents.length > 0 ? expiredStudents.map(s => (
+                         <div key={s.id} className="flex items-center justify-between bg-slate-50 dark:bg-white/5 p-2 rounded-lg">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-bold text-sky-400 text-xs flex-shrink-0">{s.initials}</div>
+                                <div className="min-w-0">
+                                    <p className="font-medium text-slate-700 dark:text-gray-200 text-sm truncate">{s.name}</p>
+                                    <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>
+                                </div>
+                            </div>
+                            <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-1 rounded-md flex-shrink-0">Vencido há {Math.abs(s.daysToExpiry)}d</span>
+                        </div>
+                    )) : <p className="text-xs text-slate-500 dark:text-gray-400 italic text-center py-4">Nenhum pagamento vencido. Ótimo trabalho!</p>}
+                </div>
+            </div>
         </div>
 
-        {/* Classes Card */}
-        <div className="bg-white dark:bg-[#161b26] rounded-2xl border border-slate-200 dark:border-gray-800/50 flex flex-col overflow-hidden h-[400px] shadow-sm dark:shadow-none transition-colors duration-300">
-          <div className="p-6 border-b border-slate-100 dark:border-gray-800/50 flex items-center gap-2">
-            <Clock size={20} className="text-sky-500" />
-            <h3 className="font-semibold text-slate-800 dark:text-gray-200">Aulas de Hoje (Quinta)</h3>
+        {/* Side Column */}
+        <div className="space-y-8">
+          {/* Today's Classes */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4"><Clock size={16} /> Aulas de Hoje</h3>
+            <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+              {todaysClasses.length > 0 ? todaysClasses.map(c => (
+                <div key={c.id} className="flex items-center gap-3">
+                  <span className="font-bold text-sky-500 text-xs w-12">{c.time}</span>
+                  <div className="flex-1 bg-slate-100 dark:bg-white/5 rounded-md p-2 text-xs flex justify-between items-center">
+                    <span className="font-medium text-slate-700 dark:text-gray-200">{c.student}</span>
+                    <span className="text-slate-500 dark:text-gray-400 font-bold">{c.instructorInitials}</span>
+                  </div>
+                </div>
+              )) : <p className="text-xs text-slate-500 dark:text-gray-400 italic text-center py-4">Nenhuma aula hoje.</p>}
+            </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
-            {classes.map((cls) => (
-              <ScheduleItem key={cls.id} item={cls} />
-            ))}
+          {/* Birthdays */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4"><Cake size={16} /> Aniversariantes do Mês</h3>
+            <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+              {monthlyBirthdays.length > 0 ? monthlyBirthdays.map(s => (
+                <div key={s.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-bold text-sky-400 text-xs">{s.initials}</div>
+                    <span className="font-medium text-slate-700 dark:text-gray-200 text-sm">{s.name}</span>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500 dark:text-gray-400 bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-md">{new Date(s.birthDate!).getUTCDate()} / {currentDate.getMonth()+1}</span>
+                </div>
+              )) : <p className="text-xs text-slate-500 dark:text-gray-400 italic text-center py-4">Nenhum aniversariante em Dezembro.</p>}
+            </div>
           </div>
         </div>
       </div>

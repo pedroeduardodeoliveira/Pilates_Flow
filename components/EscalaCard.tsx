@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { AgendaItem } from '../types';
+import { EscalaItem } from '../types';
 
-interface AgendaCardProps {
-  item: AgendaItem;
+interface EscalaCardProps {
+  item: EscalaItem;
 }
 
-const AgendaCard: React.FC<AgendaCardProps> = ({ item }) => {
+const EscalaCard: React.FC<EscalaCardProps> = ({ item }) => {
   const colorMap = {
     orange: { bg: 'bg-orange-500', dot: 'bg-indigo-500' },
     blue: { bg: 'bg-blue-600', dot: 'bg-sky-500' },
@@ -26,18 +26,18 @@ const AgendaCard: React.FC<AgendaCardProps> = ({ item }) => {
         <span className="text-[11px] font-bold text-white truncate">{item.instructor}</span>
       </div>
       
-      {/* Body com Aluno */}
+      {/* Body com Aparelho */}
       <div className="p-2 flex items-center justify-between gap-2 bg-white dark:bg-transparent flex-1">
         <div className="flex items-center gap-1.5 min-w-0">
           <div className={`w-2 h-2 rounded-full ${theme.dot}`}></div>
-          <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate">{item.student}</span>
+          <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate">{item.equipment}</span>
         </div>
         <button className="text-[10px] text-sky-600 dark:text-sky-500 hover:text-sky-400 font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          Remarcar
+          Ajustar
         </button>
       </div>
     </div>
   );
 };
 
-export default AgendaCard;
+export default EscalaCard;

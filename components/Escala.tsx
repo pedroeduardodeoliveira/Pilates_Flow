@@ -1,12 +1,12 @@
 
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { ChevronLeft, ChevronRight, Users, Clock, Check } from 'lucide-react';
-import AgendaCard from './AgendaCard';
-import { AgendaItem, Instructor } from '../types';
-import { agendaItemsData } from '../mockData';
+import { ChevronLeft, ChevronRight, Users, Clock, Check, Box } from 'lucide-react';
+import EscalaCard from './EscalaCard';
+import { EscalaItem, Instructor } from '../types';
+import { escalaItemsData } from '../mockData';
 
-const Agenda: React.FC = () => {
+const Escala: React.FC = () => {
   const { state } = useContext(AppContext);
   const { instructors } = state;
   
@@ -16,9 +16,8 @@ const Agenda: React.FC = () => {
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const appointments: AgendaItem[] = agendaItemsData;
+  const escalaItems: EscalaItem[] = escalaItemsData;
 
-  // Fecha o dropdown ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -35,8 +34,8 @@ const Agenda: React.FC = () => {
     return `${hour.toString().padStart(2, '0')}:00`;
   });
 
-  const getFilteredAppointments = (time: string, dayIdx: number) => {
-    return appointments.filter(a => {
+  const getFilteredEscala = (time: string, dayIdx: number) => {
+    return escalaItems.filter(a => {
       const matchTime = a.time === time;
       const matchDay = a.day === dayIdx;
       const matchInstructor = selectedInstructor ? a.instructor === selectedInstructor : true;
@@ -63,7 +62,7 @@ const Agenda: React.FC = () => {
 
   const renderDaily = () => {
     const dayOfWeek = currentDate.getDay();
-    const dayIdx = dayOfWeek === 0 ? 5 : dayOfWeek - 1; 
+    const dayIdx = dayOfWeek === 0 ? 5 : dayOfWeek - 1;
 
     return (
       <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -73,8 +72,8 @@ const Agenda: React.FC = () => {
             <span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span>
           </div>
           <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex items-center">
-            <Clock className="text-sky-500 mr-2" size={16} />
-            <h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Cronograma do Dia</h3>
+            <Box className="text-sky-500 mr-2" size={16} />
+            <h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Distribuição de Aparelhos</h3>
           </div>
           {timeSlots.map((time) => (
             <React.Fragment key={time}>
@@ -83,12 +82,12 @@ const Agenda: React.FC = () => {
               </div>
               <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {getFilteredAppointments(time, dayIdx).map((item) => (
-                    <AgendaCard key={item.id} item={item} />
+                  {getFilteredEscala(time, dayIdx).map((item) => (
+                    <EscalaCard key={item.id} item={item} />
                   ))}
-                  {getFilteredAppointments(time, dayIdx).length === 0 && (
+                  {getFilteredEscala(time, dayIdx).length === 0 && (
                     <div className="h-full border border-dashed border-slate-200 dark:border-gray-700 rounded-xl flex items-center justify-center text-slate-400 dark:text-gray-600 text-xs italic">
-                      Livre
+                      Nenhum aparelho alocado
                     </div>
                   )}
                 </div>
@@ -149,8 +148,8 @@ const Agenda: React.FC = () => {
                   {[0, 1, 2, 3, 4, 5].map((dayIdx) => (
                     <div key={`${time}-${dayIdx}`} className="p-1.5 border-b border-slate-200 dark:border-gray-800 min-h-[100px] relative transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5">
                       <div className="flex flex-col gap-1.5 h-full">
-                        {getFilteredAppointments(time, dayIdx).map((item) => (
-                          <AgendaCard key={item.id} item={item} />
+                        {getFilteredEscala(time, dayIdx).map((item) => (
+                          <EscalaCard key={item.id} item={item} />
                         ))}
                       </div>
                     </div>
@@ -202,7 +201,7 @@ const Agenda: React.FC = () => {
                 {day.date}
               </span>
               <div className="hidden md:flex flex-wrap gap-1 mt-1">
-                {day.isCurrentMonth && appointments.filter(a => a.day === (day.fullDate.getDay() - 1)).slice(0, 4).map(a => (
+                {day.isCurrentMonth && escalaItems.filter(a => a.day === (day.fullDate.getDay() - 1)).slice(0, 4).map(a => (
                   <div key={a.id} className={`h-1.5 w-1.5 rounded-full ${
                     a.color === 'orange' ? 'bg-orange-500' : a.color === 'blue' ? 'bg-blue-600' : a.color === 'pink' ? 'bg-rose-500' : 'bg-emerald-500'
                   }`} />
@@ -259,7 +258,7 @@ const Agenda: React.FC = () => {
               }`}
             >
               <Users size={16} className={selectedInstructor ? 'text-sky-500' : 'text-gray-500 dark:text-gray-400'} />
-              <span className="font-medium">{selectedInstructor || 'Todos Instrutores'}</span>
+              <span className="font-medium">{selectedInstructor || 'Filtrar por Instrutor'}</span>
               <ChevronRight size={14} className={`transition-transform duration-200 ${isInstructorOpen ? '-rotate-90' : 'rotate-90 text-gray-500'}`} />
             </button>
 
@@ -269,7 +268,7 @@ const Agenda: React.FC = () => {
                   onClick={() => { setSelectedInstructor(null); setIsInstructorOpen(false); }}
                   className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sky-500 transition-colors"
                 >
-                  <span>Todos os Instrutores</span>
+                  <span>Ver Escala Global</span>
                   {!selectedInstructor && <Check size={14} className="text-sky-500" />}
                 </button>
                 <div className="h-[1px] bg-slate-200 dark:bg-gray-800 mx-2 my-1"></div>
@@ -280,7 +279,7 @@ const Agenda: React.FC = () => {
                     className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sky-500 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${instr.avatarColor.replace('bg-', 'bg-')}`}></div>
+                      <div className={`w-2 h-2 rounded-full ${instr.avatarColor}`}></div>
                       <span>{instr.name}</span>
                     </div>
                     {selectedInstructor === instr.name && <Check size={14} className="text-sky-500" />}
@@ -322,4 +321,4 @@ const Agenda: React.FC = () => {
   );
 };
 
-export default Agenda;
+export default Escala;

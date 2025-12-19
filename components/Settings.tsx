@@ -1,114 +1,174 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { AppContext } from '../AppContext';
+import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle } from 'lucide-react';
 
-interface SettingsProps {
-  notify: (msg: string) => void;
-}
+const Settings: React.FC = () => {
+  const { state, dispatch } = useContext(AppContext);
+  const { settings } = state;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const debounceTimeout = useRef<number | null>(null);
 
-const Settings: React.FC<SettingsProps> = ({ notify }) => {
-  const [appName, setAppName] = useState('Pilates Flow');
-
-  const handleSave = (field: string) => {
-    notify(`Configuração "${field}" salva com sucesso.`);
+  const showSaveSuccess = () => {
+    setSaveSuccess(true);
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = window.setTimeout(() => {
+        setSaveSuccess(false);
+    }, 2000);
   };
 
-  const planRows = [
-    { label: 'Valor para 1 aula por semana', value: '150' },
-    { label: 'Valor para 2 aulas por semana', value: '250' },
-    { label: 'Valor para 3 aulas por semana', value: '320' },
-    { label: 'Valor para 4 aulas por semana', value: '380' },
-    { label: 'Valor para 5 aulas por semana', value: '420' },
-  ];
+  const handleSettingsChange = (updatedSettings: Partial<typeof settings>) => {
+    dispatch({ type: 'UPDATE_SETTINGS', payload: updatedSettings });
+    showSaveSuccess();
+  };
+  
+  const handlePlanChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const newPlans = [...settings.plans];
+    newPlans[index] = { ...newPlans[index], value: e.target.value };
+    handleSettingsChange({ plans: newPlans });
+  };
+  
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleSettingsChange({ logo: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Limpa o timeout quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+        if(debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    }
+  }, []);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-10">
-      <div className="bg-[#161b26] border border-gray-800/50 rounded-2xl p-8">
-        <div className="flex justify-between items-start mb-6">
-          <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider">Identidade Visual</h3>
-          <button 
-            onClick={() => handleSave("Identidade Visual")}
-            className="text-xs bg-sky-500/10 text-sky-500 font-bold px-4 py-1.5 rounded-lg hover:bg-sky-500/20 transition-all"
-          >
-            Salvar Nome
-          </button>
-        </div>
-        
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-500">Nome do Aplicativo</label>
-            <input 
-              type="text" 
-              value={appName}
-              onChange={(e) => setAppName(e.target.value)}
-              className="w-full md:w-[400px] bg-[#242b3d]/50 border border-gray-800/80 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-sky-500/50"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <label className="text-xs font-medium text-gray-500 block">Logo do Aplicativo</label>
-            <button 
-              onClick={() => notify("Abrindo seletor de arquivos...")}
-              className="bg-gray-700/30 hover:bg-gray-700/50 border border-gray-700/50 text-gray-300 px-6 py-2 rounded-lg text-xs font-bold transition-all"
-            >
-              Enviar Logo
-            </button>
-            <p className="text-[10px] text-gray-500">Recomendado: imagem quadrada, como PNG ou SVG.</p>
-          </div>
-        </div>
+    <div className="pt-8 pb-24">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-xl font-bold text-slate-800 dark:text-gray-100 uppercase tracking-tighter">Ajustes Gerais</h1>
+         {saveSuccess && (
+            <div className="flex items-center gap-2 text-emerald-500 text-xs font-bold animate-in fade-in">
+              <CheckCircle size={14} />
+              <span>Salvo!</span>
+            </div>
+          )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-[#161b26] border border-gray-800/50 rounded-2xl p-8">
-          <div className="flex justify-between items-center mb-6 border-b border-gray-800/50 pb-4">
-            <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider">Configuração de Planos</h3>
-            <button onClick={() => handleSave("Planos")} className="text-xs text-emerald-500 font-bold">Salvar Planos</button>
-          </div>
-          
-          <div className="space-y-4">
-            {planRows.map((row, idx) => (
-              <div key={idx} className="space-y-2">
-                <label className="text-xs font-medium text-gray-500">{row.label}</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500">R$</span>
-                  <input 
-                    type="text" 
-                    defaultValue={row.value}
-                    className="w-full bg-[#242b3d]/50 border border-gray-800/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-sky-500/50 font-medium"
-                  />
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Coluna Esquerda: Informações do Estúdio */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-12 h-12 rounded-lg bg-sky-500/10 flex items-center justify-center overflow-hidden border border-sky-500/20`}>
+                {settings.logo ? <img src={settings.logo} className="w-full h-full object-cover" /> : <Image size={24} className="text-sky-500" />}
               </div>
-            ))}
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-gray-100">{settings.appName}</h3>
+                <p className="text-xs text-slate-500 dark:text-gray-400">Perfil do Estúdio</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-gray-400 leading-relaxed">
+              Aqui você personaliza a identidade, os planos e as regras de negócio do seu estúdio. As alterações são salvas automaticamente.
+            </p>
           </div>
         </div>
 
-        <div className="bg-[#161b26] border border-gray-800/50 rounded-2xl p-8">
-          <div className="flex justify-between items-center mb-6 border-b border-gray-800/50 pb-4">
-            <h3 className="text-sm font-bold text-gray-100 uppercase tracking-wider">Comissão e Alertas</h3>
-            <button onClick={() => handleSave("Alertas")} className="text-xs text-sky-500 font-bold">Salvar Tudo</button>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-gray-500">Comissão Padrão (para todos)</label>
-              <div className="relative">
+        {/* Coluna Direita: Configurações */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Identidade Visual */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
+              <Palette size={16} className="text-sky-500" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Identidade Visual</h3>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label>
                 <input 
                   type="text" 
-                  defaultValue="40"
-                  className="w-full bg-[#242b3d]/50 border border-gray-800/80 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-sky-500/50 text-right pr-10 font-medium"
+                  value={settings.appName}
+                  onChange={(e) => handleSettingsChange({ appName: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500"
                 />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500">%</span>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Logo</label>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 bg-slate-50 dark:bg-gray-800 border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-sky-500 rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-gray-400 font-medium transition-all"
+                >
+                  <UploadCloud size={16} />
+                  {settings.logo ? 'Alterar Logo' : 'Enviar Logo'}
+                </button>
+                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoChange} />
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-gray-500">Alertar vencimento com antecedência de</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  defaultValue="7"
-                  className="w-full bg-[#242b3d]/50 border border-gray-800/80 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-sky-500/50 text-right pr-14 font-medium"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500">dias</span>
+          </div>
+          
+          {/* Financeiro */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
+              <DollarSign size={16} className="text-emerald-500" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Financeiro</h3>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {settings.plans.map((plan, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">{plan.label}</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">R$</span>
+                      <input 
+                        type="number" 
+                        value={plan.value}
+                        onChange={(e) => handlePlanChange(e, idx)}
+                        className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-gray-800">
+                 <div className="space-y-1.5 max-w-xs">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Comissão Padrão (Instrutores)</label>
+                    <div className="relative">
+                       <input 
+                         type="number" 
+                         value={settings.commission}
+                         onChange={(e) => handleSettingsChange({ commission: e.target.value })}
+                         className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pr-12 pl-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium text-right"
+                       />
+                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">%</span>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Sistema */}
+          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
+              <Bell size={16} className="text-amber-500" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Sistema & Alertas</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-1.5 max-w-xs">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Alertar vencimento com antecedência de</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    value={settings.alertDays}
+                    onChange={(e) => handleSettingsChange({ alertDays: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pr-16 pl-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium text-right"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias</span>
+                </div>
               </div>
             </div>
           </div>
