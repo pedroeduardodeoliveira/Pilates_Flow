@@ -1,5 +1,4 @@
 
-// Fix: Import React to resolve 'Cannot find namespace React' errors on ReactNode types.
 import React from 'react';
 
 export interface NavItem {
@@ -58,7 +57,6 @@ export interface Student {
   schedule: string[];
   instructor: string;
   phone: string;
-  // Novos campos adicionados
   birthDate?: string;
   cpf?: string;
   regDate?: string;
@@ -83,11 +81,31 @@ export interface Instructor {
   phone: string;
   specialties: string;
   avatarColor: string;
+  cpf?: string;
+  password?: string;
+  birthDate?: string;
+  regDate?: string;
+  image?: string | null;
+  address?: {
+    cep: string;
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+  };
   schedule?: string[];
   workingDays?: string[];
   workStart?: string;
   workEnd?: string;
   classDuration?: number;
+}
+
+export interface UserSession {
+  id: string;
+  name: string;
+  role: 'admin' | 'instructor';
+  avatar?: string;
 }
 
 export interface Room {

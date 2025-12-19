@@ -1,5 +1,6 @@
+
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem } from './types';
+import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession } from './types';
 import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
 
 // --- TIPOS ---
@@ -25,6 +26,7 @@ interface SettingsData {
 
 interface AppState {
   isAuthenticated: boolean;
+  user: UserSession | null;
   students: Student[];
   instructors: Instructor[];
   rooms: Room[];
@@ -48,7 +50,7 @@ type Action =
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' }
-  | { type: 'LOGIN' }
+  | { type: 'LOGIN'; payload: UserSession }
   | { type: 'LOGOUT' };
 
 
@@ -86,6 +88,7 @@ const initialSettings: SettingsData = {
 
 const initialState: AppState = {
   isAuthenticated: false,
+  user: null,
   students: mockStudentsData,
   instructors: mockInstructorsData,
   rooms: mockRoomsData,
@@ -123,9 +126,9 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'TOGGLE_THEME':
       return { ...state, settings: { ...state.settings, isDarkMode: !state.settings.isDarkMode } };
     case 'LOGIN':
-      return { ...state, isAuthenticated: true };
+      return { ...state, isAuthenticated: true, user: action.payload };
     case 'LOGOUT':
-      return { ...state, isAuthenticated: false, activeTab: 'painel' };
+      return { ...state, isAuthenticated: false, user: null, activeTab: 'painel' };
     default:
       return state;
   }

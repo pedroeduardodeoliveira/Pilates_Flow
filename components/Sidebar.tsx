@@ -1,3 +1,4 @@
+
 import React, { useContext } from 'react';
 import { 
   LayoutGrid, 
@@ -12,7 +13,10 @@ import {
   Settings,
   LogOut,
   X,
-  LifeBuoy
+  LifeBuoy,
+  UserCircle,
+  ShieldCheck,
+  User
 } from 'lucide-react';
 import { AppContext } from '../AppContext';
 
@@ -27,17 +31,24 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isDarkMode, toggleTheme, isOpen, setIsOpen }) => {
-  const { dispatch } = useContext(AppContext);
+  const { state, dispatch } = useContext(AppContext);
+  const { user, instructors } = state;
 
+  const isAdmin = user?.role === 'admin';
+  
+  // Busca os dados completos do instrutor logado para pegar a foto
+  const currentUserData = !isAdmin ? instructors.find(i => i.id === user?.id) : null;
+
+  // Navegação filtrada por Role (Removido 'perfil' daqui)
   const mainNav = [
-    { id: 'painel', label: 'Painel', icon: <LayoutGrid size={20} /> },
-    { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} /> },
-    { id: 'escala', label: 'Escala', icon: <Layers size={20} /> },
-    { id: 'alunos', label: 'Alunos', icon: <Users size={20} /> },
-    { id: 'instrutores', label: 'Instrutores', icon: <GraduationCap size={20} /> },
-    { id: 'sala', label: 'Sala / Aparelhos', icon: <Dumbbell size={20} /> },
-    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={20} /> },
-  ];
+    { id: 'painel', label: 'Painel', icon: <LayoutGrid size={20} />, visible: true },
+    { id: 'agenda', label: 'Agenda', icon: <Calendar size={20} />, visible: true },
+    { id: 'escala', label: 'Escala', icon: <Layers size={20} />, visible: true },
+    { id: 'alunos', label: 'Alunos', icon: <Users size={20} />, visible: true },
+    { id: 'instrutores', label: 'Instrutores', icon: <GraduationCap size={20} />, visible: isAdmin },
+    { id: 'sala', label: 'Sala / Aparelhos', icon: <Dumbbell size={20} />, visible: isAdmin },
+    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={20} />, visible: isAdmin },
+  ].filter(item => item.visible);
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
@@ -45,13 +56,30 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
 
   return (
     <aside className={`fixed left-0 top-0 h-screen w-72 bg-white dark:bg-[#0d121d] border-r border-slate-200 dark:border-gray-800 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-      {/* Brand & Close button */}
+      {/* Brand & User Info */}
       <div className="p-6 mb-4 flex justify-between items-start">
-        <div>
+        <div className="w-full">
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-2xl font-bold text-sky-500">{appName}</h2>
           </div>
-          <p className="text-xs text-slate-400 dark:text-gray-500 uppercase tracking-widest font-medium">Gestão de Estúdio</p>
+          
+          {/* SEÇÃO DO USUÁRIO LOGADO COM FOTO */}
+          <div className="mt-4 p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-gray-800 flex items-center gap-3">
+             <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-gray-700 ${isAdmin ? 'bg-sky-500' : (currentUserData?.avatarColor || 'bg-slate-500')}`}>
+                {isAdmin ? (
+                  <ShieldCheck size={20} className="text-white" />
+                ) : currentUserData?.image ? (
+                  <img src={currentUserData.image} alt="Perfil" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold text-xs">{currentUserData?.initials || user?.name?.substring(0,2).toUpperCase()}</span>
+                )}
+             </div>
+             <div className="min-w-0">
+                <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-widest font-bold mb-0.5">Logado como:</p>
+                <p className="text-xs font-bold text-slate-700 dark:text-gray-200 truncate">{user?.name}</p>
+                <p className="text-[9px] text-sky-500 font-bold uppercase mt-0.5">{isAdmin ? 'Administrador' : 'Instrutor'}</p>
+             </div>
+          </div>
         </div>
         <button onClick={() => setIsOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-rose-500">
           <X size={24} />
@@ -88,17 +116,33 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
           <span className="text-[15px] font-medium">{isDarkMode ? 'Modo Claro' : 'Modo Escuro'}</span>
         </button>
         
-        <button 
-          onClick={() => setActiveTab('configuracoes')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
-            activeTab === 'configuracoes'
-              ? 'bg-sky-500/10 text-sky-600 dark:text-sky-500 shadow-sm' 
-              : 'text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-gray-200'
-          }`}
-        >
-          <span><Settings size={20} /></span>
-          <span className="text-[15px] font-medium">Configurações</span>
-        </button>
+        {isAdmin && (
+          <button 
+            onClick={() => setActiveTab('configuracoes')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+              activeTab === 'configuracoes'
+                ? 'bg-sky-500/10 text-sky-600 dark:text-sky-500 shadow-sm' 
+                : 'text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-gray-200'
+            }`}
+          >
+            <span><Settings size={20} /></span>
+            <span className="text-[15px] font-medium">Configurações</span>
+          </button>
+        )}
+
+        {!isAdmin && (
+          <button 
+            onClick={() => setActiveTab('perfil')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group ${
+              activeTab === 'perfil'
+                ? 'bg-sky-500/10 text-sky-600 dark:text-sky-500 shadow-sm' 
+                : 'text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-gray-200'
+            }`}
+          >
+            <span><UserCircle size={20} /></span>
+            <span className="text-[15px] font-medium">Meu Perfil</span>
+          </button>
+        )}
         
         <a
           href="https://wa.me/qr/NPA2GMI23V4PJ1"

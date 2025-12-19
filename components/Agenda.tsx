@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { ChevronLeft, ChevronRight, Users, Clock, Check, Plus, AlertTriangle, X } from 'lucide-react';
@@ -6,12 +7,15 @@ import { AgendaItem } from '../types';
 
 const Agenda: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, students, agenda: appointments, escala: escalaItems } = state;
+  const { instructors, students, agenda: appointments, escala: escalaItems, user } = state;
+
+  const isAdmin = user?.role === 'admin';
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
   const [isInstructorOpen, setIsInstructorOpen] = useState(false);
-  const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
+  // Se for instrutor, já começa filtrado por ele mesmo
+  const [selectedInstructor, setSelectedInstructor] = useState<string | null>(!isAdmin ? user?.name || null : null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,7 +45,15 @@ const Agenda: React.FC = () => {
     const appointmentsInSlot = appointments.filter(a => {
       const matchTime = a.time === time;
       const matchDay = a.day === dayIdx;
-      const matchInstructor = selectedInstructor ? a.instructor === selectedInstructor : true;
+      
+      // Regra: Instrutor só vê o dele. Admin pode ver todos ou filtrar.
+      let matchInstructor = true;
+      if (!isAdmin) {
+          matchInstructor = a.instructor === user?.name;
+      } else if (selectedInstructor) {
+          matchInstructor = a.instructor === selectedInstructor;
+      }
+
       return matchTime && matchDay && matchInstructor;
     });
 
@@ -78,8 +90,11 @@ const Agenda: React.FC = () => {
     if(item) {
         setFormData(item);
     } else {
-        const defaultInstructor = instructors[0];
-        const defaultStudent = students.find(s => s.status === 'Ativo');
+        const defaultInstructor = !isAdmin ? instructors.find(i => i.name === user?.name) : instructors[0];
+        const defaultStudent = students.find(s => {
+            if (!isAdmin) return s.status === 'Ativo' && s.instructor === user?.name;
+            return s.status === 'Ativo';
+        });
         setFormData({
             id: '',
             time: time || '07:00',
@@ -275,7 +290,11 @@ const Agenda: React.FC = () => {
                 {day.date}
               </span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {day.isCurrentMonth && appointments.filter(a => a.day === (day.fullDate.getDay() === 0 ? 6 : day.fullDate.getDay() - 1)).slice(0, 4).map(a => (
+                {day.isCurrentMonth && appointments.filter(a => {
+                    const matchDay = a.day === (day.fullDate.getDay() === 0 ? 6 : day.fullDate.getDay() - 1);
+                    if (!isAdmin) return matchDay && a.instructor === user?.name;
+                    return matchDay;
+                }).slice(0, 4).map(a => (
                   <div key={a.id} className={`h-1.5 w-1.5 rounded-full ${
                     a.color === 'orange' ? 'bg-orange-500' : a.color === 'blue' ? 'bg-blue-600' : a.color === 'pink' ? 'bg-rose-500' : 'bg-emerald-500'
                   }`} title={`${a.student} - ${a.instructor}`} />
@@ -318,20 +337,22 @@ const Agenda: React.FC = () => {
             <button onClick={() => navigate(1)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-md text-slate-500 dark:text-gray-400 transition-colors"><ChevronRight size={18} /></button>
           </div>
 
-          <div className="relative" ref={dropdownRef}>
-            <button onClick={() => setIsInstructorOpen(!isInstructorOpen)} className={`flex w-full justify-between items-center gap-2 bg-white dark:bg-gray-900/40 border px-4 py-2.5 rounded-lg text-sm transition-all ${selectedInstructor ? 'border-sky-500/50 text-sky-500' : 'border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300 hover:border-slate-300 dark:hover:border-gray-700'}`}>
-              <Users size={16} className={selectedInstructor ? 'text-sky-500' : 'text-gray-500 dark:text-gray-400'} />
-              <span className="font-medium">{selectedInstructor || 'Todos Instrutores'}</span>
-              <ChevronRight size={14} className={`transition-transform duration-200 ${isInstructorOpen ? '-rotate-90' : 'rotate-90 text-gray-500'}`} />
-            </button>
-            {isInstructorOpen && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-2xl z-[60] overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-150">
-                <button onClick={() => { setSelectedInstructor(null); setIsInstructorOpen(false); }} className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sky-500 transition-colors"><span>Todos os Instrutores</span>{!selectedInstructor && <Check size={14} className="text-sky-500" />}</button>
-                <div className="h-[1px] bg-slate-200 dark:bg-gray-800 mx-2 my-1"></div>
-                {instructors.map(instr => (<button key={instr.id} onClick={() => { setSelectedInstructor(instr.name); setIsInstructorOpen(false); }} className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sky-500 transition-colors"><div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${instr.avatarColor}`}></div><span>{instr.name}</span></div>{selectedInstructor === instr.name && <Check size={14} className="text-sky-500" />}</button>))}
-              </div>
-            )}
-          </div>
+          {isAdmin && (
+            <div className="relative" ref={dropdownRef}>
+                <button onClick={() => setIsInstructorOpen(!isInstructorOpen)} className={`flex w-full justify-between items-center gap-2 bg-white dark:bg-gray-900/40 border px-4 py-2.5 rounded-lg text-sm transition-all ${selectedInstructor ? 'border-sky-500/50 text-sky-500' : 'border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300 hover:border-slate-300 dark:hover:border-gray-700'}`}>
+                <Users size={16} className={selectedInstructor ? 'text-sky-500' : 'text-gray-500 dark:text-gray-400'} />
+                <span className="font-medium">{selectedInstructor || 'Todos Instrutores'}</span>
+                <ChevronRight size={14} className={`transition-transform duration-200 ${isInstructorOpen ? '-rotate-90' : 'rotate-90 text-gray-500'}`} />
+                </button>
+                {isInstructorOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-2xl z-[60] overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-150">
+                    <button onClick={() => { setSelectedInstructor(null); setIsInstructorOpen(false); }} className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sky-500 transition-colors"><span>Todos os Instrutores</span>{!selectedInstructor && <Check size={14} className="text-sky-500" />}</button>
+                    <div className="h-[1px] bg-slate-200 dark:bg-gray-800 mx-2 my-1"></div>
+                    {instructors.map(instr => (<button key={instr.id} onClick={() => { setSelectedInstructor(instr.name); setIsInstructorOpen(false); }} className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-sky-500 transition-colors"><div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${instr.avatarColor}`}></div><span>{instr.name}</span></div>{selectedInstructor === instr.name && <Check size={14} className="text-sky-500" />}</button>))}
+                </div>
+                )}
+            </div>
+          )}
         </div>
         <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">
           {viewOptions.map(v => <button key={v.value} onClick={() => setView(v.value as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v.value ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300'}`}>{v.label}</button>)}
@@ -349,8 +370,22 @@ const Agenda: React.FC = () => {
             <div className="p-6 space-y-4">
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label><select value={formData.day} onChange={e => setFormData({...formData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aluno</label><select value={formData.student} onChange={e => setFormData({...formData, student: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{students.filter(s => s.status === 'Ativo').map(s => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label><select value={formData.instructor} onChange={e => setFormData({...formData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aluno</label>
+              <select value={formData.student} onChange={e => setFormData({...formData, student: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">
+                {students.filter(s => {
+                    if (!isAdmin) return s.status === 'Ativo' && s.instructor === user?.name;
+                    return s.status === 'Ativo';
+                }).map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+              </select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label>
+              <select 
+                value={formData.instructor} 
+                onChange={e => setFormData({...formData, instructor: e.target.value})} 
+                disabled={!isAdmin}
+                className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm disabled:opacity-50"
+              >
+                {instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}
+              </select></div>
             </div>
             <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>

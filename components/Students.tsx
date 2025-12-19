@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 import { AppContext } from '../AppContext';
 import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, MapPin, Calendar, CreditCard, Info, Camera, Clock, PlusCircle, AlertTriangle, Filter, Layers, Activity } from 'lucide-react';
@@ -7,7 +8,9 @@ import * as XLSX from 'xlsx';
 
 const Students: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { students: mockStudents, instructors, agenda } = state;
+  const { students: mockStudents, instructors, agenda, user } = state;
+
+  const isAdmin = user?.role === 'admin';
 
   const setMockStudents = (updater: (prev: Student[]) => Student[]) => {
       const newStudents = updater(mockStudents);
@@ -61,7 +64,7 @@ const Students: React.FC = () => {
     expiryDate: '', 
     planType: '1x na semana', 
     level: 'Iniciante' as any, 
-    instructor: '', 
+    instructor: !isAdmin ? user?.name || '' : '', 
     schedule: [] as string[]
   };
 
@@ -243,6 +246,9 @@ const Students: React.FC = () => {
   };
 
   const filteredStudents = mockStudents.filter(s => {
+    // Regra principal: Instrutor só vê os próprios alunos
+    if (!isAdmin && s.instructor !== user?.name) return false;
+
     const mSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.id.toLowerCase().includes(searchTerm.toLowerCase());
     const mStatus = statusFilter === 'Todos' || s.status === statusFilter;
     const mLevel = levelFilter === 'Todos' || s.level === levelFilter;
@@ -291,7 +297,9 @@ const Students: React.FC = () => {
 
             <FilterDropdown label="Status" value={statusFilter} icon={Activity} isOpen={isStatusOpen} setIsOpen={setIsStatusOpen} containerRef={statusRef} onSelect={setStatusFilter} options={[{ label: 'Todos Status', value: 'Todos' }, { label: 'Alunos Ativos', value: 'Ativo' }, { label: 'Alunos Inativos', value: 'Inativo' }]} />
             <FilterDropdown label="Nível" value={levelFilter} icon={Layers} isOpen={isLevelOpen} setIsOpen={setIsLevelOpen} containerRef={levelRef} onSelect={setLevelFilter} options={[{ label: 'Todos Níveis', value: 'Todos' }, { label: 'Iniciante', value: 'Iniciante' }, { label: 'Intermediário', value: 'Intermediário' }, { label: 'Avançado', value: 'Avançado' }]} />
-            <FilterDropdown label="Instrutor" value={selectedInstructor} icon={User} isOpen={isInstructorOpen} setIsOpen={setIsInstructorOpen} containerRef={instructorRef} onSelect={setSelectedInstructor} options={[{ label: 'Todos Instrutores', value: null }, ...instructorsList.map(i => ({ label: i, value: i }))]} />
+            {isAdmin && (
+              <FilterDropdown label="Instrutor" value={selectedInstructor} icon={User} isOpen={isInstructorOpen} setIsOpen={setIsInstructorOpen} containerRef={instructorRef} onSelect={setSelectedInstructor} options={[{ label: 'Todos Instrutores', value: null }, ...instructorsList.map(i => ({ label: i, value: i }))]} />
+            )}
           </div>
 
           <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
@@ -385,8 +393,19 @@ const Students: React.FC = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="space-y-4"><div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><CreditCard size={14} /> Contrato e Nível</div><div className="grid grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Tipo de Plano</label><select value={formData.planType} onChange={e => setFormData({...formData, planType: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[1,2,3,4,5,6].map(n => <option key={n} value={`${n}x na semana`}>{n}x na semana</option>)}</select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nível Técnica</label><select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value as any})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"><option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option></select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Próximo Vencimento</label><input type="date" value={formData.expiryDate} onChange={e => setFormData({...formData, expiryDate: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor Responsável</label><select value={formData.instructor} onChange={e => setFormData({...formData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"><option value="">Selecione...</option>{instructorsList.map(i => <option key={i} value={i}>{i}</option>)}</select></div></div></div>
-                <div className="space-y-4"><div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Clock size={14} /> Horários das Aulas</div><div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-4 space-y-4"><div className="flex gap-2"><select value={tempDay} onChange={e => setTempDay(e.target.value)} className="flex-1 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 dark:text-gray-300 outline-none focus:border-sky-500">{weekDays.map(d => <option key={d} value={d}>{d}</option>)}</select><input type="time" value={tempTime} onChange={e => setTempTime(e.target.value)} className="w-24 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 dark:text-gray-300 outline-none focus:border-sky-500" /><button onClick={addSchedule} className="w-10 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl flex items-center justify-center transition-colors"><PlusCircle size={20} /></button></div><div className="flex flex-wrap gap-2">{formData.schedule.length === 0 ? <p className="text-[10px] text-slate-500 dark:text-gray-400 italic py-2">Nenhum horário definido...</p> : formData.schedule.map((entry, idx) => (<div key={idx} className="bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 px-3 py-1.5 rounded-lg text-[10px] font-bold text-sky-500 flex items-center gap-2">{entry}<button onClick={() => removeSchedule(idx)} className="text-slate-400 dark:text-gray-400 hover:text-rose-500"><X size={12} /></button></div>))}</div></div></div>
+                <div className="space-y-4"><div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><CreditCard size={14} /> Contrato e Nível</div><div className="grid grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Tipo de Plano</label><select value={formData.planType} onChange={e => setFormData({...formData, planType: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[1,2,3,4,5,6].map(n => <option key={n} value={`${n}x na semana`}>{n}x na semana</option>)}</select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nível Técnica</label><select value={formData.level} onChange={e => setFormData({...formData, level: e.target.value as any})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"><option value="Iniciante">Iniciante</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option></select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Próximo Vencimento</label><input type="date" value={formData.expiryDate} onChange={e => setFormData({...formData, expiryDate: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div><div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor Responsável</label>
+                  <select 
+                    value={formData.instructor} 
+                    onChange={e => setFormData({...formData, instructor: e.target.value})} 
+                    disabled={!isAdmin}
+                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm disabled:opacity-50"
+                  >
+                    <option value="">Selecione...</option>
+                    {instructorsList.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
+                </div></div></div>
+                <div className="space-y-4"><div className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Clock size={14} /> Horários das Aulas</div><div className="bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl p-4 space-y-4"><div className="flex gap-2"><select value={tempDay} onChange={e => setTempDay(e.target.value)} className="flex-1 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 dark:text-gray-300 outline-none focus:border-sky-500">{weekDays.map(d => <option key={d} value={d}>{d}</option>)}</select><input type="time" value={tempTime} onChange={e => setTempTime(e.target.value)} className="w-24 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 dark:text-gray-300 outline-none focus:border-sky-500" /><button onClick={addSchedule} className="w-10 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-xl flex items-center justify-center transition-colors"><PlusCircle size={20} /></button></div><div className="flex flex-wrap gap-2">{formData.schedule.length === 0 ? <p className="text-[10px] text-slate-500 dark:text-gray-400 italic py-2">Nenhum horário definido...</p> : formData.schedule.map((entry, idx) => (<div key={idx} className="bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-700 px-3 py-1.5 rounded-lg text-[10px] font-bold text-sky-500 flex items-center gap-2">{entry}<button onClick={() => removeSchedule(idx)} className="text-slate-400 dark:text-gray-400 hover:text-rose-500"><X size={12} /></button></div>))}</div></div></div>
               </div>
             </div>
             <div className="p-8 border-t border-slate-100 dark:border-gray-800 flex justify-end gap-3 bg-white dark:bg-gray-900 rounded-b-3xl">

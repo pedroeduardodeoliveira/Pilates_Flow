@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, Phone, FileText, Camera, CreditCard, Info, AlertTriangle, MapPin, Calendar, Clock, Timer } from 'lucide-react';
@@ -54,7 +55,8 @@ const Instructors: React.FC = () => {
     workingDays: [] as string[],
     workStart: '07:00',
     workEnd: '21:00',
-    classDuration: 50
+    classDuration: 50,
+    password: ''
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -103,16 +105,17 @@ const Instructors: React.FC = () => {
       workStart: instructor.workStart || '07:00',
       workEnd: instructor.workEnd || '21:00',
       classDuration: instructor.classDuration || 50,
-      birthDate: '', 
-      cpf: '',
-      regDate: new Date().toISOString().split('T')[0],
-      cep: '',
-      street: '',
-      number: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      image: null,
+      birthDate: instructor.birthDate || '', 
+      cpf: instructor.cpf || '',
+      regDate: instructor.regDate || new Date().toISOString().split('T')[0],
+      cep: instructor.address?.cep || '',
+      street: instructor.address?.street || '',
+      number: instructor.address?.number || '',
+      neighborhood: instructor.address?.neighborhood || '',
+      city: instructor.address?.city || '',
+      state: instructor.address?.state || '',
+      image: instructor.image || null,
+      password: instructor.password || ''
     });
     calculateEarnings(instructor.name);
     setIsModalOpen(true);
@@ -237,32 +240,41 @@ const Instructors: React.FC = () => {
     if (!formData.name || cpfError) return;
     const initials = formData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
+    const instructorData = {
+      name: formData.name,
+      initials,
+      phone: formData.phone,
+      specialties: formData.specialties,
+      avatarColor: formData.avatarColor,
+      workingDays: formData.workingDays,
+      workStart: formData.workStart,
+      workEnd: formData.workEnd,
+      classDuration: formData.classDuration,
+      cpf: formData.cpf,
+      birthDate: formData.birthDate,
+      regDate: formData.regDate,
+      image: formData.image,
+      password: formData.password || '123456',
+      address: {
+        cep: formData.cep,
+        street: formData.street,
+        number: formData.number,
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        state: formData.state
+      }
+    };
+
     if (editingInstructorId) {
       setMockInstructors(prev => prev.map(i => i.id === editingInstructorId ? {
         ...i,
-        name: formData.name,
-        initials,
-        phone: formData.phone,
-        specialties: formData.specialties,
-        avatarColor: formData.avatarColor,
-        workingDays: formData.workingDays,
-        workStart: formData.workStart,
-        workEnd: formData.workEnd,
-        classDuration: formData.classDuration,
+        ...instructorData
       } : i));
     } else {
       const newInstructor: Instructor = {
         id: Math.random().toString(36).substring(2, 9),
-        name: formData.name,
-        initials,
-        phone: formData.phone,
-        specialties: formData.specialties,
-        avatarColor: formData.avatarColor,
         studentsCount: 0,
-        workingDays: formData.workingDays,
-        workStart: formData.workStart,
-        workEnd: formData.workEnd,
-        classDuration: formData.classDuration,
+        ...instructorData
       };
       setMockInstructors(prev => [newInstructor, ...prev]);
     }
@@ -468,7 +480,7 @@ const Instructors: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CEP</label>
-                    <input value={settings.address.cep} readOnly className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-500 dark:text-gray-400 outline-none text-sm" />
+                    <input value={formData.cep} onChange={e => setFormData({...formData, cep: maskCEP(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="00000-000" maxLength={9} />
                   </div>
                   <div className="md:col-span-4 space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Rua / Logradouro</label>

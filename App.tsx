@@ -7,6 +7,7 @@ import Agenda from './components/Agenda';
 import Escala from './components/Escala';
 import Students from './components/Students';
 import Instructors from './components/Instructors';
+import InstructorProfile from './components/InstructorProfile';
 import RoomsAndEquipment from './components/RoomsAndEquipment';
 import Financial from './components/Financial';
 import Settings from './components/Settings';
@@ -34,6 +35,7 @@ const App: React.FC = () => {
     escala: 'Escala de Aparelhos',
     alunos: 'Gestão de Alunos',
     instrutores: 'Corpo Docente',
+    perfil: 'Meu Perfil Profissional',
     sala: 'Salas & Aparelhos',
     financeiro: 'Controle Financeiro',
     configuracoes: 'Ajustes Gerais',
@@ -55,6 +57,8 @@ const App: React.FC = () => {
         return <Students />;
       case 'instrutores':
         return <Instructors />;
+      case 'perfil':
+        return <InstructorProfile />;
       case 'sala':
         return <RoomsAndEquipment />;
       case 'financeiro':

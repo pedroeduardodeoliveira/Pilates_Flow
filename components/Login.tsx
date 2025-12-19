@@ -1,48 +1,75 @@
 import React, { useState, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { Fingerprint, Lock, LogIn, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Fingerprint, Lock, LogIn, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import NeuralNetworkBackground from './NeuralNetworkBackground';
 
 const Login: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { settings } = state;
+  const { settings, instructors } = state;
   const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Função para aplicar máscara de CPF (000.000.000-00)
   const maskCPF = (value: string) => {
     return value
-      .replace(/\D/g, '') // Remove tudo o que não é dígito
-      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto entre o terceiro e o quarto dígitos
-      .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto entre o sexto e o sétimo dígitos
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2') // Coloca hífen entre o nono e o décimo dígitos
-      .substring(0, 14); // Limita o tamanho
+      .replace(/\D/g, '')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      .substring(0, 14);
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const maskedValue = maskCPF(e.target.value);
     setCpf(maskedValue);
+    setError(null);
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulando um atraso de rede para UX
     setTimeout(() => {
-      dispatch({ type: 'LOGIN' });
+      const cleanCpf = cpf.replace(/\D/g, '');
+      
+      // Validação Admin (Hardcoded para exemplo)
+      if (cleanCpf === '00000000000' && password === 'admin123') {
+        dispatch({ 
+          type: 'LOGIN', 
+          payload: { id: 'admin', name: 'Administrador', role: 'admin' } 
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Validação Instrutor
+      const instructor = instructors.find(i => {
+        const iCpf = i.cpf?.replace(/\D/g, '');
+        // Se o instrutor não tem senha cadastrada, usamos '123456' como padrão
+        const iPass = i.password || '123456';
+        return iCpf === cleanCpf && iPass === password;
+      });
+
+      if (instructor) {
+        dispatch({ 
+          type: 'LOGIN', 
+          payload: { id: instructor.id, name: instructor.name, role: 'instructor' } 
+        });
+      } else {
+        setError('CPF ou senha inválidos. Tente novamente.');
+      }
+      
       setIsLoading(false);
-    }, 1000);
+    }, 1200);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0b0e14] px-4 py-12 relative overflow-hidden transition-colors duration-300">
-      {/* Fundo Animado Neural */}
       <NeuralNetworkBackground isDarkMode={settings.isDarkMode} />
 
-      {/* Elementos decorativos de fundo */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-sky-500/5 blur-[120px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/5 blur-[120px] rounded-full pointer-events-none"></div>
 
@@ -54,6 +81,13 @@ const Login: React.FC = () => {
 
         <div className="bg-white/80 dark:bg-gray-900/60 backdrop-blur-2xl border border-slate-200 dark:border-gray-800 rounded-3xl p-8 shadow-2xl shadow-slate-200/50 dark:shadow-none">
           <form onSubmit={handleLogin} className="space-y-6">
+            {error && (
+              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-3 rounded-xl text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-1">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 tracking-wider">CPF de Acesso</label>
               <div className="relative">
@@ -78,7 +112,7 @@ const Login: React.FC = () => {
                   type={showPassword ? 'text' : 'password'} 
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
                   placeholder="••••••••"
                   className="w-full bg-slate-50/50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl py-4 pl-12 pr-12 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 transition-colors"
                 />
@@ -86,25 +120,16 @@ const Login: React.FC = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 hover:text-sky-500 transition-colors focus:outline-none"
-                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between px-1">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 dark:border-gray-700 text-sky-500 focus:ring-sky-500" />
-                <span className="text-xs text-slate-500 dark:text-gray-400 group-hover:text-sky-500 transition-colors">Lembrar de mim</span>
-              </label>
-              <button type="button" className="text-xs font-bold text-sky-500 hover:text-sky-400 transition-colors">Esqueceu a senha?</button>
-            </div>
-
             <button 
               type="submit" 
               disabled={isLoading}
-              className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-4 rounded-2xl text-sm transition-all shadow-lg shadow-sky-600/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed group"
+              className="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-4 rounded-2xl text-sm transition-all shadow-lg shadow-sky-600/20 flex items-center justify-center gap-2 disabled:opacity-70 group"
             >
               {isLoading ? (
                 <Loader2 size={20} className="animate-spin" />
@@ -118,9 +143,9 @@ const Login: React.FC = () => {
           </form>
         </div>
 
-        <div className="mt-8 text-center relative z-10">
+        <div className="mt-12 text-center relative z-10">
           <p className="text-xs text-slate-400 dark:text-gray-600 font-medium tracking-tight">
-            © 2025 Powered by <span className="font-bold text-sky-500/80">COD3 Software Solution</span>
+            © 2025 Powered by <a href="https://cod3-ss.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-500 hover:underline">COD3 Software Solution</a>
           </p>
         </div>
       </div>
