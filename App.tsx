@@ -102,7 +102,7 @@ const App: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto h-screen lg:ml-72 relative custom-scrollbar">
         {impersonatingFrom && (
-            <div className="sticky top-0 z-50 bg-amber-500 text-white py-2 px-4 flex items-center justify-between gap-4 shadow-lg h-9">
+            <div className="sticky top-0 z-[70] bg-amber-500 text-white py-2 px-4 flex items-center justify-between gap-4 shadow-lg h-9">
                 <div className="flex items-center gap-2">
                     <ShieldQuestion size={16} />
                     <p className="text-xs font-bold">

@@ -1,17 +1,22 @@
 import React, { useContext, useState, useRef } from 'react';
 import { AppContext } from '../AppContext';
-import { LogOut, DollarSign, Users, Activity, Search, Plus, Settings2, ShieldQuestion, Trash2, X, AlertTriangle, Calendar, Award, Palette, Bell, UploadCloud, Image, Loader2, MapPin, FileText, CreditCard } from 'lucide-react';
+import { DollarSign, Users, Activity, Search, Plus, Settings2, ShieldQuestion, Trash2, X, AlertTriangle, Calendar, Award, Loader2, MapPin, FileText, CreditCard } from 'lucide-react';
 import NeuralNetworkBackground from './NeuralNetworkBackground';
+import SuperAdminSettings from './SuperAdminSettings';
+import SuperAdminSidebar from './SuperAdminSidebar';
+import MobileHeader from './MobileHeader';
 import { Client, License, StudioSettings, UserSession } from '../types';
 import { superAdminClients } from '../superAdminMockData';
 
 const SuperAdminDashboard: React.FC = () => {
     const { state, dispatch } = useContext(AppContext);
-    const { settings: appSettings, user } = state;
+    const { settings: appSettings, user, superAdminSettings } = state;
     const { isDarkMode } = appSettings;
 
     const [clients, setClients] = useState<Client[]>(superAdminClients);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeSuperAdminTab, setActiveSuperAdminTab] = useState('clients');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -23,7 +28,6 @@ const SuperAdminDashboard: React.FC = () => {
     const [isLoadingCep, setIsLoadingCep] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
-    // --- MASK HELPERS ---
     const maskPhone = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
     const maskCEP = (v: string) => v.replace(/\D/g, "").replace(/^(\d{5})(\d)/, "$1-$2");
     const maskCNPJ = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
@@ -40,6 +44,10 @@ const SuperAdminDashboard: React.FC = () => {
                 settings: { ...client.settings }
             });
         } else {
+            const trialDays = superAdminSettings.defaultTrialDays;
+            const expirationDate = new Date();
+            expirationDate.setDate(expirationDate.getDate() + trialDays);
+
             const defaultSettings: StudioSettings = {
               appName: 'Novo Estúdio', logo: null, phone: '', email: '',
               documentType: 'CNPJ', document: '',
@@ -53,7 +61,7 @@ const SuperAdminDashboard: React.FC = () => {
             };
             setFormData({
                 studioName: 'Novo Estúdio', adminName: '', licenseStatus: 'Teste', mrr: 0,
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                expiresAt: expirationDate.toISOString().split('T')[0],
                 settings: defaultSettings,
             });
         }
@@ -139,23 +147,52 @@ const SuperAdminDashboard: React.FC = () => {
     const statusStyles: { [key in Client['licenseStatus']]: string } = { 'Ativa': 'bg-emerald-500/10 text-emerald-500', 'Teste': 'bg-sky-500/10 text-sky-500', 'Expirada': 'bg-rose-500/10 text-rose-500', 'Pendente': 'bg-amber-500/10 text-amber-500' };
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-[#06080b] text-slate-800 dark:text-gray-200">
+        <div className="flex min-h-screen text-slate-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden relative bg-slate-50 dark:bg-[#0b0e14]">
             <NeuralNetworkBackground isDarkMode={isDarkMode} />
-            <header className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/60 backdrop-blur-xl border-b border-slate-200 dark:border-gray-800"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="flex justify-between items-center h-16"><div className="flex items-center gap-4"><div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center text-white font-bold">SA</div><div><h1 className="text-lg font-bold text-slate-800 dark:text-white">Super Admin</h1><p className="text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-widest">Painel de Gestão SaaS</p></div></div><div className="flex items-center gap-4"><span className="text-xs font-bold text-slate-600 dark:text-gray-300 hidden md:block">Bem-vindo, {user?.name}!</span><button onClick={handleLogout} className="flex items-center gap-2 bg-rose-500/10 text-rose-500 font-bold py-2 px-4 rounded-lg text-xs transition-all hover:bg-rose-500 hover:text-white"><LogOut size={14} /> Sair</button></div></div></div></header>
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Receita Mensal (MRR)</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{formatCurrency(summary.mrr)}</p></div><div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center"><DollarSign size={20}/></div></div></div><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Total de Clientes</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{summary.totalClients}</p></div><div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center"><Users size={20}/></div></div></div><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Assinaturas Ativas</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{summary.activeSubscriptions}</p></div><div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center"><Activity size={20}/></div></div></div></div>
-                <div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-2xl overflow-hidden"><div className="p-4 border-b border-slate-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4"><div className="relative w-full md:w-80"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="Buscar estúdio ou administrador..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl py-2 pl-10 pr-4 text-sm" /></div><button onClick={() => handleOpenModal(null)} className="w-full md:w-auto flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg"><Plus size={14} /> Novo Cliente</button></div>
-                    <div className="overflow-x-auto"><table className="w-full text-left"><thead className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-800"><tr><th className="px-6 py-4">Estúdio</th><th className="px-6 py-4">Status da Licença</th><th className="px-6 py-4">Expira em</th><th className="px-6 py-4 text-center">Alunos</th><th className="px-6 py-4 text-center">Instrutores</th><th className="px-6 py-4 text-right">Ações</th></tr></thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-gray-800">{filteredClients.map(client => (<tr key={client.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
-                            <td className="px-6 py-4"><p className="text-sm font-bold text-slate-800 dark:text-gray-100">{client.studioName}</p><p className="text-xs text-slate-500 dark:text-gray-400">{client.adminName}</p></td>
-                            <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${statusStyles[client.licenseStatus]}`}>{client.licenseStatus}</span></td>
-                            <td className="px-6 py-4 text-xs font-medium text-slate-600 dark:text-gray-300">{client.expiresAt}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.studentCount}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.instructorCount}</td>
-                            <td className="px-6 py-4"><div className="flex justify-end gap-2"><button onClick={() => handleOpenModal(client)} className="p-2 text-slate-400 hover:text-sky-500" title="Gerenciar"><Settings2 size={14}/></button><button onClick={() => handleImpersonate(client)} className="p-2 text-slate-400 hover:text-amber-500" title="Personificar"><ShieldQuestion size={14}/></button><button onClick={() => handleDeleteClick(client)} className="p-2 text-slate-400 hover:text-rose-500" title="Remover"><Trash2 size={14}/></button></div></td>
-                        </tr>))}</tbody>
-                    </table></div>
+            <SuperAdminSidebar
+                activeTab={activeSuperAdminTab}
+                setActiveTab={setActiveSuperAdminTab}
+                onLogout={handleLogout}
+                isOpen={isSidebarOpen}
+                setIsOpen={setIsSidebarOpen}
+            />
+            {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-40 lg:hidden" />}
+
+            <main className="flex-1 overflow-y-auto h-screen lg:ml-72 relative custom-scrollbar">
+                <MobileHeader
+                  pageTitle={activeSuperAdminTab === 'clients' ? 'Gestão de Clientes' : 'Configurações Globais'}
+                  onToggleSidebar={() => setIsSidebarOpen(true)}
+                  isImpersonating={false}
+                />
+                 <div className="hidden lg:flex justify-end items-center h-16 px-8">
+                    <div className="flex items-center gap-4">
+                       <span className="text-xs font-bold text-slate-600 dark:text-gray-300">Bem-vindo, {user?.name}!</span>
+                    </div>
+                 </div>
+
+                <div className="px-4 md:px-8 pb-8">
+                    {activeSuperAdminTab === 'clients' && (
+                        <div className="animate-in fade-in">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Receita Mensal (MRR)</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{formatCurrency(summary.mrr)}</p></div><div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center"><DollarSign size={20}/></div></div></div><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Total de Clientes</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{summary.totalClients}</p></div><div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center"><Users size={20}/></div></div></div><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Assinaturas Ativas</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{summary.activeSubscriptions}</p></div><div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center"><Activity size={20}/></div></div></div></div>
+                            <div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-2xl overflow-hidden"><div className="p-4 border-b border-slate-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4"><div className="relative w-full md:w-80"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="Buscar estúdio ou administrador..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl py-2 pl-10 pr-4 text-sm" /></div><button onClick={() => handleOpenModal(null)} className="w-full md:w-auto flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg"><Plus size={14} /> Novo Cliente</button></div>
+                                <div className="overflow-x-auto"><table className="w-full text-left"><thead className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-800"><tr><th className="px-6 py-4">Estúdio</th><th className="px-6 py-4">Status da Licença</th><th className="px-6 py-4">Expira em</th><th className="px-6 py-4 text-center">Alunos</th><th className="px-6 py-4 text-center">Instrutores</th><th className="px-6 py-4 text-right">Ações</th></tr></thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-gray-800">{filteredClients.map(client => (<tr key={client.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
+                                        <td className="px-6 py-4"><p className="text-sm font-bold text-slate-800 dark:text-gray-100">{client.studioName}</p><p className="text-xs text-slate-500 dark:text-gray-400">{client.adminName}</p></td>
+                                        <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${statusStyles[client.licenseStatus]}`}>{client.licenseStatus}</span></td>
+                                        <td className="px-6 py-4 text-xs font-medium text-slate-600 dark:text-gray-300">{client.expiresAt}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.studentCount}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.instructorCount}</td>
+                                        <td className="px-6 py-4"><div className="flex justify-end gap-2"><button onClick={() => handleOpenModal(client)} className="p-2 text-slate-400 hover:text-sky-500" title="Gerenciar"><Settings2 size={14}/></button><button onClick={() => handleImpersonate(client)} className="p-2 text-slate-400 hover:text-amber-500" title="Personificar"><ShieldQuestion size={14}/></button><button onClick={() => handleDeleteClick(client)} className="p-2 text-slate-400 hover:text-rose-500" title="Remover"><Trash2 size={14}/></button></div></td>
+                                    </tr>))}</tbody>
+                                </table></div>
+                            </div>
+                        </div>
+                    )}
+                    {activeSuperAdminTab === 'settings' && <SuperAdminSettings />}
                 </div>
+                <footer className="mt-12 text-center text-xs text-slate-400 dark:text-gray-600 pb-8 relative z-10">
+                    © 2025 Powered by <a href="https://cod3-ss.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-500 hover:underline">COD3 Software Solution</a>
+                </footer>
             </main>
-            <footer className="mt-12 text-center text-xs text-slate-400 dark:text-gray-600 pb-8 relative z-10">© 2025 Powered by <a href="https://cod3-ss.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-500 hover:underline">COD3 Software Solution</a></footer>
+
             {isModalOpen && formData && (<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
                 <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
                   <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>

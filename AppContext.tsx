@@ -7,6 +7,10 @@ interface SettingsData extends StudioSettings {
   isDarkMode: boolean;
 }
 
+interface SuperAdminSettings {
+  defaultTrialDays: number;
+}
+
 interface AppState {
   isAuthenticated: boolean;
   user: UserSession | null;
@@ -19,6 +23,7 @@ interface AppState {
   escala: EscalaItem[];
   agenda: AgendaItem[];
   settings: SettingsData;
+  superAdminSettings: SuperAdminSettings;
   activeTab: string;
 }
 
@@ -32,6 +37,7 @@ type Action =
   | { type: 'UPDATE_ESCALA'; payload: EscalaItem[] }
   | { type: 'UPDATE_AGENDA'; payload: AgendaItem[] }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
+  | { type: 'UPDATE_SUPER_ADMIN_SETTINGS'; payload: Partial<SuperAdminSettings> }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'LOGIN'; payload: UserSession }
@@ -124,6 +130,9 @@ const initialState: AppState = {
   escala: mockEscalaData,
   agenda: mockAgendaData,
   settings: initialSettings,
+  superAdminSettings: {
+    defaultTrialDays: 30,
+  },
   activeTab: 'painel',
 };
 
@@ -148,6 +157,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return { ...state, agenda: action.payload };
     case 'UPDATE_SETTINGS':
       return { ...state, settings: { ...state.settings, ...action.payload } };
+    case 'UPDATE_SUPER_ADMIN_SETTINGS':
+      return { ...state, superAdminSettings: { ...state.superAdminSettings, ...action.payload } };
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
     case 'TOGGLE_THEME':

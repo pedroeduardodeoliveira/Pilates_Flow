@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 
 const Instructors: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors: mockInstructors, students: mockStudentsData, settings } = state;
+  const { instructors: mockInstructors, students: mockStudentsData, settings, impersonatingFrom } = state;
 
   const setMockInstructors = (updater: (prev: Instructor[]) => Instructor[]) => {
       const newInstructors = updater(mockInstructors);
@@ -303,7 +303,7 @@ const Instructors: React.FC = () => {
 
   return (
     <div className="relative pt-8 lg:pt-0">
-      <div className="lg:sticky lg:top-0 z-[60] bg-slate-50/80 dark:bg-[#0b0e14]/80 backdrop-blur-sm lg:pt-8 pb-6 flex flex-col gap-6 transition-colors duration-300">
+      <div className={`lg:sticky z-[60] bg-slate-50/80 dark:bg-[#0b0e14]/80 backdrop-blur-sm lg:pt-8 pb-6 flex flex-col gap-6 transition-colors duration-300 ${impersonatingFrom ? 'lg:top-9' : 'lg:top-0'}`}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-slate-800 dark:text-gray-100 uppercase tracking-tighter">Corpo Docente</h1>
