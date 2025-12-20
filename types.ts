@@ -103,11 +103,17 @@ export interface Instructor {
   classDuration?: number;
 }
 
+export interface License {
+  status: 'active' | 'expiring_soon' | 'expired' | 'trial';
+  expiresAt: string; // ISO Date String
+}
+
 export interface UserSession {
   id: string;
   name: string;
   role: 'admin' | 'instructor';
   avatar?: string;
+  license: License;
 }
 
 export interface Room {

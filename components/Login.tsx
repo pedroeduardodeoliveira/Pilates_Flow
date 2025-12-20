@@ -37,9 +37,10 @@ const Login: React.FC = () => {
       
       // Validação Admin (Hardcoded para exemplo)
       if (cleanCpf === '00000000000' && password === 'admin123') {
+        // FIX: Add dummy license to satisfy UserSession type. It will be overwritten by the reducer.
         dispatch({ 
           type: 'LOGIN', 
-          payload: { id: 'admin', name: 'Administrador', role: 'admin' } 
+          payload: { id: 'admin', name: 'Administrador', role: 'admin', license: { status: 'active', expiresAt: '' } } 
         });
         setIsLoading(false);
         return;
@@ -54,9 +55,10 @@ const Login: React.FC = () => {
       });
 
       if (instructor) {
+        // FIX: Add dummy license to satisfy UserSession type. It will be overwritten by the reducer.
         dispatch({ 
           type: 'LOGIN', 
-          payload: { id: instructor.id, name: instructor.name, role: 'instructor' } 
+          payload: { id: instructor.id, name: instructor.name, role: 'instructor', license: { status: 'active', expiresAt: '' } } 
         });
       } else {
         setError('CPF ou senha inválidos. Tente novamente.');

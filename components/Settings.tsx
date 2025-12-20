@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText } from 'lucide-react';
+import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText, AlertTriangle, ShieldAlert, CreditCard } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { settings } = state;
+  const { settings, user } = state;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const debounceTimeout = useRef<number | null>(null);
@@ -87,7 +87,7 @@ const Settings: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Coluna Esquerda: Informações do Estúdio */}
+        {/* Coluna Esquerda: Informações do Estúdio e Licença */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
             <div className="flex items-center gap-3 mb-4">
@@ -103,6 +103,61 @@ const Settings: React.FC = () => {
               Aqui você personaliza a identidade, os planos e as regras de negócio do seu estúdio. As alterações são salvas automaticamente.
             </p>
           </div>
+          
+          {/* Card de Status da Licença */}
+          {user?.license && (() => {
+            const { license } = user;
+            const expiresDate = new Date(license.expiresAt);
+
+            let config = {
+                icon: <CheckCircle size={24} />,
+                borderColor: 'border-emerald-500/20',
+                textColor: 'text-emerald-500',
+                title: 'Licença Ativa',
+                buttonClass: 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-white/20'
+            };
+
+            if (license.status === 'expiring_soon') {
+                config = {
+                    icon: <AlertTriangle size={24} />,
+                    borderColor: 'border-amber-500/20',
+                    textColor: 'text-amber-500',
+                    title: 'Licença Expirando',
+                    buttonClass: 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
+                };
+            } else if (license.status === 'expired') {
+                config = {
+                    icon: <ShieldAlert size={24} />,
+                    borderColor: 'border-rose-500/20',
+                    textColor: 'text-rose-500',
+                    title: 'Licença Expirada',
+                    buttonClass: 'bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20'
+                };
+            }
+
+            return (
+                <div className={`bg-white dark:bg-gray-900/40 border ${config.borderColor} rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none animate-in fade-in`}>
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className={`w-12 h-12 rounded-lg ${config.textColor}/10 flex items-center justify-center`}>
+                           <div className={config.textColor}>{config.icon}</div>
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-800 dark:text-gray-100">Status da Licença</h3>
+                            <p className={`text-xs font-bold ${config.textColor}`}>{config.title}</p>
+                        </div>
+                    </div>
+                    <p className="text-sm text-slate-500 dark:text-gray-400 leading-relaxed mb-4">
+                        Sua assinatura é válida até{' '}
+                        <strong className="text-slate-700 dark:text-gray-200">
+                            {expiresDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        </strong>.
+                    </p>
+                    <button className={`w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}>
+                        <CreditCard size={14} /> Gerenciar Assinatura
+                    </button>
+                </div>
+            );
+          })()}
         </div>
 
         {/* Coluna Direita: Configurações */}
@@ -207,7 +262,7 @@ const Settings: React.FC = () => {
                          type="number" 
                          value={settings.commission}
                          onChange={(e) => handleSettingsChange({ commission: e.target.value })}
-                         className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pr-12 pl-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium text-right"
+                         className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
                        />
                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">%</span>
                     </div>
@@ -222,17 +277,53 @@ const Settings: React.FC = () => {
               <Bell size={16} className="text-amber-500" />
               <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Sistema & Alertas</h3>
             </div>
-            <div className="p-6">
-              <div className="space-y-1.5 max-w-xs">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Alertar vencimento com antecedência de</label>
                 <div className="relative">
                   <input 
                     type="number" 
                     value={settings.alertDays}
                     onChange={(e) => handleSettingsChange({ alertDays: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pr-16 pl-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium text-right"
+                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-16 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias</span>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Inativar aluno automaticamente após</label>
+                <div className="relative">
+                  <input 
+                    type="number" 
+                    value={settings.autoInactiveDays}
+                    onChange={(e) => handleSettingsChange({ autoInactiveDays: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-28 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias de vencido</span>
+                </div>
+              </div>
+               <div className="md:col-span-2 pt-6 border-t border-slate-100 dark:border-gray-800">
+                <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3">
+                    <div>
+                        <label className="text-sm font-bold text-slate-700 dark:text-gray-200">Visão Ampla para Instrutores</label>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Se ativado, instrutores podem ver todos os alunos do estúdio.</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={settings.instructorSeesAllStudents}
+                      onClick={() => handleSettingsChange({ instructorSeesAllStudents: !settings.instructorSeesAllStudents })}
+                      className={`${
+                        settings.instructorSeesAllStudents ? 'bg-sky-500' : 'bg-slate-300 dark:bg-gray-600'
+                      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900/40`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`${
+                          settings.instructorSeesAllStudents ? 'translate-x-5' : 'translate-x-0'
+                        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                      />
+                    </button>
                 </div>
               </div>
             </div>

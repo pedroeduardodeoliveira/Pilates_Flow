@@ -84,7 +84,7 @@ const Students: React.FC = () => {
         const response = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
         const data = await response.json();
         if (!data.erro) {
-          setFormData(prev => ({ ...prev, street: data.logradouro, neighborhood: data.bairro, city: data.localidade, state: data.uf }));
+          setFormData(prev => ({ ...prev, street: data.logouro, neighborhood: data.bairro, city: data.localidade, state: data.uf }));
         }
       } catch (e) { console.error("Erro ao buscar CEP"); } finally { setIsLoadingCep(false); }
     }
@@ -279,8 +279,10 @@ const Students: React.FC = () => {
   };
 
   const filteredStudents = mockStudents.filter(s => {
-    // Regra principal: Instrutor só vê os próprios alunos
-    if (!isAdmin && s.instructor !== user?.name) return false;
+    // Regra principal: Instrutor só vê os próprios alunos, a menos que a flag esteja ativa
+    if (!isAdmin && !settings.instructorSeesAllStudents && s.instructor !== user?.name) {
+        return false;
+    }
 
     const mSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.id.toLowerCase().includes(searchTerm.toLowerCase());
     const mStatus = statusFilter === 'Todos' || s.status === statusFilter;
@@ -330,7 +332,7 @@ const Students: React.FC = () => {
 
             <FilterDropdown label="Status" value={statusFilter} icon={Activity} isOpen={isStatusOpen} setIsOpen={setIsStatusOpen} containerRef={statusRef} onSelect={setStatusFilter} options={[{ label: 'Todos Status', value: 'Todos' }, { label: 'Alunos Ativos', value: 'Ativo' }, { label: 'Alunos Inativos', value: 'Inativo' }]} />
             <FilterDropdown label="Nível" value={levelFilter} icon={Layers} isOpen={isLevelOpen} setIsOpen={setIsLevelOpen} containerRef={levelRef} onSelect={setLevelFilter} options={[{ label: 'Todos Níveis', value: 'Todos' }, { label: 'Iniciante', value: 'Iniciante' }, { label: 'Intermediário', value: 'Intermediário' }, { label: 'Avançado', value: 'Avançado' }]} />
-            {isAdmin && (
+            {(isAdmin || settings.instructorSeesAllStudents) && (
               <FilterDropdown label="Instrutor" value={selectedInstructor} icon={User} isOpen={isInstructorOpen} setIsOpen={setIsInstructorOpen} containerRef={instructorRef} onSelect={setSelectedInstructor} options={[{ label: 'Todos Instrutores', value: null }, ...instructorsList.map(i => ({ label: i, value: i }))]} />
             )}
           </div>

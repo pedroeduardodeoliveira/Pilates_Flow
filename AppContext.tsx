@@ -21,6 +21,8 @@ interface SettingsData {
   plans: { label: string; value: string }[];
   commission: string;
   alertDays: string;
+  autoInactiveDays: string;
+  instructorSeesAllStudents: boolean; // Novo campo
 }
 
 interface AppState {
@@ -59,7 +61,7 @@ interface AppContextType {
 }
 
 // --- LÓGICA DE CÁLCULO DINÂMICO ---
-const calculateDynamicStudentData = (students: Student[]): Student[] => {
+const calculateDynamicStudentData = (students: Student[], settings: SettingsData): Student[] => {
     const today = new Date(2025, 11, 18); // Data "atual" fixa para consistência do mock
     today.setHours(0, 0, 0, 0);
 
@@ -76,11 +78,19 @@ const calculateDynamicStudentData = (students: Student[]): Student[] => {
         
         const diffTime = expiry.getTime() - today.getTime();
         const daysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Lógica de inativação automática
+        const autoInactiveDays = parseInt(settings.autoInactiveDays, 10);
+        let newStatus = student.status;
+        if (!isNaN(autoInactiveDays) && student.status === 'Ativo' && daysToExpiry < 0 && Math.abs(daysToExpiry) >= autoInactiveDays) {
+            newStatus = 'Inativo';
+        }
         
         return {
             ...student,
             daysToExpiry,
             isExpired: daysToExpiry < 0,
+            status: newStatus,
         };
     });
 };
@@ -111,6 +121,8 @@ const initialSettings: SettingsData = {
   ],
   commission: '40',
   alertDays: '7',
+  autoInactiveDays: '30',
+  instructorSeesAllStudents: false, // Valor padrão
 };
 
 const initialState: AppState = {
@@ -153,7 +165,21 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'TOGGLE_THEME':
       return { ...state, settings: { ...state.settings, isDarkMode: !state.settings.isDarkMode } };
     case 'LOGIN':
-      return { ...state, isAuthenticated: true, user: action.payload };
+      // Adiciona uma licença simulada ao fazer login
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 25); // Licença ativa por mais 25 dias
+      
+      return { 
+        ...state, 
+        isAuthenticated: true, 
+        user: {
+          ...action.payload,
+          // Simulação: se o admin logar, licença expira em 5 dias, senão, 25 dias.
+          license: action.payload.role === 'admin' 
+            ? { status: 'expiring_soon', expiresAt: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString() }
+            : { status: 'active', expiresAt: expirationDate.toISOString() }
+        }
+      };
     case 'LOGOUT':
       // Retorna ao estado inicial, mas mantém configurações
       return { ...initialState, settings: state.settings, isAuthenticated: false, user: null };
@@ -187,7 +213,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       
       // Aplica os cálculos dinâmicos antes do primeiro render
-      finalState.students = calculateDynamicStudentData(finalState.students);
+      finalState.students = calculateDynamicStudentData(finalState.students, finalState.settings);
       
       return finalState;
   };

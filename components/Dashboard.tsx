@@ -1,20 +1,21 @@
 import React, { useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import StatCard from './StatCard';
+import LicenseStatusBanner from './LicenseStatusBanner';
 import { Users, UserX, Medal, Activity, Cake, Clock, Ban, AlertTriangle } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { state } = useContext(AppContext);
-  const { students, instructors, agenda, user } = state;
+  const { students, instructors, agenda, user, settings } = state;
 
   const isAdmin = user?.role === 'admin';
   const currentDate = new Date(2025, 11, 18); // Quinta, 18 de Dezembro de 2025
 
-  // Filtra os alunos baseados no perfil do usuário
+  // Filtra os alunos baseados no perfil do usuário e na nova configuração
   const filteredStudentsBase = useMemo(() => {
-    if (isAdmin) return students;
+    if (isAdmin || settings.instructorSeesAllStudents) return students;
     return students.filter(s => s.instructor === user?.name);
-  }, [students, user, isAdmin]);
+  }, [students, user, isAdmin, settings.instructorSeesAllStudents]);
 
   // Filtra a agenda baseada no perfil do usuário
   const filteredAgendaBase = useMemo(() => {
@@ -59,17 +60,20 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 pt-8">
+      {/* Banner de Status da Licença */}
+      {user?.license && <LicenseStatusBanner license={user.license} />}
+
       {/* Statistics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          label={isAdmin ? "Alunos Ativos" : "Meus Alunos Ativos"} 
+          label={isAdmin || settings.instructorSeesAllStudents ? "Alunos Ativos" : "Meus Alunos Ativos"} 
           value={kpis.activeStudents} 
           icon={<Users size={20} />} 
           iconBg="bg-sky-500/10" 
           iconColor="text-sky-500" 
         />
         <StatCard 
-          label={isAdmin ? "Alunos Inativos" : "Meus Alunos Inativos"} 
+          label={isAdmin || settings.instructorSeesAllStudents ? "Alunos Inativos" : "Meus Alunos Inativos"} 
           value={kpis.inactiveStudents} 
           icon={<UserX size={20} />} 
           iconBg="bg-rose-500/10" 
@@ -100,7 +104,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <AlertTriangle size={16} className="text-amber-500" /> 
-                    {isAdmin ? "Próximos Vencimentos" : "Vencimentos (Meus Alunos)"}
+                    {isAdmin || settings.instructorSeesAllStudents ? "Próximos Vencimentos" : "Vencimentos (Meus Alunos)"}
                   </h3>
                   <span className="bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-md text-[10px] font-bold">{expiringStudents.length}</span>
                 </div>
@@ -111,7 +115,7 @@ const Dashboard: React.FC = () => {
                                 <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-bold text-sky-400 text-xs flex-shrink-0">{s.initials}</div>
                                 <div className="min-w-0">
                                     <p className="font-medium text-slate-700 dark:text-gray-200 text-sm truncate">{s.name}</p>
-                                    {isAdmin && <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>}
+                                    {(isAdmin || settings.instructorSeesAllStudents) && <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>}
                                 </div>
                             </div>
                             <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md flex-shrink-0">
@@ -127,7 +131,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <Ban size={16} className="text-rose-500" /> 
-                    {isAdmin ? "Pagamentos Vencidos" : "Vencidos (Meus Alunos)"}
+                    {isAdmin || settings.instructorSeesAllStudents ? "Pagamentos Vencidos" : "Vencidos (Meus Alunos)"}
                   </h3>
                   <span className="bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-md text-[10px] font-bold">{expiredStudents.length}</span>
                 </div>
@@ -138,7 +142,7 @@ const Dashboard: React.FC = () => {
                                 <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center font-bold text-sky-400 text-xs flex-shrink-0">{s.initials}</div>
                                 <div className="min-w-0">
                                     <p className="font-medium text-slate-700 dark:text-gray-200 text-sm truncate">{s.name}</p>
-                                    {isAdmin && <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>}
+                                    {(isAdmin || settings.instructorSeesAllStudents) && <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>}
                                 </div>
                             </div>
                             <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-1 rounded-md flex-shrink-0">Vencido há {Math.abs(s.daysToExpiry)}d</span>
@@ -170,7 +174,7 @@ const Dashboard: React.FC = () => {
           {/* Birthdays */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
             <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4">
-              <Cake size={16} /> {isAdmin ? "Aniversariantes do Mês" : "Meus Aniversariantes"}
+              <Cake size={16} /> {isAdmin || settings.instructorSeesAllStudents ? "Aniversariantes do Mês" : "Meus Aniversariantes"}
             </h3>
             <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
               {monthlyBirthdays.length > 0 ? monthlyBirthdays.map(s => (
