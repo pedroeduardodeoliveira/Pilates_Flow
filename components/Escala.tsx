@@ -183,17 +183,17 @@ const Escala: React.FC = () => {
     const weekDays = Array.from({ length: 6 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return { name: getDayName(d), date: d.getDate(), fullDate: d, active: d.toDateString() === currentDate.toDateString() }; });
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="overflow-x-auto"><div className="min-w-[800px]"><div className="grid grid-cols-[80px_repeat(6,1fr)]">
-          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20"></div>
+      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-auto max-h-[75vh] custom-scrollbar shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="grid grid-cols-[80px_repeat(6,1fr)] min-w-[800px] relative">
+          <div className="sticky top-0 left-0 z-40 p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20"></div>
           {weekDays.map((day, idx) => (
-            <div key={idx} onClick={() => setCurrentDate(day.fullDate)} className={`p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 ${day.active ? 'bg-sky-500/10' : 'bg-slate-50 dark:bg-gray-900/20'}`}>
+            <div key={idx} onClick={() => setCurrentDate(day.fullDate)} className={`sticky top-0 z-30 p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 ${day.active ? 'bg-sky-500/10' : 'bg-slate-50 dark:bg-gray-900/20'}`}>
               <span className={`text-[10px] font-bold tracking-wider mb-1 ${day.active ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>{day.name}</span><span className={`text-xl font-bold ${day.active ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-gray-300'}`}>{day.date}</span>{day.active && <div className="mt-2 w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]"></div>}
             </div>
           ))}
           {timeSlots.map((time) => (
             <React.Fragment key={time}>
-              <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
+              <div className="sticky left-0 z-20 p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900/40"><span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
               {[0, 1, 2, 3, 4, 5].map((dayIdx) => {
                 const itemsInSlot = getEscalaItems(time, dayIdx);
                 const groupedByInstructor = itemsInSlot.reduce<Record<string, EscalaItem[]>>((acc, item) => {
@@ -218,7 +218,7 @@ const Escala: React.FC = () => {
               })}
             </React.Fragment>
           ))}
-        </div></div></div>
+        </div>
       </div>
     );
   };
