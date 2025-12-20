@@ -1,33 +1,16 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession } from './types';
+import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession, StudioSettings } from './types';
 import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
 
 // --- TIPOS ---
-interface SettingsData {
+interface SettingsData extends StudioSettings {
   isDarkMode: boolean;
-  appName: string;
-  logo: string | null;
-  phone: string;
-  email: string;
-  cnpj: string;
-  address: {
-    cep: string;
-    street: string;
-    number: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-  };
-  plans: { label: string; value: string }[];
-  commission: string;
-  alertDays: string;
-  autoInactiveDays: string;
-  instructorSeesAllStudents: boolean; // Novo campo
 }
 
 interface AppState {
   isAuthenticated: boolean;
   user: UserSession | null;
+  impersonatingFrom: UserSession | null;
   students: Student[];
   instructors: Instructor[];
   rooms: Room[];
@@ -52,7 +35,9 @@ type Action =
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'LOGIN'; payload: UserSession }
-  | { type: 'LOGOUT' };
+  | { type: 'LOGOUT' }
+  | { type: 'IMPERSONATE'; payload: { user: UserSession, settings: StudioSettings } }
+  | { type: 'STOP_IMPERSONATING' };
 
 
 interface AppContextType {
@@ -103,7 +88,8 @@ const initialSettings: SettingsData = {
   logo: null,
   phone: '',
   email: '',
-  cnpj: '',
+  documentType: 'CNPJ',
+  document: '',
   address: {
     cep: '',
     street: '',
@@ -111,6 +97,7 @@ const initialSettings: SettingsData = {
     neighborhood: '',
     city: '',
     state: '',
+    complement: '',
   },
   plans: [
     { label: 'Valor para 1 aula por semana', value: '150' },
@@ -128,6 +115,7 @@ const initialSettings: SettingsData = {
 const initialState: AppState = {
   isAuthenticated: false,
   user: null,
+  impersonatingFrom: null,
   students: mockStudentsData,
   instructors: mockInstructorsData,
   rooms: mockRoomsData,
@@ -165,24 +153,41 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'TOGGLE_THEME':
       return { ...state, settings: { ...state.settings, isDarkMode: !state.settings.isDarkMode } };
     case 'LOGIN':
-      // Adiciona uma licença simulada ao fazer login
       const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 25); // Licença ativa por mais 25 dias
+      expirationDate.setDate(expirationDate.getDate() + 25);
       
       return { 
         ...state, 
         isAuthenticated: true, 
         user: {
           ...action.payload,
-          // Simulação: se o admin logar, licença expira em 5 dias, senão, 25 dias.
           license: action.payload.role === 'admin' 
             ? { status: 'expiring_soon', expiresAt: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString() }
             : { status: 'active', expiresAt: expirationDate.toISOString() }
         }
       };
     case 'LOGOUT':
-      // Retorna ao estado inicial, mas mantém configurações
-      return { ...initialState, settings: state.settings, isAuthenticated: false, user: null };
+      return { ...initialState, settings: state.settings, isAuthenticated: false, user: null, impersonatingFrom: null };
+    case 'IMPERSONATE':
+        return {
+            ...state,
+            isAuthenticated: true,
+            impersonatingFrom: state.user,
+            user: action.payload.user,
+            settings: { ...action.payload.settings, isDarkMode: state.settings.isDarkMode },
+            activeTab: 'painel',
+        };
+    case 'STOP_IMPERSONATING':
+        if (!state.impersonatingFrom) {
+            return state;
+        }
+        return {
+            ...state,
+            user: state.impersonatingFrom,
+            impersonatingFrom: null,
+            settings: { ...initialSettings, isDarkMode: state.settings.isDarkMode },
+            activeTab: 'painel',
+        };
     default:
       return state;
   }
@@ -202,7 +207,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const savedState = localStorage.getItem('pilatesFlowData');
           if (savedState) {
               const parsedState = JSON.parse(savedState);
-              // Garante que o estado tenha todos os campos do initialState
               finalState = { ...initialValue, ...parsedState, settings: { ...initialValue.settings, ...parsedState.settings }};
           } else {
               finalState = initialValue;
@@ -212,7 +216,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           finalState = initialValue;
       }
       
-      // Aplica os cálculos dinâmicos antes do primeiro render
       finalState.students = calculateDynamicStudentData(finalState.students, finalState.settings);
       
       return finalState;
@@ -222,7 +225,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   useEffect(() => {
     try {
-      // Cria uma cópia do estado para não modificar o original antes de salvar
       const stateToSave = { ...state };
       localStorage.setItem('pilatesFlowData', JSON.stringify(stateToSave));
     } catch (error) {

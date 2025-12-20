@@ -43,6 +43,7 @@ const Settings: React.FC = () => {
   const maskPhone = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
   const maskCEP = (v: string) => v.replace(/\D/g, "").replace(/^(\d{5})(\d)/, "$1-$2");
   const maskCNPJ = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
+  const maskCPF = (v: string) => v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
   
   const handleCEPBlur = async () => {
     const cleaned = settings.address.cep.replace(/\D/g, "");
@@ -55,7 +56,7 @@ const Settings: React.FC = () => {
             handleSettingsChange({ 
                 address: {
                     ...settings.address,
-                    street: data.logradouro,
+                    street: data.logouro,
                     neighborhood: data.bairro,
                     city: data.localidade,
                     state: data.uf
@@ -224,9 +225,24 @@ const Settings: React.FC = () => {
                 <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Dados Fiscais</h3>
             </div>
             <div className="p-6">
-                <div className="space-y-1.5 max-w-sm">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CNPJ</label>
-                    <input value={settings.cnpj} onChange={e => handleSettingsChange({ cnpj: maskCNPJ(e.target.value) })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="00.000.000/0000-00" maxLength={18}/>
+                <div className="space-y-4 max-w-sm">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Tipo de Documento</label>
+                        <div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-1">
+                            <button onClick={() => handleSettingsChange({ documentType: 'CNPJ' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CNPJ' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-500 dark:text-gray-400'}`}>CNPJ</button>
+                            <button onClick={() => handleSettingsChange({ documentType: 'CPF' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CPF' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-500 dark:text-gray-400'}`}>CPF</button>
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">{settings.documentType}</label>
+                        <input 
+                            value={settings.document} 
+                            onChange={e => handleSettingsChange({ document: settings.documentType === 'CNPJ' ? maskCNPJ(e.target.value) : maskCPF(e.target.value) })} 
+                            className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" 
+                            placeholder={settings.documentType === 'CNPJ' ? "00.000.000/0000-00" : "000.000.000-00"} 
+                            maxLength={settings.documentType === 'CNPJ' ? 18 : 14}
+                        />
+                    </div>
                 </div>
             </div>
           </div>

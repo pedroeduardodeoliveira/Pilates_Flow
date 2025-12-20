@@ -1,4 +1,27 @@
-import { Client } from './types';
+import { Client, StudioSettings } from './types';
+
+const createDefaultSettings = (appName: string): StudioSettings => ({
+  appName,
+  logo: null,
+  phone: '(11) 91234-5678',
+  email: 'contato@email.com',
+  documentType: 'CNPJ',
+  document: '00.000.000/0001-00',
+  address: {
+    cep: '01001-000', street: 'Praça da Sé', number: '1', neighborhood: 'Sé', city: 'São Paulo', state: 'SP', complement: ''
+  },
+  plans: [
+    { label: 'Valor para 1 aula por semana', value: '150' },
+    { label: 'Valor para 2 aulas por semana', value: '250' },
+    { label: 'Valor para 3 aulas por semana', value: '320' },
+    { label: 'Valor para 4 aulas por semana', value: '380' },
+    { label: 'Valor para 5 aulas por semana', value: '420' },
+  ],
+  commission: '40',
+  alertDays: '7',
+  autoInactiveDays: '30',
+  instructorSeesAllStudents: false,
+});
 
 export const superAdminClients: Client[] = [
     {
@@ -10,6 +33,7 @@ export const superAdminClients: Client[] = [
         studentCount: 52,
         instructorCount: 4,
         mrr: 299.90,
+        settings: createDefaultSettings('Pilates Flow - Moema')
     },
     {
         id: 'CLI-002',
@@ -20,6 +44,7 @@ export const superAdminClients: Client[] = [
         studentCount: 12,
         instructorCount: 2,
         mrr: 0,
+        settings: createDefaultSettings('Studio Zen Pilates')
     },
     {
         id: 'CLI-003',
@@ -30,6 +55,7 @@ export const superAdminClients: Client[] = [
         studentCount: 89,
         instructorCount: 7,
         mrr: 299.90,
+        settings: createDefaultSettings('Corpo & Mente Pilates')
     },
     {
         id: 'CLI-004',
@@ -40,6 +66,7 @@ export const superAdminClients: Client[] = [
         studentCount: 34,
         instructorCount: 3,
         mrr: 299.90,
+        settings: createDefaultSettings('Vitality Studio')
     },
     {
         id: 'CLI-005',
@@ -50,6 +77,7 @@ export const superAdminClients: Client[] = [
         studentCount: 41,
         instructorCount: 4,
         mrr: 199.90,
+        settings: createDefaultSettings('Studio Harmonia')
     },
     {
         id: 'CLI-006',
@@ -60,5 +88,6 @@ export const superAdminClients: Client[] = [
         studentCount: 120,
         instructorCount: 10,
         mrr: 499.90,
+        settings: createDefaultSettings('Pilates Premium')
     },
 ];

@@ -95,6 +95,7 @@ export interface Instructor {
     neighborhood: string;
     city: string;
     state: string;
+    complement?: string;
   };
   schedule?: string[];
   workingDays?: string[];
@@ -140,6 +141,29 @@ export interface Transaction {
   sourceType?: 'student_payment' | 'manual'; // Origem do lançamento
 }
 
+export interface StudioSettings {
+  appName: string;
+  logo: string | null;
+  phone: string;
+  email: string;
+  documentType: 'CPF' | 'CNPJ';
+  document: string;
+  address: {
+    cep: string;
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    complement?: string;
+  };
+  plans: { label: string; value: string }[];
+  commission: string;
+  alertDays: string;
+  autoInactiveDays: string;
+  instructorSeesAllStudents: boolean;
+}
+
 // Para o Painel Super Admin
 export interface Client {
   id: string;
@@ -150,4 +174,5 @@ export interface Client {
   studentCount: number;
   instructorCount: number;
   mrr: number;
+  settings: StudioSettings;
 }
