@@ -13,10 +13,11 @@ import Financial from './components/Financial';
 import Settings from './components/Settings';
 import NeuralNetworkBackground from './components/NeuralNetworkBackground';
 import Login from './components/Login';
+import SuperAdminDashboard from './components/SuperAdminDashboard';
 
 const App: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { activeTab, settings, isAuthenticated } = state;
+  const { activeTab, settings, isAuthenticated, user } = state;
   const { isDarkMode, appName } = settings;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -43,6 +44,11 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) {
     return <Login />;
+  }
+  
+  // Rota para o Super Admin
+  if (user?.role === 'superadmin') {
+    return <SuperAdminDashboard />;
   }
 
   const renderContent = () => {

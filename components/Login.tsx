@@ -35,9 +35,18 @@ const Login: React.FC = () => {
     setTimeout(() => {
       const cleanCpf = cpf.replace(/\D/g, '');
       
+      // Validação Super Admin
+      if (cleanCpf === '99999999999' && password === 'super') {
+        dispatch({
+          type: 'LOGIN',
+          payload: { id: 'superadmin', name: 'Super Admin', role: 'superadmin', license: { status: 'active', expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString() } }
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Validação Admin (Hardcoded para exemplo)
       if (cleanCpf === '00000000000' && password === 'admin123') {
-        // FIX: Add dummy license to satisfy UserSession type. It will be overwritten by the reducer.
         dispatch({ 
           type: 'LOGIN', 
           payload: { id: 'admin', name: 'Administrador', role: 'admin', license: { status: 'active', expiresAt: '' } } 
@@ -55,7 +64,6 @@ const Login: React.FC = () => {
       });
 
       if (instructor) {
-        // FIX: Add dummy license to satisfy UserSession type. It will be overwritten by the reducer.
         dispatch({ 
           type: 'LOGIN', 
           payload: { id: instructor.id, name: instructor.name, role: 'instructor', license: { status: 'active', expiresAt: '' } } 

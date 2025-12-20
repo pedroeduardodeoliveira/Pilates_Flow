@@ -111,7 +111,7 @@ export interface License {
 export interface UserSession {
   id: string;
   name: string;
-  role: 'admin' | 'instructor';
+  role: 'admin' | 'instructor' | 'superadmin';
   avatar?: string;
   license: License;
 }
@@ -138,4 +138,16 @@ export interface Transaction {
   status: 'Pago' | 'Pendente';
   studentId?: string; // Vínculo com o aluno
   sourceType?: 'student_payment' | 'manual'; // Origem do lançamento
+}
+
+// Para o Painel Super Admin
+export interface Client {
+  id: string;
+  studioName: string;
+  adminName: string;
+  licenseStatus: 'Ativa' | 'Teste' | 'Expirada' | 'Pendente';
+  expiresAt: string; // "DD/MM/YYYY"
+  studentCount: number;
+  instructorCount: number;
+  mrr: number;
 }
