@@ -35,19 +35,28 @@ const SuperAdminDashboard: React.FC = () => {
     const handleSaveClient = () => {
         if (!formData.studioName || !formData.adminName) return;
 
-        const clientData = {
-            ...formData,
-            expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toLocaleDateString('pt-BR') : '',
-        } as Client;
+        // Correctly handle date string to avoid timezone issues.
+        const formattedExpiresAt = formData.expiresAt ? new Date(formData.expiresAt + 'T00:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
 
         if (editingClient) {
-            setClients(clients.map(c => c.id === editingClient.id ? { ...c, ...clientData } : c));
+            // Merge form data into the existing client data
+            const updatedClient = {
+                ...editingClient,
+                ...formData, // formData is Partial<Client>
+                expiresAt: formattedExpiresAt,
+            };
+            setClients(clients.map(c => c.id === editingClient.id ? updatedClient : c));
         } else {
+            // Construct a new Client object from scratch, satisfying the type.
             const newClient: Client = {
                 id: `CLI-${Math.floor(100 + Math.random() * 900)}`,
                 studentCount: 0,
                 instructorCount: 0,
-                ...clientData
+                studioName: formData.studioName, // Guaranteed by the check above
+                adminName: formData.adminName, // Guaranteed by the check above
+                licenseStatus: formData.licenseStatus || 'Teste',
+                expiresAt: formattedExpiresAt,
+                mrr: formData.mrr || 0,
             };
             setClients([newClient, ...clients]);
         }
@@ -76,7 +85,7 @@ const SuperAdminDashboard: React.FC = () => {
         };
         
         const [day, month, year] = client.expiresAt.split('/');
-        const isoDate = new Date(`${year}-${month}-${day}`).toISOString();
+        const isoDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
 
         const impersonatedUser = {
             id: 'impersonated_admin',
