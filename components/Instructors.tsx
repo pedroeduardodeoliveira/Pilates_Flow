@@ -48,6 +48,7 @@ const Instructors: React.FC = () => {
     neighborhood: '',
     city: '',
     state: '',
+    complement: '',
     specialties: '',
     avatarColor: 'bg-sky-500',
     image: null as string | null,
@@ -113,6 +114,7 @@ const Instructors: React.FC = () => {
       neighborhood: instructor.address?.neighborhood || '',
       city: instructor.address?.city || '',
       state: instructor.address?.state || '',
+      complement: instructor.address?.complement || '',
       image: instructor.image || null,
       password: instructor.password || ''
     });
@@ -260,7 +262,8 @@ const Instructors: React.FC = () => {
         number: formData.number,
         neighborhood: formData.neighborhood,
         city: formData.city,
-        state: formData.state
+        state: formData.state,
+        complement: formData.complement
       }
     };
 
@@ -476,31 +479,16 @@ const Instructors: React.FC = () => {
                   </div>
                   {isLoadingCep && <div className="flex items-center gap-2 text-[10px] text-sky-500 font-bold animate-pulse"><Loader2 size={12} className="animate-spin" /> Buscando...</div>}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CEP</label>
-                    <input value={formData.cep} onChange={e => setFormData({...formData, cep: maskCEP(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="00000-000" maxLength={9} />
-                  </div>
-                  <div className="md:col-span-4 space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Rua / Logradouro</label>
-                    <input value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="Preenchido automaticamente" />
-                  </div>
-                  <div className="md:col-span-1 space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nº</label>
-                    <input value={formData.number} onChange={e => setFormData({...formData, number: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" placeholder="123" />
-                  </div>
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Bairro</label>
-                    <input value={formData.neighborhood} onChange={e => setFormData({...formData, neighborhood: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" />
-                  </div>
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Cidade</label>
-                    <input value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" />
-                  </div>
-                  <div className="md:col-span-1 space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">UF</label>
-                    <input value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm" maxLength={2} placeholder="SP" />
-                  </div>
+                <div className="grid grid-cols-12 gap-x-4 gap-y-4">
+                    <div className="col-span-12 md:col-span-3 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CEP</label><input value={formData.cep} onChange={e => setFormData({...formData, cep: maskCEP(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="00000-000" maxLength={9} /></div>
+                    <div className="col-span-12 md:col-span-9 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Rua / Logradouro</label><input value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="Preenchido automaticamente" /></div>
+                    
+                    <div className="col-span-12 md:col-span-2 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nº</label><input value={formData.number} onChange={e => setFormData({...formData, number: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="123" /></div>
+                    <div className="col-span-12 md:col-span-5 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Bairro</label><input value={formData.neighborhood} onChange={e => setFormData({...formData, neighborhood: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
+                    <div className="col-span-12 md:col-span-5 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Complemento</label><input value={formData.complement} onChange={e => setFormData({...formData, complement: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
+                    
+                    <div className="col-span-12 md:col-span-8 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Cidade</label><input value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
+                    <div className="col-span-12 md:col-span-4 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Estado</label><input value={formData.state} onChange={e => setFormData({...formData, state: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" maxLength={2} placeholder="SP" /></div>
                 </div>
               </div>
 
