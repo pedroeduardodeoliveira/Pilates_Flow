@@ -1,4 +1,3 @@
-
 import React, { useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import StatCard from './StatCard';
@@ -115,7 +114,9 @@ const Dashboard: React.FC = () => {
                                     {isAdmin && <p className="text-xs text-slate-500 dark:text-gray-400 truncate">{s.instructor}</p>}
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md flex-shrink-0">Vence em {s.daysToExpiry}d</span>
+                            <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-md flex-shrink-0">
+                              {s.daysToExpiry === 0 ? 'Vence hoje' : `Vence em ${s.daysToExpiry}d`}
+                            </span>
                         </div>
                     )) : <p className="text-xs text-slate-500 dark:text-gray-400 italic text-center py-4">Nenhum aluno com vencimento próximo.</p>}
                 </div>

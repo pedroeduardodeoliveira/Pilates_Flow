@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { Plus, Pencil, Trash2, X, AlertTriangle, ArrowUpRight, ArrowDownLeft, DollarSign, CheckCircle2, Clock, Filter, Check, Briefcase } from 'lucide-react';
@@ -46,6 +45,9 @@ const Financial: React.FC = () => {
       type: formData.type,
       category: formData.category,
       status: formData.status,
+      // Manter o vínculo se já existir
+      studentId: editingTransaction?.studentId,
+      sourceType: editingTransaction?.sourceType || 'manual'
     };
 
     let updatedTransactions;
@@ -65,8 +67,39 @@ const Financial: React.FC = () => {
   
   const executeDelete = () => {
     if (!transactionToDelete) return;
+
+    // 1. Lógica de reversão do vencimento do aluno
+    if (transactionToDelete.studentId && transactionToDelete.sourceType === 'student_payment') {
+      const studentToRevert = students.find(s => s.id === transactionToDelete.studentId);
+      
+      if (studentToRevert) {
+        const updatedStudents = students.map(s => {
+          if (s.id === studentToRevert.id) {
+            const [day, month, year] = s.expiryDate.split('/').map(Number);
+            const currentExpiry = new Date(year, month - 1, day);
+            currentExpiry.setMonth(currentExpiry.getMonth() - 1); // Reverte um mês
+            const revertedExpiryDateStr = currentExpiry.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            // Recalcula os dias restantes com base na data "congelada" do app
+            const today = new Date(2025, 11, 18);
+            today.setHours(0, 0, 0, 0);
+            const revertedExpiryDate = new Date(currentExpiry);
+            revertedExpiryDate.setHours(0,0,0,0);
+            const diffTime = revertedExpiryDate.getTime() - today.getTime();
+            const newDaysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            return { ...s, expiryDate: revertedExpiryDateStr, daysToExpiry: newDaysToExpiry, isExpired: newDaysToExpiry < 0 };
+          }
+          return s;
+        });
+        dispatch({ type: 'UPDATE_STUDENTS', payload: updatedStudents });
+      }
+    }
+
+    // 2. Exclusão da transação financeira (ação original)
     const updatedTransactions = transactions.filter(t => t.id !== transactionToDelete.id);
     dispatch({ type: 'UPDATE_TRANSACTIONS', payload: updatedTransactions });
+    
     setIsDeleteModalOpen(false);
     setTransactionToDelete(null);
   };

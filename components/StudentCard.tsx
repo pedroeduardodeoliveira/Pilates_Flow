@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Pencil, Trash2, Calendar, User, Phone, CheckCircle } from 'lucide-react';
 import { Student } from '../types';
@@ -74,8 +73,10 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, onEdit, onDelete, on
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400">
           <Calendar size={14} className={student.isExpired ? 'text-rose-500' : 'text-gray-500'} />
           <span className="truncate">Vencimento: <span className="text-slate-700 dark:text-gray-300 font-medium">{student.expiryDate}</span> 
-            <span className={student.isExpired ? 'text-rose-500 ml-1 font-bold' : 'text-gray-500 ml-1'}>
-              ({student.isExpired ? `Vencido há ${Math.abs(student.daysToExpiry)} dia(s)` : `Vence em ${student.daysToExpiry} dia(s)`})
+            <span className={student.isExpired ? 'text-rose-500 ml-1 font-bold' : student.daysToExpiry === 0 ? 'text-amber-500 ml-1 font-bold' : 'text-gray-500 ml-1'}>
+              ({student.isExpired 
+                ? `Vencido há ${Math.abs(student.daysToExpiry)} dia(s)` 
+                : (student.daysToExpiry === 0 ? 'Vence hoje' : `Vence em ${student.daysToExpiry} dia(s)`)})
             </span>
           </span>
         </div>

@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 import { AppContext } from '../AppContext';
 import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Award, Loader2, ChevronDown, Check, MapPin, Calendar, CreditCard, Info, Camera, Clock, PlusCircle, AlertTriangle, Filter, Layers, Activity, FileText } from 'lucide-react';
 import StudentCard from './StudentCard';
-import { Student, AgendaItem } from '../types';
+import { Student, AgendaItem, Transaction } from '../types';
 import * as XLSX from 'xlsx';
 
 const Students: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { students: mockStudents, instructors, agenda, user } = state;
+  const { students: mockStudents, instructors, agenda, user, transactions, settings } = state;
 
   const isAdmin = user?.role === 'admin';
 
@@ -109,22 +109,53 @@ const Students: React.FC = () => {
   const removeSchedule = (idx: number) => setFormData(prev => ({ ...prev, schedule: prev.schedule.filter((_, i) => i !== idx) }));
 
   const handleMarkAsPaid = (studentId: string) => {
+    const student = mockStudents.find(s => s.id === studentId);
+    if (!student) return;
+
+    // 1. Atualizar dados do aluno
     setMockStudents(prevStudents => 
-        prevStudents.map(student => {
-            if (student.id === studentId) {
-                const [day, month, year] = student.expiryDate.split('/').map(Number);
+        prevStudents.map(s => {
+            if (s.id === studentId) {
+                const [day, month, year] = s.expiryDate.split('/').map(Number);
                 const currentExpiry = new Date(year, month - 1, day);
                 currentExpiry.setMonth(currentExpiry.getMonth() + 1);
                 const newExpiryDateStr = currentExpiry.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                const today = new Date(); today.setHours(0, 0, 0, 0);
-                const newExpiryDate = new Date(currentExpiry); newExpiryDate.setHours(0,0,0,0);
+                
+                // Recalcula os dias restantes com base na data "congelada" do app
+                const today = new Date(2025, 11, 18);
+                today.setHours(0, 0, 0, 0);
+                const newExpiryDate = new Date(currentExpiry);
+                newExpiryDate.setHours(0,0,0,0);
                 const diffTime = newExpiryDate.getTime() - today.getTime();
                 const newDaysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return { ...student, expiryDate: newExpiryDateStr, daysToExpiry: newDaysToExpiry, isExpired: newDaysToExpiry < 0 };
+                
+                return { ...s, expiryDate: newExpiryDateStr, daysToExpiry: newDaysToExpiry, isExpired: newDaysToExpiry < 0 };
             }
-            return student;
+            return s;
         })
     );
+
+    // 2. Criar transação financeira com vínculo
+    const frequency = student.planType ? student.planType.split('x')[0] : '1';
+    const plan = settings.plans.find(p => p.label.includes(`${frequency} aula`));
+    const planValue = plan ? parseFloat(plan.value) : 0;
+
+    if (planValue > 0) {
+      const newTransaction: Transaction = {
+        id: `TR-${student.id}-${Date.now()}`,
+        description: `Mensalidade - ${student.name}`,
+        amount: planValue,
+        date: new Date(2025, 11, 18).toISOString().split('T')[0], // Data "atual" do app
+        type: 'Receita',
+        category: 'Mensalidade',
+        status: 'Pago',
+        studentId: student.id, // Vínculo com o aluno
+        sourceType: 'student_payment' // Identifica a origem do pagamento
+      };
+      dispatch({ type: 'UPDATE_TRANSACTIONS', payload: [newTransaction, ...transactions] });
+    }
+
+    // 3. Feedback visual
     setPaymentSuccessId(studentId);
     setTimeout(() => setPaymentSuccessId(null), 3000);
   };

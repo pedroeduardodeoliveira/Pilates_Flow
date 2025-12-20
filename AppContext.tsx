@@ -1,4 +1,3 @@
-
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
 import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession } from './types';
 import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
@@ -58,6 +57,34 @@ interface AppContextType {
   state: AppState;
   dispatch: Dispatch<Action>;
 }
+
+// --- LÓGICA DE CÁLCULO DINÂMICO ---
+const calculateDynamicStudentData = (students: Student[]): Student[] => {
+    const today = new Date(2025, 11, 18); // Data "atual" fixa para consistência do mock
+    today.setHours(0, 0, 0, 0);
+
+    return students.map(student => {
+        if (!student.expiryDate) {
+            return { ...student, daysToExpiry: 999, isExpired: false };
+        }
+        const [day, month, year] = student.expiryDate.split('/').map(Number);
+        if (isNaN(day) || isNaN(month) || isNaN(year)) {
+             return { ...student, daysToExpiry: 999, isExpired: false };
+        }
+        const expiry = new Date(year, month - 1, day);
+        expiry.setHours(0, 0, 0, 0);
+        
+        const diffTime = expiry.getTime() - today.getTime();
+        const daysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return {
+            ...student,
+            daysToExpiry,
+            isExpired: daysToExpiry < 0,
+        };
+    });
+};
+
 
 // --- ESTADO INICIAL ---
 const initialSettings: SettingsData = {
@@ -128,7 +155,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'LOGIN':
       return { ...state, isAuthenticated: true, user: action.payload };
     case 'LOGOUT':
-      return { ...state, isAuthenticated: false, user: null, activeTab: 'painel' };
+      // Retorna ao estado inicial, mas mantém configurações
+      return { ...initialState, settings: state.settings, isAuthenticated: false, user: null };
     default:
       return state;
   }
@@ -142,25 +170,37 @@ export const AppContext = createContext<AppContextType>({
 
 // --- PROVIDER ---
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(appReducer, initialState);
-
-  useEffect(() => {
-    try {
-      const savedState = localStorage.getItem('pilatesFlowData');
-      if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        dispatch({ type: 'SET_STATE', payload: parsedState });
+  const initializer = (initialValue: AppState): AppState => {
+      let finalState: AppState;
+      try {
+          const savedState = localStorage.getItem('pilatesFlowData');
+          if (savedState) {
+              const parsedState = JSON.parse(savedState);
+              // Garante que o estado tenha todos os campos do initialState
+              finalState = { ...initialValue, ...parsedState, settings: { ...initialValue.settings, ...parsedState.settings }};
+          } else {
+              finalState = initialValue;
+          }
+      } catch (error) {
+          console.error("Falha ao carregar estado do localStorage, usando estado inicial.", error);
+          finalState = initialValue;
       }
-    } catch (error) {
-      console.error("Failed to parse state from localStorage", error);
-    }
-  }, []);
+      
+      // Aplica os cálculos dinâmicos antes do primeiro render
+      finalState.students = calculateDynamicStudentData(finalState.students);
+      
+      return finalState;
+  };
 
+  const [state, dispatch] = useReducer(appReducer, initialState, initializer);
+  
   useEffect(() => {
     try {
-      localStorage.setItem('pilatesFlowData', JSON.stringify(state));
+      // Cria uma cópia do estado para não modificar o original antes de salvar
+      const stateToSave = { ...state };
+      localStorage.setItem('pilatesFlowData', JSON.stringify(stateToSave));
     } catch (error) {
-      console.error("Failed to save state to localStorage", error);
+      console.error("Falha ao salvar estado no localStorage", error);
     }
   }, [state]);
 

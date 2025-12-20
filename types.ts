@@ -130,4 +130,6 @@ export interface Transaction {
   type: 'Receita' | 'Despesa';
   category: string;
   status: 'Pago' | 'Pendente';
+  studentId?: string; // Vínculo com o aluno
+  sourceType?: 'student_payment' | 'manual'; // Origem do lançamento
 }
