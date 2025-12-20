@@ -74,7 +74,7 @@ const Instructors: React.FC = () => {
     instructorStudents.forEach(student => {
         if (student.planType) {
             const frequency = student.planType.split('x')[0];
-            const plan = settings.plans.find((p: any) => p.label.includes(`${frequency} aula`));
+            const plan = settings.plans.find(p => p.label.includes(`${frequency} aula`));
             if (plan && plan.value) {
                 totalRevenue += parseFloat(plan.value);
             }
@@ -302,7 +302,7 @@ const Instructors: React.FC = () => {
   );
 
   return (
-    <div className="relative pt-24 lg:pt-0">
+    <div className="relative pt-8 lg:pt-0">
       <div className="lg:sticky lg:top-0 z-[60] bg-slate-50/80 dark:bg-[#0b0e14]/80 backdrop-blur-sm lg:pt-8 pb-6 flex flex-col gap-6 transition-colors duration-300">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">

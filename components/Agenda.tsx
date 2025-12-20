@@ -372,7 +372,7 @@ const Agenda: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pt-24 lg:pt-8">
+    <div className="space-y-6 pt-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
           <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">

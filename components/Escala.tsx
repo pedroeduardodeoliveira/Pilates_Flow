@@ -298,7 +298,7 @@ const Escala: React.FC = () => {
   const viewOptions = [ { value: 'daily', label: 'Diário' }, { value: 'weekly', label: 'Semanal' }, { value: 'monthly', label: 'Mensal' }];
 
   return (
-    <div className="space-y-6 pt-24 lg:pt-8">
+    <div className="space-y-6 pt-8">
       {/* Header and Filters */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
