@@ -1,4 +1,3 @@
-
 import React, { useContext } from 'react';
 import { 
   LayoutGrid, 
@@ -87,7 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {mainNav.map((item) => (
           <button
             key={item.id}
