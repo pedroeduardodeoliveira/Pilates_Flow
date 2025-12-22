@@ -1,6 +1,7 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession, StudioSettings } from './types';
+import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession, StudioSettings, SubscriptionPlan } from './types';
 import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
+import { superAdminSubscriptionPlans } from './superAdminMockData';
 
 // --- TIPOS ---
 interface SettingsData extends StudioSettings {
@@ -9,6 +10,9 @@ interface SettingsData extends StudioSettings {
 
 interface SuperAdminSettings {
   defaultTrialDays: number;
+  defaultCommission: number;
+  defaultAlertDays: number;
+  supportLink: string;
 }
 
 interface AppState {
@@ -24,6 +28,7 @@ interface AppState {
   agenda: AgendaItem[];
   settings: SettingsData;
   superAdminSettings: SuperAdminSettings;
+  subscriptionPlans: SubscriptionPlan[];
   activeTab: string;
 }
 
@@ -38,6 +43,7 @@ type Action =
   | { type: 'UPDATE_AGENDA'; payload: AgendaItem[] }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
   | { type: 'UPDATE_SUPER_ADMIN_SETTINGS'; payload: Partial<SuperAdminSettings> }
+  | { type: 'UPDATE_SUBSCRIPTION_PLANS'; payload: SubscriptionPlan[] }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'LOGIN'; payload: UserSession }
@@ -132,7 +138,11 @@ const initialState: AppState = {
   settings: initialSettings,
   superAdminSettings: {
     defaultTrialDays: 30,
+    defaultCommission: 40,
+    defaultAlertDays: 7,
+    supportLink: 'https://wa.me/qr/NPA2GMI23V4PJ1',
   },
+  subscriptionPlans: superAdminSubscriptionPlans,
   activeTab: 'painel',
 };
 
@@ -159,6 +169,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, settings: { ...state.settings, ...action.payload } };
     case 'UPDATE_SUPER_ADMIN_SETTINGS':
       return { ...state, superAdminSettings: { ...state.superAdminSettings, ...action.payload } };
+    case 'UPDATE_SUBSCRIPTION_PLANS':
+      return { ...state, subscriptionPlans: action.payload };
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
     case 'TOGGLE_THEME':

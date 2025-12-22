@@ -1,4 +1,4 @@
-import { Client, StudioSettings } from './types';
+import { Client, StudioSettings, SubscriptionPlan } from './types';
 
 const createDefaultSettings = (appName: string): StudioSettings => ({
   appName,
@@ -90,4 +90,25 @@ export const superAdminClients: Client[] = [
         mrr: 499.90,
         settings: createDefaultSettings('Pilates Premium')
     },
+];
+
+export const superAdminSubscriptionPlans: SubscriptionPlan[] = [
+    {
+        id: 'plan_essential',
+        name: 'Plano Essencial',
+        price: 199.90,
+        features: {
+            financialModule: false,
+            bulkAllocation: false,
+        }
+    },
+    {
+        id: 'plan_pro',
+        name: 'Plano Pro',
+        price: 299.90,
+        features: {
+            financialModule: true,
+            bulkAllocation: true,
+        }
+    }
 ];

@@ -178,3 +178,13 @@ export interface Client {
   mrr: number;
   settings: StudioSettings;
 }
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  features: {
+    financialModule: boolean;
+    bulkAllocation: boolean;
+  };
+}
