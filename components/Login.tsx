@@ -6,24 +6,36 @@ import NeuralNetworkBackground from './NeuralNetworkBackground';
 const Login: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
   const { settings, instructors } = state;
-  const [cpf, setCpf] = useState('');
+  const [document, setDocument] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const maskCPF = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-      .substring(0, 14);
+  const maskDocument = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+
+    if (cleaned.length <= 11) {
+      // Máscara de CPF
+      return cleaned
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+        .substring(0, 14);
+    } else {
+      // Máscara de CNPJ
+      return cleaned
+        .replace(/^(\d{2})(\d)/, '$1.$2')
+        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+        .replace(/(\d{4})(\d)/, '$1-$2')
+        .substring(0, 18);
+    }
   };
 
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const maskedValue = maskCPF(e.target.value);
-    setCpf(maskedValue);
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const maskedValue = maskDocument(e.target.value);
+    setDocument(maskedValue);
     setError(null);
   };
 
@@ -33,10 +45,10 @@ const Login: React.FC = () => {
     setError(null);
     
     setTimeout(() => {
-      const cleanCpf = cpf.replace(/\D/g, '');
+      const cleanDocument = document.replace(/\D/g, '');
       
       // Validação Super Admin
-      if (cleanCpf === '99999999999' && password === 'super') {
+      if (cleanDocument === '99999999999' && password === 'super') {
         dispatch({
           type: 'LOGIN',
           payload: { id: 'superadmin', name: 'Super Admin', role: 'superadmin', license: { status: 'active', expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString() } }
@@ -46,7 +58,7 @@ const Login: React.FC = () => {
       }
 
       // Validação Admin (Hardcoded para exemplo)
-      if (cleanCpf === '00000000000' && password === 'admin123') {
+      if (cleanDocument === '00000000000' && password === 'admin123') {
         dispatch({ 
           type: 'LOGIN', 
           payload: { id: 'admin', name: 'Administrador', role: 'admin', license: { status: 'active', expiresAt: '' } } 
@@ -60,7 +72,7 @@ const Login: React.FC = () => {
         const iCpf = i.cpf?.replace(/\D/g, '');
         // Se o instrutor não tem senha cadastrada, usamos '123456' como padrão
         const iPass = i.password || '123456';
-        return iCpf === cleanCpf && iPass === password;
+        return iCpf === cleanDocument && iPass === password;
       });
 
       if (instructor) {
@@ -69,7 +81,7 @@ const Login: React.FC = () => {
           payload: { id: instructor.id, name: instructor.name, role: 'instructor', license: { status: 'active', expiresAt: '' } } 
         });
       } else {
-        setError('CPF ou senha inválidos. Tente novamente.');
+        setError('Documento ou senha inválidos. Tente novamente.');
       }
       
       setIsLoading(false);
@@ -99,15 +111,15 @@ const Login: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 tracking-wider">CPF de Acesso</label>
+              <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 tracking-wider">CPF / CNPJ</label>
               <div className="relative">
                 <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" size={18} />
                 <input 
                   type="text" 
                   required
-                  value={cpf}
-                  onChange={handleCpfChange}
-                  placeholder="000.000.000-00"
+                  value={document}
+                  onChange={handleDocumentChange}
+                  placeholder="Seu CPF ou CNPJ"
                   inputMode="numeric"
                   className="w-full bg-slate-50/50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl py-4 pl-12 pr-4 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 transition-colors"
                 />
