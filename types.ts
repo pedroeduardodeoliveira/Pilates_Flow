@@ -32,6 +32,7 @@ export interface AgendaItem {
   instructorInitials: string;
   color: 'orange' | 'blue' | 'pink' | 'green';
   equipment?: string;
+  roomName?: string;
   status?: 'scheduled' | 'rescheduled_source' | 'rescheduled_target';
   originalId?: string;
 }
@@ -41,6 +42,7 @@ export interface EscalaItem {
   time: string;
   day: number; // 0 (SEG) to 5 (SÁB)
   equipment: string;
+  roomName: string;
   instructor: string;
   instructorInitials: string;
   color: 'orange' | 'blue' | 'pink' | 'green';

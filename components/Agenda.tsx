@@ -62,7 +62,8 @@ const Agenda: React.FC = () => {
       );
       return {
         ...appointment,
-        equipment: equipmentItem ? equipmentItem.equipment : undefined
+        equipment: equipmentItem ? equipmentItem.equipment : undefined,
+        roomName: equipmentItem ? equipmentItem.roomName : undefined
       };
     });
   };

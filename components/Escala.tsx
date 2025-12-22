@@ -16,7 +16,7 @@ const Escala: React.FC = () => {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EscalaItem | null>(null);
-  const [formData, setFormData] = useState<Omit<EscalaItem, 'id' | 'instructorInitials' | 'color'>>({ time: '07:00', day: 0, equipment: '', instructor: '' });
+  const [formData, setFormData] = useState<Omit<EscalaItem, 'id' | 'instructorInitials' | 'color'>>({ time: '07:00', day: 0, equipment: '', roomName: '', instructor: '' });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<EscalaItem | null>(null);
@@ -78,10 +78,12 @@ const Escala: React.FC = () => {
         setFormData(item);
     } else {
         const defaultInstructor = instructors[0];
+        const defaultEquipment = equipments[0];
         setFormData({
             time: time || '07:00',
             day: day !== undefined ? day : 0,
-            equipment: equipments[0]?.name || '',
+            equipment: defaultEquipment?.name || '',
+            roomName: defaultEquipment?.roomName || '',
             instructor: defaultInstructor?.name || '',
         });
     }
@@ -91,8 +93,9 @@ const Escala: React.FC = () => {
   const handleSave = () => {
     if(!formData.equipment || !formData.instructor) return;
     const selectedInst = instructors.find(i => i.name === formData.instructor);
+    const selectedEquip = equipments.find(eq => eq.name === formData.equipment);
     const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {'Ana Silva': 'pink','Bruno Santos': 'blue','Carla Dias': 'orange','Daniel Oliveira': 'green'};
-    const newItem: EscalaItem = { ...formData, instructorInitials: selectedInst?.initials || '??', color: colorMap[selectedInst?.name || ''] || 'blue', id: editingItem ? editingItem.id : Date.now().toString() };
+    const newItem: EscalaItem = { ...formData, roomName: selectedEquip?.roomName || '', instructorInitials: selectedInst?.initials || '??', color: colorMap[selectedInst?.name || ''] || 'blue', id: editingItem ? editingItem.id : Date.now().toString() };
     
     if(editingItem) { 
         setEscalaItems(escalaItems.map(item => item.id === editingItem.id ? newItem : item)); 
@@ -117,7 +120,8 @@ const Escala: React.FC = () => {
     const endHour = parseInt(endTime.split(':')[0]);
 
     const instructorDetails = instructors.find(i => i.name === instructor);
-    if (!instructorDetails) return;
+    const equipmentDetails = equipments.find(eq => eq.name === equipment);
+    if (!instructorDetails || !equipmentDetails) return;
 
     const newItems: EscalaItem[] = [];
     const existingItems = new Set(escalaItems.map(item => `${item.day}-${item.time}-${item.instructor}`));
@@ -128,7 +132,7 @@ const Escala: React.FC = () => {
 
       if (!existingItems.has(key)) {
           const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'};
-          newItems.push({ id: `${key}-${Math.random()}`, day, time, instructor, equipment, instructorInitials: instructorDetails.initials, color: colorMap[instructor as keyof typeof colorMap] || 'blue' });
+          newItems.push({ id: `${key}-${Math.random()}`, day, time, instructor, equipment, roomName: equipmentDetails.roomName, instructorInitials: instructorDetails.initials, color: colorMap[instructor as keyof typeof colorMap] || 'blue' });
       }
     }
     setEscalaItems([...escalaItems, ...newItems]);

@@ -40,7 +40,16 @@ const GroupedAgendaCard: React.FC<GroupedAgendaCardProps> = ({ items, onEdit, on
         {firstItem.equipment && (
           <div className="flex items-center gap-1.5 text-slate-500 dark:text-gray-400 mb-2 px-1 border-b border-slate-100 dark:border-gray-800 pb-1.5">
             <Box size={12} className="flex-shrink-0 text-sky-500" />
-            <span className="text-[10px] font-bold text-slate-600 dark:text-gray-300 truncate" title={firstItem.equipment}>{firstItem.equipment}</span>
+            <div className="flex flex-col min-w-0">
+                <span className="text-[10px] font-bold text-slate-600 dark:text-gray-300 truncate" title={firstItem.equipment}>
+                    {firstItem.equipment}
+                </span>
+                {firstItem.roomName && (
+                    <span className="text-[9px] font-medium text-slate-400 dark:text-gray-500 truncate" title={firstItem.roomName}>
+                        {firstItem.roomName}
+                    </span>
+                )}
+            </div>
           </div>
         )}
         <div className="space-y-1">

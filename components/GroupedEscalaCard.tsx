@@ -43,9 +43,14 @@ const GroupedEscalaCard: React.FC<GroupedEscalaCardProps> = ({ items, onEdit, on
               <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                       <Box size={12} className={`text-slate-500 dark:text-gray-400 flex-shrink-0`} />
-                      <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.equipment}>
-                          {item.equipment}
-                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[11px] text-slate-700 dark:text-gray-300 font-medium truncate" title={item.equipment}>
+                            {item.equipment}
+                        </span>
+                         <span className="text-[9px] text-slate-400 dark:text-gray-500 font-semibold truncate" title={item.roomName}>
+                            {item.roomName}
+                        </span>
+                      </div>
                   </div>
                   <div className="flex items-center gap-0.5 transition-opacity">
                       <button onClick={() => onEdit(item)} title="Editar Alocação" className="p-1 text-slate-400 dark:text-gray-500 hover:text-sky-500"><Pencil size={12} /></button>
