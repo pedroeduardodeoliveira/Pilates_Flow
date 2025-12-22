@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 import { AppContext } from '../AppContext';
 import { ChevronLeft, ChevronRight, Users, Check, Box, Plus, Pencil, Trash2, X, AlertTriangle, Zap } from 'lucide-react';
 import GroupedEscalaCard from './GroupedEscalaCard';
@@ -6,7 +6,7 @@ import { EscalaItem } from '../types';
 
 const Escala: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, escala: escalaItems, equipments, user } = state;
+  const { instructors, escala: escalaItems, equipments, rooms, user } = state;
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [currentDate, setCurrentDate] = useState(new Date()); // 22 de Dezembro, 2025
@@ -16,7 +16,7 @@ const Escala: React.FC = () => {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EscalaItem | null>(null);
-  const [formData, setFormData] = useState<Omit<EscalaItem, 'id' | 'instructorInitials' | 'color'>>({ time: '07:00', day: 0, equipment: '', roomName: '', instructor: '' });
+  const [formData, setFormData] = useState<Omit<EscalaItem, 'id' | 'instructorInitials' | 'color'>>({ time: '07:00', day: 0, equipment: '', roomName: rooms[0]?.name || '', instructor: '' });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<EscalaItem | null>(null);
@@ -25,7 +25,8 @@ const Escala: React.FC = () => {
   const [bulkFormData, setBulkFormData] = useState({
     day: 0,
     instructor: instructors[0]?.name || '',
-    equipment: equipments[0]?.name || '',
+    roomName: rooms[0]?.name || '',
+    equipment: equipments.find(e => e.roomName === (rooms[0]?.name || ''))?.name || '',
     startTime: '07:00',
     endTime: '21:00'
   });
@@ -45,6 +46,32 @@ const Escala: React.FC = () => {
   }, []);
 
   const timeSlots = Array.from({ length: 17 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
+
+  const equipmentsInSelectedRoom = useMemo(() => {
+    return equipments.filter(eq => eq.roomName === formData.roomName);
+  }, [equipments, formData.roomName]);
+
+  const equipmentsInBulkRoom = useMemo(() => {
+    return equipments.filter(eq => eq.roomName === bulkFormData.roomName);
+  }, [equipments, bulkFormData.roomName]);
+
+  const handleRoomChange = (newRoomName: string) => {
+    const firstEquipmentInRoom = equipments.find(eq => eq.roomName === newRoomName);
+    setFormData(prev => ({
+      ...prev,
+      roomName: newRoomName,
+      equipment: firstEquipmentInRoom?.name || ''
+    }));
+  };
+
+  const handleBulkRoomChange = (newRoomName: string) => {
+    const firstEquipmentInRoom = equipments.find(eq => eq.roomName === newRoomName);
+    setBulkFormData(prev => ({
+      ...prev,
+      roomName: newRoomName,
+      equipment: firstEquipmentInRoom?.name || ''
+    }));
+  };
 
   const getEscalaItems = (time: string, dayIdx: number) => {
     return escalaItems.filter(e => {
@@ -78,12 +105,13 @@ const Escala: React.FC = () => {
         setFormData(item);
     } else {
         const defaultInstructor = instructors[0];
-        const defaultEquipment = equipments[0];
+        const defaultRoom = rooms[0];
+        const firstEquipmentInDefaultRoom = equipments.find(eq => eq.roomName === defaultRoom?.name);
         setFormData({
             time: time || '07:00',
             day: day !== undefined ? day : 0,
-            equipment: defaultEquipment?.name || '',
-            roomName: defaultEquipment?.roomName || '',
+            roomName: defaultRoom?.name || '',
+            equipment: firstEquipmentInDefaultRoom?.name || '',
             instructor: defaultInstructor?.name || '',
         });
     }
@@ -93,14 +121,17 @@ const Escala: React.FC = () => {
   const handleSave = () => {
     if(!formData.equipment || !formData.instructor) return;
     const selectedInst = instructors.find(i => i.name === formData.instructor);
-    const selectedEquip = equipments.find(eq => eq.name === formData.equipment);
     const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {'Ana Silva': 'pink','Bruno Santos': 'blue','Carla Dias': 'orange','Daniel Oliveira': 'green'};
-    const newItem: EscalaItem = { ...formData, roomName: selectedEquip?.roomName || '', instructorInitials: selectedInst?.initials || '??', color: colorMap[selectedInst?.name || ''] || 'blue', id: editingItem ? editingItem.id : Date.now().toString() };
+    const newItem: EscalaItem = { 
+        ...formData, 
+        instructorInitials: selectedInst?.initials || '??', 
+        color: colorMap[selectedInst?.name || ''] || 'blue', 
+        id: editingItem ? editingItem.id : Date.now().toString() 
+    };
     
     if(editingItem) { 
         setEscalaItems(escalaItems.map(item => item.id === editingItem.id ? newItem : item)); 
     } else { 
-        // Evita duplicados na mesma célula
         const alreadyExists = escalaItems.some(item => item.day === newItem.day && item.time === newItem.time && item.instructor === newItem.instructor && item.equipment === newItem.equipment);
         if(!alreadyExists) {
             setEscalaItems([...escalaItems, newItem]); 
@@ -113,15 +144,14 @@ const Escala: React.FC = () => {
   const executeDelete = () => { if(itemToDelete) { setEscalaItems(escalaItems.filter(item => item.id !== itemToDelete.id)); setIsDeleteModalOpen(false); setItemToDelete(null); }};
 
   const handleSaveBulk = () => {
-    const { day, instructor, equipment, startTime, endTime } = bulkFormData;
-    if (!instructor || !equipment) return;
+    const { day, instructor, roomName, equipment, startTime, endTime } = bulkFormData;
+    if (!instructor || !equipment || !roomName) return;
 
     const startHour = parseInt(startTime.split(':')[0]);
     const endHour = parseInt(endTime.split(':')[0]);
 
     const instructorDetails = instructors.find(i => i.name === instructor);
-    const equipmentDetails = equipments.find(eq => eq.name === equipment);
-    if (!instructorDetails || !equipmentDetails) return;
+    if (!instructorDetails) return;
 
     const newItems: EscalaItem[] = [];
     const existingItems = new Set(escalaItems.map(item => `${item.day}-${item.time}-${item.instructor}`));
@@ -132,7 +162,7 @@ const Escala: React.FC = () => {
 
       if (!existingItems.has(key)) {
           const colorMap: {[key: string]: 'orange' | 'blue' | 'pink' | 'green'} = {'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'};
-          newItems.push({ id: `${key}-${Math.random()}`, day, time, instructor, equipment, roomName: equipmentDetails.roomName, instructorInitials: instructorDetails.initials, color: colorMap[instructor as keyof typeof colorMap] || 'blue' });
+          newItems.push({ id: `${key}-${Math.random()}`, day, time, instructor, equipment, roomName, instructorInitials: instructorDetails.initials, color: colorMap[instructor as keyof typeof colorMap] || 'blue' });
       }
     }
     setEscalaItems([...escalaItems, ...newItems]);
@@ -348,7 +378,8 @@ const Escala: React.FC = () => {
                   <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
               </div>
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label><select value={formData.instructor} onChange={e => setFormData({...formData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={formData.equipment} onChange={e => setFormData({...formData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Sala</label><select value={formData.roomName} onChange={e => handleRoomChange(e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{rooms.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={formData.equipment} onChange={e => setFormData({...formData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipmentsInSelectedRoom.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
             </div>
             <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
@@ -369,7 +400,8 @@ const Escala: React.FC = () => {
                   <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Até o Horário</label><input type="time" step="3600" value={bulkFormData.endTime} onChange={e => setBulkFormData({...bulkFormData, endTime: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
               </div>
               <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Instrutor</label><select value={bulkFormData.instructor} onChange={e => setBulkFormData({...bulkFormData, instructor: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{instructors.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}</select></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={bulkFormData.equipment} onChange={e => setBulkFormData({...bulkFormData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipments.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Sala</label><select value={bulkFormData.roomName} onChange={e => handleBulkRoomChange(e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{rooms.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}</select></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aparelho</label><select value={bulkFormData.equipment} onChange={e => setBulkFormData({...bulkFormData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{equipmentsInBulkRoom.map(eq => <option key={eq.id} value={eq.name}>{eq.name}</option>)}</select></div>
             </div>
             <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
               <button onClick={() => setIsBulkModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
