@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { Fingerprint, Lock, LogIn, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Fingerprint, Lock, LogIn, Loader2, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 import NeuralNetworkBackground from './NeuralNetworkBackground';
 
 const Login: React.FC = () => {
@@ -11,6 +11,7 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRecoveryModalOpen, setIsRecoveryModalOpen] = useState(false);
 
   const maskDocument = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
@@ -127,7 +128,16 @@ const Login: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 tracking-wider">Senha</label>
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 tracking-wider">Senha</label>
+                <button
+                  type="button"
+                  onClick={() => setIsRecoveryModalOpen(true)}
+                  className="text-xs font-medium text-slate-500 dark:text-gray-400 hover:text-sky-500 hover:underline transition-colors focus:outline-none"
+                >
+                  Esqueci a senha
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" size={18} />
                 <input 
@@ -171,6 +181,30 @@ const Login: React.FC = () => {
           </p>
         </div>
       </div>
+      
+      {isRecoveryModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-3xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-sky-500/10 text-sky-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Info size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">Recuperação de Senha</h3>
+              <p className="text-sm text-slate-500 dark:text-gray-400">
+                Para redefinir sua senha, entre em contato com o administrador do estúdio. Por motivos de segurança, a recuperação de senha não é automatizada.
+              </p>
+            </div>
+            <div className="p-6 bg-slate-50 dark:bg-gray-800/50 flex">
+              <button 
+                onClick={() => setIsRecoveryModalOpen(false)} 
+                className="flex-1 px-6 py-3 rounded-xl text-sm font-bold bg-sky-600 hover:bg-sky-500 text-white uppercase tracking-widest transition-all"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
