@@ -113,18 +113,45 @@ const Agenda: React.FC = () => {
 
     if (editingItem) {
         // Ação de Reposição/Remarcação
-        const updatedAppointments = appointments.map((item): AgendaItem =>
-            item.id === editingItem.id ? { ...item, status: 'rescheduled_source' } : item
+        // 1. Achar a aula original (raiz da corrente de remarcações).
+        let rootOriginalId = editingItem.id;
+        let currentItem = editingItem;
+        while (currentItem.originalId) {
+            const parent = appointments.find(a => a.id === currentItem.originalId);
+            if (parent) {
+                rootOriginalId = parent.id;
+                currentItem = parent;
+            } else {
+                break; // Corrente quebrada, parar.
+            }
+        }
+        
+        // 2. Filtrar todas as aulas não relacionadas e a aula original.
+        const otherAppointments = appointments.filter(
+            item => item.id !== rootOriginalId && item.originalId !== rootOriginalId
         );
+        const rootItem = appointments.find(item => item.id === rootOriginalId);
+
+        if (!rootItem) {
+            setIsModalOpen(false);
+            return; // Salvaguarda, não deve acontecer.
+        }
+
+        // 3. Marcar a aula original como "remarcada".
+        const updatedRootItem = { ...rootItem, status: 'rescheduled_source' as const };
+        
+        // 4. Criar a nova aula de reposição, apontando para a original.
         const rescheduledClass: AgendaItem = {
             ...formData,
             id: Date.now().toString(),
             instructorInitials: selectedInst?.initials || '??',
             color: colorMap[selectedInst?.name || ''] || 'blue',
             status: 'rescheduled_target',
-            originalId: editingItem.id
+            originalId: rootOriginalId
         };
-        setAppointments([...updatedAppointments, rescheduledClass]);
+        
+        // 5. Atualizar o estado com as aulas não relacionadas, a original atualizada e a nova reposição.
+        setAppointments([...otherAppointments, updatedRootItem, rescheduledClass]);
     } else {
         // Ação de Criar nova aula (Experimental)
         const newItem: AgendaItem = {
@@ -150,12 +177,12 @@ const Agenda: React.FC = () => {
     let updatedAppointments = [...appointments];
 
     if (itemToDelete.status === 'rescheduled_target' && itemToDelete.originalId) {
-        // Excluir reposição: reverte a original e remove a reposição
+        // Excluir reposição: reverte a original para 'agendada' e remove a reposição.
         updatedAppointments = updatedAppointments
             .map((item): AgendaItem => item.id === itemToDelete.originalId ? { ...item, status: 'scheduled' } : item)
             .filter(item => item.id !== itemToDelete.id);
     } else if (itemToDelete.status === 'rescheduled_source') {
-        // Excluir original remarcada: remove a original e sua reposição
+        // Excluir original remarcada: remove a original e sua reposição.
         updatedAppointments = updatedAppointments.filter(
             item => item.id !== itemToDelete.id && item.originalId !== itemToDelete.id
         );
