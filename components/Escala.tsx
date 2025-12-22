@@ -9,7 +9,7 @@ const Escala: React.FC = () => {
   const { instructors, escala: escalaItems, equipments, user } = state;
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
+  const [currentDate, setCurrentDate] = useState(new Date()); // 22 de Dezembro, 2025
   const [isInstructorOpen, setIsInstructorOpen] = useState(false);
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);

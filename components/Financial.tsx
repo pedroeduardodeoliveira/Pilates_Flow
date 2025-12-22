@@ -81,7 +81,7 @@ const Financial: React.FC = () => {
             const revertedExpiryDateStr = currentExpiry.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
             
             // Recalcula os dias restantes com base na data "congelada" do app
-            const today = new Date(2025, 11, 18);
+            const today = new Date();
             today.setHours(0, 0, 0, 0);
             const revertedExpiryDate = new Date(currentExpiry);
             revertedExpiryDate.setHours(0,0,0,0);
@@ -113,7 +113,14 @@ const Financial: React.FC = () => {
   }, [transactions, typeFilter, statusFilter]);
 
   const financialSummary = useMemo(() => {
-    const monthlyTransactions = transactions.filter(t => new Date(t.date).getMonth() === 11 && new Date(t.date).getFullYear() === 2025);
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    const monthlyTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.date + 'T00:00:00'); // Tratar como UTC para evitar problemas de fuso
+      return transactionDate.getUTCMonth() === currentMonth && transactionDate.getUTCFullYear() === currentYear;
+    });
 
     const revenue = monthlyTransactions.filter(t => t.type === 'Receita' && t.status === 'Pago').reduce((acc, t) => acc + t.amount, 0);
     const expense = monthlyTransactions.filter(t => t.type === 'Despesa' && t.status === 'Pago').reduce((acc, t) => acc + t.amount, 0);

@@ -9,7 +9,7 @@ const Dashboard: React.FC = () => {
   const { students, instructors, agenda, user, settings } = state;
 
   const isAdmin = user?.role === 'admin';
-  const currentDate = new Date(2025, 11, 18); // Quinta, 18 de Dezembro de 2025
+  const currentDate = new Date(); // Quinta, 18 de Dezembro de 2025
 
   // Filtra os alunos baseados no perfil do usuário e na nova configuração
   const filteredStudentsBase = useMemo(() => {

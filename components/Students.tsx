@@ -122,7 +122,7 @@ const Students: React.FC = () => {
                 const newExpiryDateStr = currentExpiry.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 
                 // Recalcula os dias restantes com base na data "congelada" do app
-                const today = new Date(2025, 11, 18);
+                const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 const newExpiryDate = new Date(currentExpiry);
                 newExpiryDate.setHours(0,0,0,0);
@@ -145,7 +145,7 @@ const Students: React.FC = () => {
         id: `TR-${student.id}-${Date.now()}`,
         description: `Mensalidade - ${student.name}`,
         amount: planValue,
-        date: new Date(2025, 11, 18).toISOString().split('T')[0], // Data "atual" do app
+        date: new Date().toISOString().split('T')[0], // Data "atual" do app
         type: 'Receita',
         category: 'Mensalidade',
         status: 'Pago',

@@ -11,7 +11,7 @@ const Agenda: React.FC = () => {
   const isAdmin = user?.role === 'admin';
   
   const [view, setView] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 11, 18)); // 18 de Dezembro, 2025
+  const [currentDate, setCurrentDate] = useState(new Date()); // 22 de Dezembro, 2025
   const [isInstructorOpen, setIsInstructorOpen] = useState(false);
   // Se for instrutor, já começa filtrado por ele mesmo
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(!isAdmin ? user?.name || null : null);

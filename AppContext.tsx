@@ -53,7 +53,7 @@ interface AppContextType {
 
 // --- LÓGICA DE CÁLCULO DINÂMICO ---
 const calculateDynamicStudentData = (students: Student[], settings: SettingsData): Student[] => {
-    const today = new Date(2025, 11, 18); // Data "atual" fixa para consistência do mock
+    const today = new Date(); // Usa a data atual do sistema
     today.setHours(0, 0, 0, 0);
 
     return students.map(student => {
