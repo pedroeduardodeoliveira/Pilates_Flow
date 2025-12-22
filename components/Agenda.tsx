@@ -174,13 +174,13 @@ const Agenda: React.FC = () => {
     const dayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="grid grid-cols-[80px_1fr]">
-          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex flex-col items-center justify-center">
+          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900 flex flex-col items-center justify-center">
             <span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span>
             <span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span>
           </div>
-          <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex items-center">
+          <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900 flex items-center">
             <Clock className="text-sky-500 mr-2" size={16} />
             <h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Cronograma do Dia</h3>
           </div>
@@ -193,7 +193,7 @@ const Agenda: React.FC = () => {
 
               return (
                 <React.Fragment key={time}>
-                  <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center">
+                  <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900">
                     <span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span>
                   </div>
                   <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
@@ -232,16 +232,14 @@ const Agenda: React.FC = () => {
     });
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-auto max-h-[75vh] custom-scrollbar shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-auto max-h-[75vh] custom-scrollbar shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="grid grid-cols-[80px_repeat(6,1fr)] min-w-[800px] relative">
-          <div className="sticky top-0 left-0 z-40 p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20"></div>
+          <div className="sticky top-0 left-0 z-40 p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900"></div>
           {weekDays.map((day, idx) => (
             <div 
               key={idx} 
               onClick={() => setCurrentDate(day.fullDate)}
-              className={`sticky top-0 z-30 p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 ${
-                day.active ? 'bg-sky-500/10' : 'bg-slate-50 dark:bg-gray-900/20'
-              }`}
+              className={`sticky top-0 z-30 p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 bg-slate-50 dark:bg-gray-900`}
             >
               <span className={`text-[10px] font-bold tracking-wider mb-1 ${day.active ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>
                 {day.name}
@@ -255,7 +253,7 @@ const Agenda: React.FC = () => {
 
           {timeSlots.map((time) => (
             <React.Fragment key={time}>
-              <div className="sticky left-0 z-20 p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900/40">
+              <div className="sticky left-0 z-20 p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span>
               </div>
               {[0, 1, 2, 3, 4, 5].map((dayIdx) => {
@@ -308,8 +306,8 @@ const Agenda: React.FC = () => {
     };
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20">
+      <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900">
           {dayHeaders.map(h => (
             <div key={h} className="p-2 md:p-4 text-center text-[10px] font-bold text-slate-500 dark:text-gray-400 tracking-widest uppercase">{h}</div>
           ))}

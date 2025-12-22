@@ -140,10 +140,10 @@ const Escala: React.FC = () => {
     const dayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="grid grid-cols-[80px_1fr]">
-          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex flex-col items-center justify-center"><span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span><span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span></div>
-          <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20 flex items-center"><Box className="text-sky-500 mr-2" size={16} /><h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Distribuição de Aparelhos</h3></div>
+          <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900 flex flex-col items-center justify-center"><span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span><span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span></div>
+          <div className="p-4 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900 flex items-center"><Box className="text-sky-500 mr-2" size={16} /><h3 className="font-bold text-slate-700 dark:text-gray-300 text-sm">Distribuição de Aparelhos</h3></div>
           {timeSlots.map((time) => {
             const itemsInSlot = getEscalaItems(time, dayIdx);
             const groupedByInstructor = itemsInSlot.reduce<Record<string, EscalaItem[]>>((acc, item) => {
@@ -153,7 +153,7 @@ const Escala: React.FC = () => {
 
             return (
               <React.Fragment key={time}>
-                <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center"><span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
+                <div className="p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900"><span className="text-xs font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
                 <div className="p-4 border-b border-slate-200 dark:border-gray-800 min-h-[120px] transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5 group relative">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {Object.values(groupedByInstructor).map((items) => (
@@ -183,17 +183,17 @@ const Escala: React.FC = () => {
     const weekDays = Array.from({ length: 6 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return { name: getDayName(d), date: d.getDate(), fullDate: d, active: d.toDateString() === currentDate.toDateString() }; });
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-auto max-h-[75vh] custom-scrollbar shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-auto max-h-[75vh] custom-scrollbar shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="grid grid-cols-[80px_repeat(6,1fr)] min-w-[800px] relative">
-          <div className="sticky top-0 left-0 z-40 p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20"></div>
+          <div className="sticky top-0 left-0 z-40 p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900"></div>
           {weekDays.map((day, idx) => (
-            <div key={idx} onClick={() => setCurrentDate(day.fullDate)} className={`sticky top-0 z-30 p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 ${day.active ? 'bg-sky-500/10' : 'bg-slate-50 dark:bg-gray-900/20'}`}>
+            <div key={idx} onClick={() => setCurrentDate(day.fullDate)} className={`sticky top-0 z-30 p-4 border-b border-slate-200 dark:border-gray-800 text-center flex flex-col items-center justify-center transition-all cursor-pointer hover:bg-sky-500/5 bg-slate-50 dark:bg-gray-900`}>
               <span className={`text-[10px] font-bold tracking-wider mb-1 ${day.active ? 'text-sky-500' : 'text-slate-500 dark:text-gray-400'}`}>{day.name}</span><span className={`text-xl font-bold ${day.active ? 'text-slate-800 dark:text-white' : 'text-slate-600 dark:text-gray-300'}`}>{day.date}</span>{day.active && <div className="mt-2 w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]"></div>}
             </div>
           ))}
           {timeSlots.map((time) => (
             <React.Fragment key={time}>
-              <div className="sticky left-0 z-20 p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900/40"><span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
+              <div className="sticky left-0 z-20 p-4 text-center border-b border-r border-slate-200 dark:border-gray-800 flex items-center justify-center bg-white dark:bg-gray-900"><span className="text-[11px] font-bold text-slate-500 dark:text-gray-400">{time}</span></div>
               {[0, 1, 2, 3, 4, 5].map((dayIdx) => {
                 const itemsInSlot = getEscalaItems(time, dayIdx);
                 const groupedByInstructor = itemsInSlot.reduce<Record<string, EscalaItem[]>>((acc, item) => {
@@ -246,8 +246,8 @@ const Escala: React.FC = () => {
     };
 
     return (
-      <div className="bg-white dark:bg-gray-900/40 rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900/20">
+      <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="grid grid-cols-7 border-b border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900">
           {dayHeaders.map(h => (
             <div key={h} className="p-2 md:p-4 text-center text-[10px] font-bold text-slate-500 dark:text-gray-400 tracking-widest uppercase">{h}</div>
           ))}
@@ -324,7 +324,7 @@ const Escala: React.FC = () => {
           <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center gap-2 bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 px-4 py-2.5 rounded-lg text-sm text-slate-700 dark:text-gray-300 hover:border-sky-500/50 hover:text-sky-500 transition-all font-medium shadow-sm"><Zap size={16} /> Alocação Rápida</button>
         </div>
         <div className="flex items-center bg-white dark:bg-gray-900/40 rounded-lg border border-slate-200 dark:border-gray-800 p-1 shadow-sm">
-          {viewOptions.map(v => <button key={v.value} onClick={() => setView(v.value as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v.value ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-300'}`}>{v.label}</button>)}
+          {viewOptions.map(v => <button key={v.value} onClick={() => setView(v.value as any)} className={`px-4 py-1.5 text-xs font-bold transition-all rounded-md ${view === v.value ? 'bg-sky-500/10 text-sky-500' : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'}`}>{v.label}</button>)}
         </div>
       </div>
       <div className="relative min-h-[500px]">
