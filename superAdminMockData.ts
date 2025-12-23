@@ -112,8 +112,14 @@ export const superAdminSubscriptionPlans: SubscriptionPlan[] = [
         price: 119.90,
         studentLimit: 200,
         features: {
-            financialModule: false,
+            dashboard: true,
+            detailedAgenda: true,
+            scale: true,
+            studentManagement: true,
+            instructorManagement: true,
+            roomsManagement: true,
             bulkAllocation: true,
+            financialModule: false,
             whatsappBot: false,
         }
     },
@@ -123,8 +129,14 @@ export const superAdminSubscriptionPlans: SubscriptionPlan[] = [
         price: 159.90,
         studentLimit: 300,
         features: {
-            financialModule: true,
+            dashboard: true,
+            detailedAgenda: true,
+            scale: true,
+            studentManagement: true,
+            instructorManagement: true,
+            roomsManagement: true,
             bulkAllocation: true,
+            financialModule: true,
             whatsappBot: false,
         }
     },
@@ -134,8 +146,14 @@ export const superAdminSubscriptionPlans: SubscriptionPlan[] = [
         price: 199.90,
         studentLimit: 500,
         features: {
-            financialModule: true,
+            dashboard: true,
+            detailedAgenda: true,
+            scale: true,
+            studentManagement: true,
+            instructorManagement: true,
+            roomsManagement: true,
             bulkAllocation: true,
+            financialModule: true,
             whatsappBot: true,
         }
     },
@@ -145,8 +163,14 @@ export const superAdminSubscriptionPlans: SubscriptionPlan[] = [
         price: 299.90,
         studentLimit: 'unlimited',
         features: {
-            financialModule: true,
+            dashboard: true,
+            detailedAgenda: true,
+            scale: true,
+            studentManagement: true,
+            instructorManagement: true,
+            roomsManagement: true,
             bulkAllocation: true,
+            financialModule: true,
             whatsappBot: true,
         }
     }

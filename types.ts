@@ -169,6 +169,13 @@ export interface StudioSettings {
 }
 
 // Para o Painel Super Admin
+export interface SuperAdminSettings {
+  defaultTrialDays: number;
+  defaultCommission: number;
+  defaultAlertDays: number;
+  supportLink: string;
+}
+
 export interface Client {
   id: string;
   studioName: string;
@@ -189,6 +196,12 @@ export interface SubscriptionPlan {
   price: number;
   studentLimit: number | 'unlimited';
   features: {
+    dashboard: boolean;
+    detailedAgenda: boolean;
+    scale: boolean;
+    studentManagement: boolean;
+    instructorManagement: boolean;
+    roomsManagement: boolean;
     financialModule: boolean;
     bulkAllocation: boolean;
     whatsappBot: boolean;

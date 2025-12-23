@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText, AlertTriangle, ShieldAlert, CreditCard, Lock, Eye, EyeOff, RefreshCw, X, KeySquare, Info, Zap, Bot } from 'lucide-react';
+import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText, AlertTriangle, ShieldAlert, CreditCard, Lock, Eye, EyeOff, RefreshCw, X, KeySquare, Info, Zap, Bot, LayoutGrid, Calendar, Layers, Users, GraduationCap, Dumbbell, XCircle } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -18,6 +18,17 @@ const Settings: React.FC = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
+  const featureList: { key: keyof (typeof subscriptionPlans)[0]['features']; label: string; icon: React.ReactNode; }[] = [
+    { key: 'dashboard', label: 'Painel Gerencial', icon: <LayoutGrid size={14} /> },
+    { key: 'detailedAgenda', label: 'Agenda Detalhada', icon: <Calendar size={14} /> },
+    { key: 'scale', label: 'Escala de Aparelhos', icon: <Layers size={14} /> },
+    { key: 'studentManagement', label: 'Gestão de Alunos', icon: <Users size={14} /> },
+    { key: 'instructorManagement', label: 'Gestão de Instrutores', icon: <GraduationCap size={14} /> },
+    { key: 'roomsManagement', label: 'Salas & Aparelhos', icon: <Dumbbell size={14} /> },
+    { key: 'bulkAllocation', label: 'Alocação Rápida', icon: <Zap size={14} /> },
+    { key: 'financialModule', label: 'Módulo Financeiro', icon: <DollarSign size={14} /> },
+    { key: 'whatsappBot', label: 'Chatbot WhatsApp', icon: <Bot size={14} /> },
+  ];
 
   const showSaveSuccess = () => {
     setSaveSuccess(true);
@@ -174,87 +185,39 @@ const Settings: React.FC = () => {
             };
             
             if (license.status === 'trial') {
-                config = {
-                    ...config,
-                    icon: <CheckCircle size={24} />,
-                    borderColor: 'border-sky-500/20',
-                    textColor: 'text-sky-500',
-                    title: 'Período de Teste',
-                    buttonText: 'Fazer Upgrade',
-                    buttonClass: 'bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20'
-                }
+                config = { ...config, icon: <CheckCircle size={24} />, borderColor: 'border-sky-500/20', textColor: 'text-sky-500', title: 'Período de Teste', buttonText: 'Fazer Upgrade', buttonClass: 'bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20' }
             } else if (license.status === 'expiring_soon') {
-                config = {
-                    ...config,
-                    icon: <AlertTriangle size={24} />,
-                    borderColor: 'border-amber-500/20',
-                    textColor: 'text-amber-500',
-                    title: 'Licença Expirando',
-                    buttonText: 'Renovar Agora',
-                    buttonClass: 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
-                };
+                config = { ...config, icon: <AlertTriangle size={24} />, borderColor: 'border-amber-500/20', textColor: 'text-amber-500', title: 'Licença Expirando', buttonText: 'Renovar Agora', buttonClass: 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20' };
             } else if (license.status === 'expired') {
-                config = {
-                    ...config,
-                    icon: <ShieldAlert size={24} />,
-                    borderColor: 'border-rose-500/20',
-                    textColor: 'text-rose-500',
-                    title: 'Licença Expirada',
-                    buttonText: 'Regularizar Assinatura',
-                    buttonClass: 'bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20'
-                };
+                config = { ...config, icon: <ShieldAlert size={24} />, borderColor: 'border-rose-500/20', textColor: 'text-rose-500', title: 'Licença Expirada', buttonText: 'Regularizar Assinatura', buttonClass: 'bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20' };
             }
 
             return (
                 <div className={`bg-white dark:bg-gray-900/40 border ${config.borderColor} rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none animate-in fade-in flex flex-col`}>
                     <div className="flex items-center gap-3 mb-4">
-                        <div className={`w-12 h-12 rounded-lg ${config.textColor}/10 flex items-center justify-center`}>
-                           <div className={config.textColor}>{config.icon}</div>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-slate-800 dark:text-gray-100">Status da Licença</h3>
-                            <p className={`text-xs font-bold ${config.textColor}`}>{config.title}</p>
-                        </div>
+                        <div className={`w-12 h-12 rounded-lg ${config.textColor}/10 flex items-center justify-center`}><div className={config.textColor}>{config.icon}</div></div>
+                        <div><h3 className="font-bold text-slate-800 dark:text-gray-100">Status da Licença</h3><p className={`text-xs font-bold ${config.textColor}`}>{config.title}</p></div>
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-gray-400 leading-relaxed mb-4">
-                        Sua assinatura é válida até{' '}
-                        <strong className="text-slate-700 dark:text-gray-200">
-                            {expiresDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                        </strong>.
-                    </p>
+                    <p className="text-sm text-slate-500 dark:text-gray-400 leading-relaxed mb-4">Sua assinatura é válida até <strong className="text-slate-700 dark:text-gray-200">{expiresDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>.</p>
+                    
                     {currentPlan && (
                         <div className="my-4 pt-4 border-t border-slate-200 dark:border-gray-700 space-y-3">
-                            <p className="text-xs font-bold text-slate-500 dark:text-gray-400">
-                                Seu Plano: <span className="text-sky-500">{currentPlan.name}</span>
-                                <span className="ml-2 font-medium text-slate-400">
-                                  (Até {currentPlan.studentLimit === 'unlimited' ? 'alunos ilimitados' : `${currentPlan.studentLimit} alunos`})
-                                </span>
-                            </p>
-                            <ul className="space-y-2">
-                                {currentPlan.features.financialModule && (
-                                    <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium">
-                                        <CheckCircle size={14} className="text-emerald-500" />
-                                        Módulo Financeiro Completo
+                            <p className="text-xs font-bold text-slate-500 dark:text-gray-400">Seu Plano: <span className="text-sky-500">{currentPlan.name}</span><span className="ml-2 font-medium text-slate-400">(Até {currentPlan.studentLimit === 'unlimited' ? 'alunos ilimitados' : `${currentPlan.studentLimit} alunos`})</span></p>
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+                                {featureList.map(feature => {
+                                  const isEnabled = currentPlan.features[feature.key];
+                                  return (
+                                    <li key={feature.key} className={`flex items-center gap-2 text-xs font-medium ${isEnabled ? 'text-slate-600 dark:text-gray-300' : 'text-slate-400 dark:text-gray-500'}`}>
+                                      {isEnabled ? <CheckCircle size={14} className="text-emerald-500" /> : <XCircle size={14} className="text-rose-500" />}
+                                      {feature.label}
                                     </li>
-                                )}
-                                {currentPlan.features.bulkAllocation && (
-                                    <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium">
-                                        <CheckCircle size={14} className="text-emerald-500" />
-                                        Alocação Rápida em Lote
-                                    </li>
-                                )}
-                                {currentPlan.features.whatsappBot && (
-                                    <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium">
-                                        <CheckCircle size={14} className="text-emerald-500" />
-                                        Chatbot de Avisos (WhatsApp)
-                                    </li>
-                                )}
+                                  );
+                                })}
                             </ul>
                         </div>
                     )}
-                    <button className={`mt-auto w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}>
-                        <CreditCard size={14} /> {config.buttonText}
-                    </button>
+
+                    <button className={`mt-auto w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}><CreditCard size={14} /> {config.buttonText}</button>
                 </div>
             );
           })()}
@@ -264,56 +227,27 @@ const Settings: React.FC = () => {
         <div className="lg:col-span-2 space-y-8">
           {/* Identidade Visual */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
-              <Palette size={16} className="text-sky-500" />
-              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Identidade Visual</h3>
-            </div>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3"><Palette size={16} className="text-sky-500" /><h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Identidade Visual</h3></div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label>
-                <input 
-                  type="text" 
-                  value={settings.appName}
-                  onChange={(e) => handleSettingsChange({ appName: e.target.value })}
-                  className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Logo</label>
-                <button 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 bg-slate-50 dark:bg-gray-800 border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-sky-500 rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-gray-400 font-medium transition-all"
-                >
-                  <UploadCloud size={16} />
-                  {settings.logo ? 'Alterar Logo' : 'Enviar Logo'}
-                </button>
-                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoChange} />
-              </div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label><input type="text" value={settings.appName} onChange={(e) => handleSettingsChange({ appName: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500" /></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Logo</label><button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center justify-center gap-2 bg-slate-50 dark:bg-gray-800 border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-sky-500 rounded-xl px-4 py-3 text-sm text-slate-500 dark:text-gray-400 font-medium transition-all"><UploadCloud size={16} />{settings.logo ? 'Alterar Logo' : 'Enviar Logo'}</button><input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleLogoChange} /></div>
             </div>
           </div>
           
           {/* Contato e Endereço */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
-              <MapPin size={16} className="text-sky-500" />
-              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Contato & Endereço</h3>
-            </div>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3"><MapPin size={16} className="text-sky-500" /><h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Contato & Endereço</h3></div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Telefone / WhatsApp</label><input value={settings.phone} onChange={e => handleSettingsChange({ phone: maskPhone(e.target.value) })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="(00) 00000-0000" maxLength={15} /></div>
                 <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">E-mail de Contato</label><input type="email" value={settings.email} onChange={e => handleSettingsChange({ email: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="contato@seudominio.com"/></div>
               </div>
               <div className="grid grid-cols-12 gap-x-4 gap-y-4 pt-4 border-t border-slate-100 dark:border-gray-800">
-                <div className="col-span-12 md:col-span-3 space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex justify-between items-center">CEP {isLoadingCep && <Loader2 size={12} className="animate-spin" />}</label>
-                  <input value={settings.address.cep} onChange={e => handleSettingsChange({ address: { ...settings.address, cep: maskCEP(e.target.value) }})} onBlur={handleCEPBlur} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="00000-000" maxLength={9} />
-                </div>
+                <div className="col-span-12 md:col-span-3 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex justify-between items-center">CEP {isLoadingCep && <Loader2 size={12} className="animate-spin" />}</label><input value={settings.address.cep} onChange={e => handleSettingsChange({ address: { ...settings.address, cep: maskCEP(e.target.value) }})} onBlur={handleCEPBlur} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="00000-000" maxLength={9} /></div>
                 <div className="col-span-12 md:col-span-9 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Rua / Logradouro</label><input value={settings.address.street} onChange={e => handleSettingsChange({ address: { ...settings.address, street: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="Preenchido automaticamente"/></div>
-                
                 <div className="col-span-12 md:col-span-2 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nº</label><input value={settings.address.number} onChange={e => handleSettingsChange({ address: { ...settings.address, number: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder="123"/></div>
                 <div className="col-span-12 md:col-span-5 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Bairro</label><input value={settings.address.neighborhood} onChange={e => handleSettingsChange({ address: { ...settings.address, neighborhood: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
                 <div className="col-span-12 md:col-span-5 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Complemento</label><input value={settings.address.complement} onChange={e => handleSettingsChange({ address: { ...settings.address, complement: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
-                
                 <div className="col-span-12 md:col-span-8 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Cidade</label><input value={settings.address.city} onChange={e => handleSettingsChange({ address: { ...settings.address, city: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" /></div>
                 <div className="col-span-12 md:col-span-4 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Estado</label><input value={settings.address.state} onChange={e => handleSettingsChange({ address: { ...settings.address, state: e.target.value } })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" maxLength={2} placeholder="SP"/></div>
               </div>
@@ -322,151 +256,35 @@ const Settings: React.FC = () => {
           
           {/* Dados Fiscais e Senha */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
-                <FileText size={16} className="text-sky-500" />
-                <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Dados Fiscais & Acesso</h3>
-            </div>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3"><FileText size={16} className="text-sky-500" /><h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Dados Fiscais & Acesso</h3></div>
             <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Tipo de Documento</label>
-                        <div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-1">
-                            <button onClick={() => handleSettingsChange({ documentType: 'CNPJ' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CNPJ' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-400'}`}>CNPJ</button>
-                            <button onClick={() => handleSettingsChange({ documentType: 'CPF' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CPF' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-400'}`}>CPF</button>
-                        </div>
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">{settings.documentType}</label>
-                        <input 
-                            value={settings.document} 
-                            onChange={e => handleSettingsChange({ document: settings.documentType === 'CNPJ' ? maskCNPJ(e.target.value) : maskCPF(e.target.value) })} 
-                            className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" 
-                            placeholder={settings.documentType === 'CNPJ' ? "00.000.000/0000-00" : "000.000.000-00"} 
-                            maxLength={settings.documentType === 'CNPJ' ? 18 : 14}
-                        />
-                    </div>
+                    <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Tipo de Documento</label><div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-1"><button onClick={() => handleSettingsChange({ documentType: 'CNPJ' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CNPJ' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-400'}`}>CNPJ</button><button onClick={() => handleSettingsChange({ documentType: 'CPF' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CPF' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-400'}`}>CPF</button></div></div>
+                    <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">{settings.documentType}</label><input value={settings.document} onChange={e => handleSettingsChange({ document: settings.documentType === 'CNPJ' ? maskCNPJ(e.target.value) : maskCPF(e.target.value) })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm" placeholder={settings.documentType === 'CNPJ' ? "00.000.000/0000-00" : "000.000.000-00"} maxLength={settings.documentType === 'CNPJ' ? 18 : 14} /></div>
                 </div>
                 <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-gray-800">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Senha de Acesso do Administrador</label>
-                    <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
-                        <input 
-                            type={showPassword ? 'text' : 'password'} 
-                            value={settings.adminPassword}
-                            readOnly
-                            className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 dark:text-gray-500 focus:outline-none cursor-not-allowed"
-                        />
-                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
-                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                    </div>
-                     <div className="flex items-center gap-2 pt-1">
-                        <button onClick={() => setIsPasswordModalOpen(true)} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300">
-                            <KeySquare size={14}/> Alterar Manualmente
-                        </button>
-                        <button onClick={handleGeneratePassword} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300">
-                           <RefreshCw size={14}/> Gerar Aleatória
-                        </button>
-                    </div>
+                    <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/><input type={showPassword ? 'text' : 'password'} value={settings.adminPassword} readOnly className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 dark:text-gray-500 focus:outline-none cursor-not-allowed" /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>
+                     <div className="flex items-center gap-2 pt-1"><button onClick={() => setIsPasswordModalOpen(true)} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300"><KeySquare size={14}/> Alterar Manualmente</button><button onClick={handleGeneratePassword} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300"><RefreshCw size={14}/> Gerar Aleatória</button></div>
                 </div>
             </div>
           </div>
           
           {/* Financeiro */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
-              <DollarSign size={16} className="text-emerald-500" />
-              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Financeiro</h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {settings.plans.map((plan, idx) => (
-                  <div key={idx} className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">{plan.label}</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">R$</span>
-                      <input 
-                        type="number" 
-                        value={plan.value}
-                        onChange={(e) => handlePlanChange(e, idx)}
-                        className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-gray-800">
-                 <div className="space-y-1.5 max-w-xs">
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Comissão Padrão (Instrutores)</label>
-                    <div className="relative">
-                       <input 
-                         type="number" 
-                         value={settings.commission}
-                         onChange={(e) => handleSettingsChange({ commission: e.target.value })}
-                         className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
-                       />
-                       <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">%</span>
-                    </div>
-                 </div>
-              </div>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3"><DollarSign size={16} className="text-emerald-500" /><h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Financeiro</h3></div>
+            <div className="p-6"><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{settings.plans.map((plan, idx) => (<div key={idx} className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">{plan.label}</label><div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">R$</span><input type="number" value={plan.value} onChange={(e) => handlePlanChange(e, idx)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"/></div></div>))}</div>
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-gray-800"><div className="space-y-1.5 max-w-xs"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Comissão Padrão (Instrutores)</label><div className="relative"><input type="number" value={settings.commission} onChange={(e) => handleSettingsChange({ commission: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium" /><span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">%</span></div></div></div>
             </div>
           </div>
           
           {/* Sistema */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
-              <Bell size={16} className="text-amber-500" />
-              <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Sistema & Alertas</h3>
-            </div>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3"><Bell size={16} className="text-amber-500" /><h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Sistema & Alertas</h3></div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Alertar vencimento com antecedência de</label>
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    value={settings.alertDays}
-                    onChange={(e) => handleSettingsChange({ alertDays: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-16 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias</span>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Inativar aluno automaticamente após</label>
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    value={settings.autoInactiveDays}
-                    onChange={(e) => handleSettingsChange({ autoInactiveDays: e.target.value })}
-                    className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-28 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias de vencido</span>
-                </div>
-              </div>
-               <div className="md:col-span-2 pt-6 border-t border-slate-100 dark:border-gray-800">
-                <div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3">
-                    <div>
-                        <label className="text-sm font-bold text-slate-700 dark:text-gray-200">Visão Ampla para Instrutores</label>
-                        <p className="text-xs text-slate-500 dark:text-gray-400">Se ativado, instrutores podem ver todos os alunos do estúdio.</p>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={settings.instructorSeesAllStudents}
-                      onClick={() => handleSettingsChange({ instructorSeesAllStudents: !settings.instructorSeesAllStudents })}
-                      className={`${
-                        settings.instructorSeesAllStudents ? 'bg-sky-500' : 'bg-slate-300 dark:bg-gray-600'
-                      } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900/40`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`${
-                          settings.instructorSeesAllStudents ? 'translate-x-5' : 'translate-x-0'
-                        } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                      />
-                    </button>
-                </div>
-              </div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Alertar vencimento com antecedência de</label><div className="relative"><input type="number" value={settings.alertDays} onChange={(e) => handleSettingsChange({ alertDays: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-16 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium" /><span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias</span></div></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Inativar aluno automaticamente após</label><div className="relative"><input type="number" value={settings.autoInactiveDays} onChange={(e) => handleSettingsChange({ autoInactiveDays: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-28 py-3 text-sm text-slate-700 dark:text-gray-200 focus:outline-none focus:border-sky-500 font-medium" /><span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">dias de vencido</span></div></div>
+               <div className="md:col-span-2 pt-6 border-t border-slate-100 dark:border-gray-800"><div className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3"><div><label className="text-sm font-bold text-slate-700 dark:text-gray-200">Visão Ampla para Instrutores</label><p className="text-xs text-slate-500 dark:text-gray-400">Se ativado, instrutores podem ver todos os alunos do estúdio.</p></div><button type="button" role="switch" aria-checked={settings.instructorSeesAllStudents} onClick={() => handleSettingsChange({ instructorSeesAllStudents: !settings.instructorSeesAllStudents })} className={`${settings.instructorSeesAllStudents ? 'bg-sky-500' : 'bg-slate-300 dark:bg-gray-600'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900/40`}><span aria-hidden="true" className={`${settings.instructorSeesAllStudents ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}/></button></div></div>
             </div>
           </div>
         </div>
@@ -474,39 +292,12 @@ const Settings: React.FC = () => {
       {isPasswordModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
-            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800 dark:text-gray-100">Alterar Senha Manualmente</h3>
-              <button onClick={handleClosePasswordModal} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button>
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">Alterar Senha Manualmente</h3><button onClick={handleClosePasswordModal} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
+            <div className="p-6 space-y-4"><div className="bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs font-medium p-3 rounded-lg flex items-start gap-2"><Info size={14} className="flex-shrink-0 mt-0.5"/><span>A senha deve ter no mínimo 8 caracteres, contendo letras e números.</span></div>{passwordError && <div className="bg-rose-500/10 text-rose-500 text-xs font-bold p-3 rounded-lg">{passwordError}</div>}
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nova Senha</label><div className="relative"><input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => { setNewPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" /><button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">{showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>
+              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Confirmar Nova Senha</label><div className="relative"><input type={showNewPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" /><button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">{showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div></div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs font-medium p-3 rounded-lg flex items-start gap-2">
-                <Info size={14} className="flex-shrink-0 mt-0.5"/>
-                <span>A senha deve ter no mínimo 8 caracteres, contendo letras e números.</span>
-              </div>
-              {passwordError && <div className="bg-rose-500/10 text-rose-500 text-xs font-bold p-3 rounded-lg">{passwordError}</div>}
-              <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nova Senha</label>
-                  <div className="relative">
-                    <input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => { setNewPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" />
-                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
-                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-              </div>
-              <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Confirmar Nova Senha</label>
-                  <div className="relative">
-                    <input type={showNewPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" />
-                     <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
-                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-              </div>
-            </div>
-            <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
-              <button onClick={handleClosePasswordModal} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
-              <button onClick={handleManualPasswordChange} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Salvar Nova Senha</button>
-            </div>
+            <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3"><button onClick={handleClosePasswordModal} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button><button onClick={handleManualPasswordChange} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Salvar Nova Senha</button></div>
           </div>
         </div>
       )}
