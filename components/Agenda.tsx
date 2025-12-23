@@ -203,7 +203,7 @@ const Agenda: React.FC = () => {
 
     return (
       <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="grid grid-cols-[80px_1fr]">
+        <div className="grid grid-cols-[60px_1fr]">
           <div className="p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900 flex flex-col items-center justify-center">
             <span className="text-xs font-bold text-sky-500 mb-1">{getDayName(currentDate)}</span>
             <span className="text-2xl font-bold text-slate-800 dark:text-white">{currentDate.getDate()}</span>
@@ -261,7 +261,7 @@ const Agenda: React.FC = () => {
 
     return (
       <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-gray-800 overflow-auto max-h-[75vh] custom-scrollbar shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="grid grid-cols-[80px_repeat(7,1fr)] min-w-[920px] relative">
+        <div className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[900px] relative">
           <div className="sticky top-0 left-0 z-40 p-4 border-b border-r border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-900"></div>
           {weekDays.map((day, idx) => (
             <div 
@@ -438,8 +438,10 @@ const Agenda: React.FC = () => {
           <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
             <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{getModalTitle()}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
             <div className="p-6 space-y-4">
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label><select value={formData.day} onChange={e => setFormData({...formData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5,6].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
-              <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Dia da Semana</label><select value={formData.day} onChange={e => setFormData({...formData, day: parseInt(e.target.value)})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm">{[0,1,2,3,4,5,6].map(d => <option key={d} value={d}>{getDayName(new Date(2025,11,15+d), 'full')}</option>)}</select></div>
+                <div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário</label><input type="time" step="3600" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm"/></div>
+              </div>
               <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Aluno</label>
                   {editingItem ? (
