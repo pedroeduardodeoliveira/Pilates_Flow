@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { AppContext } from '../AppContext';
-import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText, AlertTriangle, ShieldAlert, CreditCard } from 'lucide-react';
+import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText, AlertTriangle, ShieldAlert, CreditCard, Lock, Eye, EyeOff, RefreshCw, X, KeySquare, Info, Zap, Bot } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { settings, user } = state;
+  const { settings, user, subscriptionPlans } = state;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const debounceTimeout = useRef<number | null>(null);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Estados para o modal de senha
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
 
   const showSaveSuccess = () => {
     setSaveSuccess(true);
@@ -45,6 +54,21 @@ const Settings: React.FC = () => {
   const maskCNPJ = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/, "$1.$2").replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3").replace(/\.(\d{3})(\d)/, ".$1/$2").replace(/(\d{4})(\d)/, "$1-$2");
   const maskCPF = (v: string) => v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2");
   
+  const generateRandomPassword = (length = 8) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const handleGeneratePassword = () => {
+    const newPassword = generateRandomPassword();
+    handleSettingsChange({ adminPassword: newPassword });
+    dispatch({ type: 'PASSWORD_CHANGED' });
+  };
+  
   const handleCEPBlur = async () => {
     const cleaned = settings.address.cep.replace(/\D/g, "");
     if (cleaned.length === 8) {
@@ -66,8 +90,37 @@ const Settings: React.FC = () => {
       } catch (e) { console.error("Erro ao buscar CEP"); } finally { setIsLoadingCep(false); }
     }
   };
+
+  const handleClosePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError(null);
+    setShowNewPassword(false);
+  };
+
+  const handleManualPasswordChange = () => {
+    if (!newPassword || !confirmPassword) {
+        setPasswordError('Por favor, preencha ambos os campos.');
+        return;
+    }
+    if (newPassword.length < 8) {
+        setPasswordError('A senha deve ter no mínimo 8 caracteres.');
+        return;
+    }
+    if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(newPassword)) {
+        setPasswordError('A senha deve conter letras e números.');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        setPasswordError('As senhas não coincidem. Tente novamente.');
+        return;
+    }
+    handleSettingsChange({ adminPassword: newPassword });
+    dispatch({ type: 'PASSWORD_CHANGED' });
+    handleClosePasswordModal();
+  };
   
-  // Limpa o timeout quando o componente é desmontado
   useEffect(() => {
     return () => {
         if(debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -109,35 +162,51 @@ const Settings: React.FC = () => {
           {user?.license && (() => {
             const { license } = user;
             const expiresDate = new Date(license.expiresAt);
+            const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
 
             let config = {
                 icon: <CheckCircle size={24} />,
                 borderColor: 'border-emerald-500/20',
                 textColor: 'text-emerald-500',
                 title: 'Licença Ativa',
+                buttonText: 'Gerenciar Assinatura',
                 buttonClass: 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-gray-200 hover:bg-slate-300 dark:hover:bg-white/20'
             };
-
-            if (license.status === 'expiring_soon') {
+            
+            if (license.status === 'trial') {
                 config = {
+                    ...config,
+                    icon: <CheckCircle size={24} />,
+                    borderColor: 'border-sky-500/20',
+                    textColor: 'text-sky-500',
+                    title: 'Período de Teste',
+                    buttonText: 'Fazer Upgrade',
+                    buttonClass: 'bg-sky-500 text-white hover:bg-sky-600 shadow-lg shadow-sky-500/20'
+                }
+            } else if (license.status === 'expiring_soon') {
+                config = {
+                    ...config,
                     icon: <AlertTriangle size={24} />,
                     borderColor: 'border-amber-500/20',
                     textColor: 'text-amber-500',
                     title: 'Licença Expirando',
+                    buttonText: 'Renovar Agora',
                     buttonClass: 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
                 };
             } else if (license.status === 'expired') {
                 config = {
+                    ...config,
                     icon: <ShieldAlert size={24} />,
                     borderColor: 'border-rose-500/20',
                     textColor: 'text-rose-500',
                     title: 'Licença Expirada',
+                    buttonText: 'Regularizar Assinatura',
                     buttonClass: 'bg-rose-500 text-white hover:bg-rose-600 shadow-lg shadow-rose-500/20'
                 };
             }
 
             return (
-                <div className={`bg-white dark:bg-gray-900/40 border ${config.borderColor} rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none animate-in fade-in`}>
+                <div className={`bg-white dark:bg-gray-900/40 border ${config.borderColor} rounded-2xl p-6 shadow-xl shadow-slate-200/50 dark:shadow-none animate-in fade-in flex flex-col`}>
                     <div className="flex items-center gap-3 mb-4">
                         <div className={`w-12 h-12 rounded-lg ${config.textColor}/10 flex items-center justify-center`}>
                            <div className={config.textColor}>{config.icon}</div>
@@ -153,8 +222,38 @@ const Settings: React.FC = () => {
                             {expiresDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                         </strong>.
                     </p>
-                    <button className={`w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}>
-                        <CreditCard size={14} /> Gerenciar Assinatura
+                    {currentPlan && (
+                        <div className="my-4 pt-4 border-t border-slate-200 dark:border-gray-700 space-y-3">
+                            <p className="text-xs font-bold text-slate-500 dark:text-gray-400">
+                                Seu Plano: <span className="text-sky-500">{currentPlan.name}</span>
+                                <span className="ml-2 font-medium text-slate-400">
+                                  (Até {currentPlan.studentLimit === 'unlimited' ? 'alunos ilimitados' : `${currentPlan.studentLimit} alunos`})
+                                </span>
+                            </p>
+                            <ul className="space-y-2">
+                                {currentPlan.features.financialModule && (
+                                    <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium">
+                                        <CheckCircle size={14} className="text-emerald-500" />
+                                        Módulo Financeiro Completo
+                                    </li>
+                                )}
+                                {currentPlan.features.bulkAllocation && (
+                                    <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium">
+                                        <CheckCircle size={14} className="text-emerald-500" />
+                                        Alocação Rápida em Lote
+                                    </li>
+                                )}
+                                {currentPlan.features.whatsappBot && (
+                                    <li className="flex items-center gap-2 text-xs text-slate-600 dark:text-gray-300 font-medium">
+                                        <CheckCircle size={14} className="text-emerald-500" />
+                                        Chatbot de Avisos (WhatsApp)
+                                    </li>
+                                )}
+                            </ul>
+                        </div>
+                    )}
+                    <button className={`mt-auto w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}>
+                        <CreditCard size={14} /> {config.buttonText}
                     </button>
                 </div>
             );
@@ -221,19 +320,19 @@ const Settings: React.FC = () => {
             </div>
           </div>
           
-          {/* Dados Fiscais */}
+          {/* Dados Fiscais e Senha */}
           <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none">
             <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
                 <FileText size={16} className="text-sky-500" />
-                <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Dados Fiscais</h3>
+                <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Dados Fiscais & Acesso</h3>
             </div>
-            <div className="p-6">
-                <div className="space-y-4 max-w-sm">
+            <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Tipo de Documento</label>
                         <div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-gray-700 p-1">
-                            <button onClick={() => handleSettingsChange({ documentType: 'CNPJ' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CNPJ' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-500 dark:text-gray-400'}`}>CNPJ</button>
-                            <button onClick={() => handleSettingsChange({ documentType: 'CPF' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CPF' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-slate-500 dark:text-gray-400'}`}>CPF</button>
+                            <button onClick={() => handleSettingsChange({ documentType: 'CNPJ' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CNPJ' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-400'}`}>CNPJ</button>
+                            <button onClick={() => handleSettingsChange({ documentType: 'CPF' })} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${settings.documentType === 'CPF' ? 'bg-sky-500 text-white shadow-lg' : 'text-slate-500 dark:text-gray-400'}`}>CPF</button>
                         </div>
                     </div>
                     <div className="space-y-1.5">
@@ -245,6 +344,29 @@ const Settings: React.FC = () => {
                             placeholder={settings.documentType === 'CNPJ' ? "00.000.000/0000-00" : "000.000.000-00"} 
                             maxLength={settings.documentType === 'CNPJ' ? 18 : 14}
                         />
+                    </div>
+                </div>
+                <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-gray-800">
+                    <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Senha de Acesso do Administrador</label>
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
+                        <input 
+                            type={showPassword ? 'text' : 'password'} 
+                            value={settings.adminPassword}
+                            readOnly
+                            className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 dark:text-gray-500 focus:outline-none cursor-not-allowed"
+                        />
+                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                    </div>
+                     <div className="flex items-center gap-2 pt-1">
+                        <button onClick={() => setIsPasswordModalOpen(true)} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300">
+                            <KeySquare size={14}/> Alterar Manualmente
+                        </button>
+                        <button onClick={handleGeneratePassword} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300">
+                           <RefreshCw size={14}/> Gerar Aleatória
+                        </button>
                     </div>
                 </div>
             </div>
@@ -349,6 +471,45 @@ const Settings: React.FC = () => {
           </div>
         </div>
       </div>
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800 dark:text-gray-100">Alterar Senha Manualmente</h3>
+              <button onClick={handleClosePasswordModal} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs font-medium p-3 rounded-lg flex items-start gap-2">
+                <Info size={14} className="flex-shrink-0 mt-0.5"/>
+                <span>A senha deve ter no mínimo 8 caracteres, contendo letras e números.</span>
+              </div>
+              {passwordError && <div className="bg-rose-500/10 text-rose-500 text-xs font-bold p-3 rounded-lg">{passwordError}</div>}
+              <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nova Senha</label>
+                  <div className="relative">
+                    <input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => { setNewPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" />
+                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
+                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+              </div>
+              <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Confirmar Nova Senha</label>
+                  <div className="relative">
+                    <input type={showNewPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" />
+                     <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
+                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
+              <button onClick={handleClosePasswordModal} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
+              <button onClick={handleManualPasswordChange} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Salvar Nova Senha</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

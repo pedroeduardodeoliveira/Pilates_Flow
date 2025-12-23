@@ -1,6 +1,6 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../AppContext';
-import { Settings, Calendar, CheckCircle, CreditCard, Package, ToggleLeft, ToggleRight, Percent, Bell, Link as LinkIcon, Copy, Check } from 'lucide-react';
+import { Settings, Users, CheckCircle, CreditCard, Package, ToggleLeft, ToggleRight, Link as LinkIcon, Copy, Check, Bot } from 'lucide-react';
 import { SubscriptionPlan } from '../types';
 
 const SuperAdminSettings: React.FC = () => {
@@ -33,11 +33,19 @@ const SuperAdminSettings: React.FC = () => {
         showSaveSuccess();
     };
 
-    const handlePlanChange = (planId: string, field: 'price' | keyof SubscriptionPlan['features'], value: any) => {
+    const handlePlanChange = (planId: string, field: 'price' | 'studentLimit' | keyof SubscriptionPlan['features'], value: any) => {
         const updatedPlans = plans.map(p => {
             if (p.id === planId) {
                 if (field === 'price') {
                     return { ...p, price: parseFloat(value) || 0 };
+                }
+                if (field === 'studentLimit') {
+                    const limit = value.toString().toLowerCase();
+                    if (limit === 'unlimited') {
+                        return { ...p, studentLimit: 'unlimited' };
+                    }
+                    const numLimit = parseInt(limit, 10);
+                    return { ...p, studentLimit: isNaN(numLimit) ? 0 : numLimit };
                 }
                 return { ...p, features: { ...p.features, [field]: value } };
             }
@@ -82,9 +90,9 @@ const SuperAdminSettings: React.FC = () => {
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                         {plans.map(plan => (
                             <div key={plan.id} className="bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl p-4 space-y-4">
-                                <div>
+                                <div className="space-y-3">
                                     <p className="text-sm font-bold text-slate-700 dark:text-gray-200">{plan.name}</p>
-                                    <div className="relative mt-2">
+                                    <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">R$</span>
                                         <input
                                             type="number"
@@ -93,6 +101,16 @@ const SuperAdminSettings: React.FC = () => {
                                             className="w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm font-medium"
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-gray-500">/mês</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Users size={12}/> Limite de Alunos</label>
+                                      <input
+                                          type="text"
+                                          value={plan.studentLimit}
+                                          onChange={(e) => handlePlanChange(plan.id, 'studentLimit', e.target.value)}
+                                          className="w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-lg px-4 py-2 text-sm font-medium"
+                                          placeholder="Nº ou 'unlimited'"
+                                      />
                                     </div>
                                 </div>
                                 <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-gray-700">
@@ -107,6 +125,12 @@ const SuperAdminSettings: React.FC = () => {
                                         <label className="text-xs font-medium text-slate-600 dark:text-gray-300">Alocação Rápida em Lote</label>
                                         <button onClick={() => handlePlanChange(plan.id, 'bulkAllocation', !plan.features.bulkAllocation)}>
                                             {plan.features.bulkAllocation ? <ToggleRight size={24} className="text-sky-500"/> : <ToggleLeft size={24} className="text-slate-300 dark:text-gray-600"/>}
+                                        </button>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-medium text-slate-600 dark:text-gray-300 flex items-center gap-2"><Bot size={14}/> Chatbot WhatsApp</label>
+                                        <button onClick={() => handlePlanChange(plan.id, 'whatsappBot', !plan.features.whatsappBot)}>
+                                            {plan.features.whatsappBot ? <ToggleRight size={24} className="text-sky-500"/> : <ToggleLeft size={24} className="text-slate-300 dark:text-gray-600"/>}
                                         </button>
                                     </div>
                                 </div>
@@ -134,7 +158,9 @@ const SuperAdminSettings: React.FC = () => {
                     </div>
                      <div className="p-6">
                         <div className="space-y-1.5 max-w-sm">
-                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Link de Suporte Global</label>
+                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-2">
+                                <LinkIcon size={12}/> Link de Suporte Global
+                            </label>
                             <div className="relative">
                                 <input
                                     type="text"

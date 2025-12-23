@@ -117,6 +117,7 @@ export interface UserSession {
   role: 'admin' | 'instructor' | 'superadmin';
   avatar?: string;
   license: License;
+  subscriptionPlanId?: string;
 }
 
 export interface Room {
@@ -150,6 +151,7 @@ export interface StudioSettings {
   email: string;
   documentType: 'CPF' | 'CNPJ';
   document: string;
+  adminPassword?: string;
   address: {
     cep: string;
     street: string;
@@ -171,11 +173,13 @@ export interface Client {
   id: string;
   studioName: string;
   adminName: string;
+  adminPassword?: string;
   licenseStatus: 'Ativa' | 'Teste' | 'Expirada' | 'Pendente';
   expiresAt: string; // "DD/MM/YYYY"
   studentCount: number;
   instructorCount: number;
   mrr: number;
+  subscriptionPlanId: string;
   settings: StudioSettings;
 }
 
@@ -183,8 +187,10 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   price: number;
+  studentLimit: number | 'unlimited';
   features: {
     financialModule: boolean;
     bulkAllocation: boolean;
+    whatsappBot: boolean;
   };
 }

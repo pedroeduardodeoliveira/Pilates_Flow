@@ -30,6 +30,7 @@ interface AppState {
   superAdminSettings: SuperAdminSettings;
   subscriptionPlans: SubscriptionPlan[];
   activeTab: string;
+  passwordJustChanged: boolean;
 }
 
 type Action = 
@@ -49,7 +50,8 @@ type Action =
   | { type: 'LOGIN'; payload: UserSession }
   | { type: 'LOGOUT' }
   | { type: 'IMPERSONATE'; payload: { user: UserSession, settings: StudioSettings } }
-  | { type: 'STOP_IMPERSONATING' };
+  | { type: 'STOP_IMPERSONATING' }
+  | { type: 'PASSWORD_CHANGED' };
 
 
 interface AppContextType {
@@ -102,6 +104,7 @@ const initialSettings: SettingsData = {
   email: '',
   documentType: 'CNPJ',
   document: '',
+  adminPassword: 'admin123',
   address: {
     cep: '',
     street: '',
@@ -144,6 +147,7 @@ const initialState: AppState = {
   },
   subscriptionPlans: superAdminSubscriptionPlans,
   activeTab: 'painel',
+  passwordJustChanged: false,
 };
 
 // --- REDUCER ---
@@ -190,7 +194,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         }
       };
     case 'LOGOUT':
-      return { ...initialState, settings: state.settings, isAuthenticated: false, user: null, impersonatingFrom: null };
+      return { ...initialState, settings: state.settings, isAuthenticated: false, user: null, impersonatingFrom: null, passwordJustChanged: false };
     case 'IMPERSONATE':
         return {
             ...state,
@@ -211,6 +215,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
             settings: { ...initialSettings, isDarkMode: state.settings.isDarkMode },
             activeTab: 'painel',
         };
+    case 'PASSWORD_CHANGED':
+        return { ...state, passwordJustChanged: true };
     default:
       return state;
   }

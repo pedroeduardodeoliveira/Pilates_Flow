@@ -1,6 +1,6 @@
 import React, { useContext, useState, useRef } from 'react';
 import { AppContext } from '../AppContext';
-import { DollarSign, Users, Activity, Search, Plus, Settings2, ShieldQuestion, Trash2, X, AlertTriangle, Calendar, Award, Loader2, MapPin, FileText, CreditCard } from 'lucide-react';
+import { DollarSign, Users, Activity, Search, Plus, Settings2, ShieldQuestion, Trash2, X, AlertTriangle, Calendar, Award, Loader2, MapPin, FileText, CreditCard, Lock, RefreshCw, Copy, Check, CheckCircle, Link } from 'lucide-react';
 import NeuralNetworkBackground from './NeuralNetworkBackground';
 import SuperAdminSettings from './SuperAdminSettings';
 import SuperAdminSidebar from './SuperAdminSidebar';
@@ -10,7 +10,7 @@ import { superAdminClients } from '../superAdminMockData';
 
 const SuperAdminDashboard: React.FC = () => {
     const { state, dispatch } = useContext(AppContext);
-    const { settings: appSettings, user, superAdminSettings } = state;
+    const { settings: appSettings, user, superAdminSettings, subscriptionPlans } = state;
     const { isDarkMode } = appSettings;
 
     const [clients, setClients] = useState<Client[]>(superAdminClients);
@@ -27,6 +27,22 @@ const SuperAdminDashboard: React.FC = () => {
 
     const [isLoadingCep, setIsLoadingCep] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [passwordCopySuccess, setPasswordCopySuccess] = useState(false);
+    const [credentialsCopySuccess, setCredentialsCopySuccess] = useState(false);
+    const [generatedPasswordInfo, setGeneratedPasswordInfo] = useState<{ adminName: string; document: string; pass: string } | null>(null);
+    const [credentialsModalTitle, setCredentialsModalTitle] = useState('Cliente Criado com Sucesso!');
+
+    const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    const generateRandomPassword = (length = 8) => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    };
     
     const maskPhone = (v: string) => v.replace(/\D/g, "").replace(/^(\d{2})(\d)/g, "($1) $2").replace(/(\d)(\d{4})$/, "$1-$2");
     const maskCEP = (v: string) => v.replace(/\D/g, "").replace(/^(\d{5})(\d)/, "$1-$2");
@@ -57,28 +73,36 @@ const SuperAdminDashboard: React.FC = () => {
                 { label: 'Valor para 3 aulas por semana', value: '320' }, { label: 'Valor para 4 aulas por semana', value: '380' },
                 { label: 'Valor para 5 aulas por semana', value: '420' },
               ],
-              commission: '40', alertDays: '7', autoInactiveDays: '30', instructorSeesAllStudents: false,
+              commission: String(superAdminSettings.defaultCommission),
+              alertDays: String(superAdminSettings.defaultAlertDays), 
+              autoInactiveDays: '30', instructorSeesAllStudents: false,
             };
             setFormData({
-                studioName: 'Novo Estúdio', adminName: '', licenseStatus: 'Teste', mrr: 0,
+                studioName: 'Novo Estúdio', adminName: '', licenseStatus: 'Teste', mrr: 0, adminPassword: '',
                 expiresAt: expirationDate.toISOString().split('T')[0],
+                subscriptionPlanId: 'trial',
                 settings: defaultSettings,
             });
         }
         setIsModalOpen(true);
     };
 
+    const handlePlanSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const planId = e.target.value;
+        if (planId === 'trial') {
+            setFormData(prev => ({...prev!, subscriptionPlanId: 'trial', mrr: 0, licenseStatus: 'Teste'}));
+        } else {
+            const selectedPlan = subscriptionPlans.find(p => p.id === planId);
+            if (selectedPlan) {
+                setFormData(prev => ({...prev!, subscriptionPlanId: planId, mrr: selectedPlan.price, licenseStatus: 'Ativa'}));
+            }
+        }
+    };
+    
     const setFormValue = (key: keyof Client, value: any) => setFormData(prev => ({...prev!, [key]: value}));
     const setSettingsValue = (key: keyof StudioSettings, value: any) => setFormData(prev => ({...prev!, settings: {...prev!.settings!, [key]: value}}));
     const setAddressValue = (key: keyof StudioSettings['address'], value: any) => setFormData(prev => ({...prev!, settings: {...prev!.settings!, address: {...prev!.settings!.address!, [key]: value}}}));
     
-    const handlePlanChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        if (!formData?.settings?.plans) return;
-        const newPlans = [...formData.settings.plans];
-        newPlans[index] = { ...newPlans[index], value: e.target.value };
-        setSettingsValue('plans', newPlans);
-    };
-
      const handleCEPBlur = async () => {
         if(!formData?.settings?.address?.cep) return;
         const cleaned = formData.settings.address.cep.replace(/\D/g, "");
@@ -97,28 +121,48 @@ const SuperAdminDashboard: React.FC = () => {
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onloadend = () => { setSettingsValue('logo', reader.result as string) };
-          reader.readAsDataURL(file);
-        }
-    };
-
     const handleSaveClient = () => {
         if (!formData || !formData.studioName || !formData.adminName || !formData.settings) return;
+
+        const passwordWasChanged = editingClient && formData.adminPassword !== editingClient.adminPassword;
+        
+        let password = formData.adminPassword;
+        if (!editingClient) { // É um novo cliente
+            password = generateRandomPassword();
+        } else if (!password) { // É um cliente existente, mas o campo senha está vazio (não deve acontecer, mas por segurança)
+            password = editingClient.adminPassword;
+        }
+        
         const formattedExpiresAt = formData.expiresAt ? new Date(formData.expiresAt + 'T00:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
         const finalClientData: Client = {
             id: editingClient?.id || `CLI-${Math.floor(100 + Math.random() * 900)}`,
-            studioName: formData.studioName, adminName: formData.adminName,
+            studioName: formData.studioName, adminName: formData.adminName, adminPassword: password,
             licenseStatus: formData.licenseStatus || 'Teste', expiresAt: formattedExpiresAt,
             mrr: formData.mrr || 0, studentCount: editingClient?.studentCount || 0,
             instructorCount: editingClient?.instructorCount || 0,
+            subscriptionPlanId: formData.subscriptionPlanId || 'trial',
             settings: { ...formData.settings, appName: formData.studioName } as StudioSettings
         };
-        if (editingClient) { setClients(clients.map(c => c.id === editingClient.id ? finalClientData : c));
-        } else { setClients([finalClientData, ...clients]); }
+
+        if (editingClient) { 
+            setClients(clients.map(c => c.id === editingClient.id ? finalClientData : c));
+            if (passwordWasChanged) {
+                 setCredentialsModalTitle('Senha do Cliente Atualizada!');
+                 setGeneratedPasswordInfo({
+                    adminName: finalClientData.adminName,
+                    document: finalClientData.settings.document || 'N/A',
+                    pass: password!
+                });
+            }
+        } else { // Novo cliente
+            setClients([finalClientData, ...clients]);
+            setCredentialsModalTitle('Cliente Criado com Sucesso!');
+            setGeneratedPasswordInfo({
+                adminName: finalClientData.adminName,
+                document: finalClientData.settings.document || 'N/A',
+                pass: password!
+            });
+        }
         setIsModalOpen(false);
     };
 
@@ -133,17 +177,36 @@ const SuperAdminDashboard: React.FC = () => {
             id: 'impersonated_admin', 
             name: client.adminName, 
             role: 'admin' as const, 
-            license: { status: licenseStatusMap[client.licenseStatus], expiresAt: isoDate } 
+            license: { status: licenseStatusMap[client.licenseStatus], expiresAt: isoDate },
+            subscriptionPlanId: client.subscriptionPlanId,
         };
         dispatch({ 
             type: 'IMPERSONATE', 
             payload: { user: impersonatedUser, settings: client.settings } 
         });
     };
+    
+    const handleCopyPassword = () => {
+        if(!formData?.adminPassword) return;
+        navigator.clipboard.writeText(formData.adminPassword).then(() => {
+            setPasswordCopySuccess(true);
+            setTimeout(() => setPasswordCopySuccess(false), 2000);
+        });
+    };
+
+    const handleCopyCredentials = () => {
+        if (!generatedPasswordInfo) return;
+        const accessLink = "https://pilates-studio-test.vercel.app/";
+        const textToCopy = `Olá ${generatedPasswordInfo.adminName}!\n\nSeu acesso à plataforma Pilates Flow foi liberado.\n\nLink de Acesso: ${accessLink}\nLogin: ${generatedPasswordInfo.document}\nSenha: ${generatedPasswordInfo.pass}\n\nRecomendamos alterar a senha no primeiro acesso.`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            setCredentialsCopySuccess(true);
+            setTimeout(() => setCredentialsCopySuccess(false), 2000);
+        });
+    };
 
     const filteredClients = clients.filter(c => c.studioName.toLowerCase().includes(searchTerm.toLowerCase()) || c.adminName.toLowerCase().includes(searchTerm.toLowerCase()));
     const summary = { mrr: filteredClients.reduce((acc, client) => acc + (client.licenseStatus === 'Ativa' || client.licenseStatus === 'Pendente' ? client.mrr : 0), 0), totalClients: filteredClients.length, activeSubscriptions: filteredClients.filter(c => c.licenseStatus === 'Ativa').length };
-    const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
     const statusStyles: { [key in Client['licenseStatus']]: string } = { 'Ativa': 'bg-emerald-500/10 text-emerald-500', 'Teste': 'bg-sky-500/10 text-sky-500', 'Expirada': 'bg-rose-500/10 text-rose-500', 'Pendente': 'bg-amber-500/10 text-amber-500' };
 
     return (
@@ -197,8 +260,9 @@ const SuperAdminDashboard: React.FC = () => {
                 <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
                   <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
                   <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
-                    <div className="space-y-4"><h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><CreditCard size={14} /> Informações Principais</h4><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><div className="md:col-span-2 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label><input value={formData.studioName} onChange={e => setFormValue('studioName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Admin</label><input value={formData.adminName} onChange={e => setFormValue('adminName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">MRR (R$)</label><input type="number" value={formData.mrr} onChange={e => setFormValue('mrr', parseFloat(e.target.value))} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Status da Licença</label><select value={formData.licenseStatus} onChange={e => setFormValue('licenseStatus', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm">{Object.keys(statusStyles).map(s => <option key={s} value={s}>{s}</option>)}</select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Calendar size={12}/> Data de Expiração</label><input type="date" value={formData.expiresAt} onChange={e => setFormValue('expiresAt', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div></div>
-                    <div className="space-y-4">
+                    <div className="space-y-4"><h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><CreditCard size={14} /> Informações Principais</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label><input value={formData.studioName} onChange={e => setFormValue('studioName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Admin</label><input value={formData.adminName} onChange={e => setFormValue('adminName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Plano de Assinatura</label><select value={formData.subscriptionPlanId} onChange={handlePlanSelectionChange} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm"><option value="trial">Plano de Teste - {formatCurrency(0)}</option>{subscriptionPlans.map(plan => (<option key={plan.id} value={plan.id}>{plan.name} - {formatCurrency(plan.price)}</option>))}</select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><DollarSign size={12}/> MRR (R$)</label><input type="number" value={formData.mrr} disabled className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Status da Licença</label><input value={formData.licenseStatus} disabled className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500"/></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Calendar size={12}/> Data de Expiração</label><input type="date" value={formData.expiresAt} onChange={e => setFormValue('expiresAt', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div></div>
+                    {editingClient && (<div className="space-y-4 pt-4 border-t border-slate-100 dark:border-gray-800"><h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Lock size={14}/> Acesso do Administrador</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Senha de Acesso</label><div className="relative"><input type="text" readOnly value={formData.adminPassword || ''} className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500 pr-10 cursor-not-allowed" /><button onClick={handleCopyPassword} className="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-sky-500">{passwordCopySuccess ? <Check size={16} className="text-emerald-500" /> : <Copy size={14}/>}</button></div></div><button onClick={() => setFormValue('adminPassword', generateRandomPassword())} className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 dark:text-gray-300"><RefreshCw size={14}/> Gerar Nova Senha</button></div></div>)}
+                    <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-gray-800">
                         <h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><MapPin size={14} /> Contato, Documento & Endereço</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5"><label className="text-[10px] font-bold uppercase ml-1">Telefone</label><input value={formData.settings?.phone} onChange={e => setSettingsValue('phone', maskPhone(e.target.value))} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" maxLength={15} /></div>
@@ -238,6 +302,20 @@ const SuperAdminDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+            {generatedPasswordInfo && (<div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95">
+                    <div className="p-8 text-center"><div className="w-16 h-16 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6"><CheckCircle size={32} /></div><h3 className="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">{credentialsModalTitle}</h3><p className="text-sm text-slate-500 dark:text-gray-400">Os dados de acesso para <span className="font-bold">{generatedPasswordInfo.adminName}</span> foram gerados.</p></div>
+                    <div className="px-8 pb-8 space-y-4">
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-2"><Link size={12}/> Link de Acesso</label><div className="w-full bg-slate-100 dark:bg-gray-800 rounded-lg p-3 text-sm font-mono text-slate-600 dark:text-gray-300">https://pilates-studio-test.vercel.app/</div></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Login (CPF/CNPJ)</label><div className="w-full bg-slate-100 dark:bg-gray-800 rounded-lg p-3 text-sm font-mono text-slate-600 dark:text-gray-300">{generatedPasswordInfo.document}</div></div>
+                        <div className="space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Senha Gerada</label><div className="w-full bg-slate-100 dark:bg-gray-800 rounded-lg p-3 text-sm font-mono text-slate-600 dark:text-gray-300">{generatedPasswordInfo.pass}</div></div>
+                    </div>
+                    <div className="p-6 bg-slate-50 dark:bg-gray-800/50 flex flex-col sm:flex-row gap-3">
+                        <button onClick={() => setGeneratedPasswordInfo(null)} className="flex-1 px-6 py-3 rounded-xl text-sm font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 uppercase tracking-widest">Fechar</button>
+                        <button onClick={handleCopyCredentials} className="flex-1 px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl shadow-lg uppercase tracking-widest text-xs flex items-center justify-center gap-2">{credentialsCopySuccess ? <><Check size={16}/> Copiado!</> : <><Copy size={14}/> Copiar Dados</>}</button>
+                    </div>
+                </div>
+            </div>)}
             {isDeleteModalOpen && (<div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"><div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"><div className="p-8 text-center"><div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6"><AlertTriangle size={32} /></div><h3 className="text-xl font-bold text-slate-800 dark:text-gray-100 mb-2">Remover Cliente?</h3><p className="text-sm text-slate-500 dark:text-gray-400">Esta ação removerá permanentemente o estúdio <span className="font-bold">{clientToDelete?.studioName}</span>.</p></div><div className="p-6 bg-slate-50 dark:bg-gray-800/50 flex gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-widest">Cancelar</button><button onClick={executeDelete} className="flex-1 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl shadow-lg uppercase tracking-widest text-xs">Sim, Remover</button></div></div></div>)}
         </div>
     );

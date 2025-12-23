@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 import { AppContext } from '../AppContext';
-import { Save, User, Camera, MapPin, Info, Phone, Award, Loader2, CheckCircle, Eye, EyeOff, Lock, DollarSign, TrendingUp, Users } from 'lucide-react';
-import { Instructor, Student } from '../types';
+import { Save, User, Camera, MapPin, Info, Phone, Award, Loader2, CheckCircle, Eye, EyeOff, Lock, DollarSign, TrendingUp, Users, KeySquare, RefreshCw, X } from 'lucide-react';
+import { Instructor } from '../types';
 
 const InstructorProfile: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -11,6 +10,13 @@ const InstructorProfile: React.FC = () => {
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estados para o modal de senha
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // Busca o instrutor correspondente ao usuário logado
   const currentInstructor = instructors.find(i => i.id === user?.id);
@@ -126,6 +132,68 @@ const InstructorProfile: React.FC = () => {
     }
   };
 
+  const showSaveSuccess = () => {
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
+  const handlePasswordUpdate = (newPasswordValue: string) => {
+    if (!currentInstructor) return;
+    const updatedInstructor = {
+        ...currentInstructor,
+        password: newPasswordValue,
+    };
+    const newInstructors = instructors.map(i => i.id === currentInstructor.id ? updatedInstructor : i);
+    dispatch({ type: 'UPDATE_INSTRUCTORS', payload: newInstructors });
+    dispatch({ type: 'PASSWORD_CHANGED' });
+    setFormData(prev => ({ ...prev, password: newPasswordValue }));
+    showSaveSuccess();
+  };
+
+  const generateRandomPassword = (length = 8) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const handleGeneratePassword = () => {
+    const newPass = generateRandomPassword();
+    handlePasswordUpdate(newPass);
+  };
+  
+  const handleClosePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError(null);
+    setShowNewPassword(false);
+  };
+
+  const handleManualPasswordChange = () => {
+    if (!newPassword || !confirmPassword) {
+        setPasswordError('Por favor, preencha ambos os campos.');
+        return;
+    }
+    if (newPassword.length < 8) {
+        setPasswordError('A senha deve ter no mínimo 8 caracteres.');
+        return;
+    }
+    if (!/(?=.*[a-zA-Z])(?=.*[0-9])/.test(newPassword)) {
+        setPasswordError('A senha deve conter letras e números.');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        setPasswordError('As senhas não coincidem. Tente novamente.');
+        return;
+    }
+    handlePasswordUpdate(newPassword);
+    handleClosePasswordModal();
+  };
+
+
   const handleSave = () => {
     if (!currentInstructor) return;
 
@@ -156,8 +224,7 @@ const InstructorProfile: React.FC = () => {
     const newInstructors = instructors.map(i => i.id === currentInstructor.id ? updatedInstructor : i);
     dispatch({ type: 'UPDATE_INSTRUCTORS', payload: newInstructors });
     
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    showSaveSuccess();
   };
 
   const colorOptions = [
@@ -283,23 +350,29 @@ const InstructorProfile: React.FC = () => {
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">CPF (Apenas Visualização)</label>
                     <input value={formData.cpf} readOnly className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-400 dark:text-gray-500 outline-none text-sm cursor-not-allowed" />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Senha de Acesso</label>
                     <div className="relative">
                         <input 
                             type={showPassword ? 'text' : 'password'} 
-                            value={formData.password} 
-                            onChange={e => setFormData({...formData, password: e.target.value})} 
-                            className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 transition-colors text-sm pr-12" 
+                            value={formData.password}
+                            readOnly
+                            className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl pl-4 pr-10 py-3 text-sm text-slate-400 dark:text-gray-500 focus:outline-none cursor-not-allowed"
                         />
-                        <button 
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500 transition-colors"
-                        >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                     </div>
+                  </div>
+                   <div className="flex items-center gap-2">
+                      <button onClick={() => setIsPasswordModalOpen(true)} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2 text-xs font-bold text-slate-600 dark:text-gray-300">
+                          <KeySquare size={14}/> Alterar Manualmente
+                      </button>
+                      <button onClick={handleGeneratePassword} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2 text-xs font-bold text-slate-600 dark:text-gray-300">
+                         <RefreshCw size={14}/> Gerar Aleatória
+                      </button>
+                  </div>
                 </div>
             </div>
         </div>
@@ -357,6 +430,45 @@ const InstructorProfile: React.FC = () => {
           </div>
         </div>
       </div>
+       {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
+            <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800 dark:text-gray-100">Alterar Minha Senha</h3>
+              <button onClick={handleClosePasswordModal} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="bg-sky-500/10 text-sky-700 dark:text-sky-300 text-xs font-medium p-3 rounded-lg flex items-start gap-2">
+                <Info size={14} className="flex-shrink-0 mt-0.5"/>
+                <span>A senha deve ter no mínimo 8 caracteres, contendo letras e números.</span>
+              </div>
+              {passwordError && <div className="bg-rose-500/10 text-rose-500 text-xs font-bold p-3 rounded-lg">{passwordError}</div>}
+              <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nova Senha</label>
+                  <div className="relative">
+                    <input type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => { setNewPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" />
+                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
+                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+              </div>
+              <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Confirmar Nova Senha</label>
+                  <div className="relative">
+                    <input type={showNewPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setPasswordError(null); }} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500 text-sm pr-10" />
+                     <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">
+                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3">
+              <button onClick={handleClosePasswordModal} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5">Cancelar</button>
+              <button onClick={handleManualPasswordChange} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Salvar Nova Senha</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
