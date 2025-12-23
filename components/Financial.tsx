@@ -5,9 +5,9 @@ import { Transaction } from '../types';
 import FinancialChart from './FinancialChart';
 import CategoryPieChart from './CategoryPieChart';
 // @ts-ignore
-import { GoogleGenAI } from '@google/genai';
+// import { GoogleGenAI } from '@google/genai';
 // @ts-ignore
-import { marked } from 'marked';
+// import { marked } from 'marked';
 
 const Financial: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -30,11 +30,13 @@ const Financial: React.FC = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [localMeta, setLocalMeta] = useState(settings.metaFaturamento);
 
+  /*
   // Gemini AI Analysis State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  */
 
   useEffect(() => {
     setLocalMeta(settings.metaFaturamento);
@@ -147,6 +149,7 @@ const Financial: React.FC = () => {
   
   const categoryData = (type: 'Receita' | 'Despesa') => financialSummary.monthlyTransactions.filter(t => t.type === type && t.status === 'Pago').reduce((acc, t) => { const existing = acc.find(i => i.name === t.category); if(existing) { existing.value += t.amount } else { acc.push({ name: t.category, value: t.amount })} return acc; }, [] as {name: string, value: number}[]);
 
+  /*
   const handleAiAnalysis = async () => {
     setIsAiModalOpen(true); setIsAiLoading(true); setAiError(null); setAiAnalysis(null);
     try {
@@ -176,6 +179,7 @@ const Financial: React.FC = () => {
     } catch (err) { setAiError('Ocorreu um erro ao conectar com a IA. Verifique sua chave de API e tente novamente.'); console.error(err);
     } finally { setIsAiLoading(false); }
   };
+  */
   
   const formatCurrency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const commonCategories = ['Mensalidade', 'Aula Avulsa', 'Avaliação', 'Salários', 'Aluguel', 'Infraestrutura', 'Marketing', 'Equipamentos'];
@@ -188,7 +192,7 @@ const Financial: React.FC = () => {
       {activeTab === 'overview' && (<div className="mt-6 space-y-8 animate-in fade-in">
         <div className="flex items-center justify-between gap-4">
           <p className="text-xs text-slate-500 dark:text-gray-400 max-w-2xl">Acompanhe a saúde financeira do seu estúdio, analise tendências e gerencie todas as transações de entrada e saída.</p>
-          <button onClick={handleAiAnalysis} className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg text-xs transition-all shadow-lg hover:shadow-xl whitespace-nowrap"><Sparkles size={14} /> Analisar com IA</button>
+          {/* <button onClick={handleAiAnalysis} className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg text-xs transition-all shadow-lg hover:shadow-xl whitespace-nowrap"><Sparkles size={14} /> Analisar com IA</button> */}
         </div>
         <FinancialChart transactions={transactions} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8"><CategoryPieChart title="Origem das Receitas (Mês)" data={categoryData('Receita')} onSliceClick={(cat) => setCategoryFilter(cat)} /><CategoryPieChart title="Distribuição das Despesas (Mês)" data={categoryData('Despesa')} onSliceClick={(cat) => setCategoryFilter(cat)} /></div>
@@ -214,7 +218,10 @@ const Financial: React.FC = () => {
       
       {isModalOpen && (<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in"><div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95"><div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{editingTransaction ? 'Editar Lançamento' : 'Novo Lançamento'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-rose-500"><X size={20} /></button></div><div className="p-8 space-y-6"><div className="grid grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Tipo</label><div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-xl p-1"><button onClick={() => setFormData({...formData, type: 'Receita'})} className={`flex-1 py-2 text-xs font-bold rounded-lg ${formData.type === 'Receita' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400'}`}>Receita</button><button onClick={() => setFormData({...formData, type: 'Despesa'})} className={`flex-1 py-2 text-xs font-bold rounded-lg ${formData.type === 'Despesa' ? 'bg-rose-500 text-white shadow-lg' : 'text-gray-400'}`}>Despesa</button></div></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Valor</label><div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 font-medium">R$</span><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} autoFocus className="w-full bg-slate-50 dark:bg-gray-800 border rounded-xl px-4 py-3 pl-10 text-sm" /></div></div></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Descrição</label><input value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border rounded-xl px-4 py-3 text-sm" /></div><div className="grid grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Categoria</label><input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} list="categories" className="w-full bg-slate-50 dark:bg-gray-800 border rounded-xl px-4 py-3 text-sm" /><datalist id="categories">{commonCategories.map(c => <option key={c} value={c} />)}</datalist></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Data</label><input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-slate-50 dark:bg-gray-800 border rounded-xl px-4 py-3 text-sm" /></div></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Status</label><div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-xl p-1"><button onClick={() => setFormData({...formData, status: 'Pago'})} className={`flex-1 py-2 text-xs font-bold rounded-lg ${formData.status === 'Pago' ? 'bg-sky-500 text-white' : 'text-slate-500'}`}>Pago</button><button onClick={() => setFormData({...formData, status: 'Pendente'})} className={`flex-1 py-2 text-xs font-bold rounded-lg ${formData.status === 'Pendente' ? 'bg-amber-500 text-white' : 'text-slate-500'}`}>Pendente</button></div></div></div><div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end gap-3"><button onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-lg text-xs font-bold">Cancelar</button><button onClick={handleSaveTransaction} className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg text-xs">Salvar</button></div></div></div>)}
       {isDeleteModalOpen && (<div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"><div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden"><div className="p-8 text-center"><div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6"><AlertTriangle size={32} /></div><h3 className="text-xl font-bold mb-2">Confirmar Exclusão?</h3><p className="text-sm text-slate-500">A ação removerá permanentemente o lançamento "{transactionToDelete?.description}".</p></div><div className="p-6 bg-slate-50 dark:bg-gray-800/50 flex gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="flex-1 px-6 py-3 rounded-xl text-sm font-bold uppercase">Cancelar</button><button onClick={executeDelete} className="flex-1 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs uppercase">Sim, Remover</button></div></div></div>)}
+      
+      {/*
       {isAiModalOpen && (<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in"><div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl animate-in zoom-in-95 flex flex-col max-h-[80vh]"><div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><div className="flex items-center gap-3"><BrainCircuit size={20} className="text-sky-500"/><h3 className="font-bold text-slate-800 dark:text-gray-100">Análise de IA da Saúde Financeira</h3></div><button onClick={() => setIsAiModalOpen(false)} className="text-gray-500 hover:text-rose-500"><X size={20} /></button></div><div className="p-8 overflow-y-auto custom-scrollbar">{isAiLoading ? (<div className="flex flex-col items-center justify-center gap-4 text-center p-8"><Loader2 size={32} className="animate-spin text-sky-500"/><p className="text-sm font-medium text-slate-500 dark:text-gray-400">Analisando seus dados financeiros... <br/>Isso pode levar alguns segundos.</p></div>) : aiError ? (<div className="bg-rose-500/10 text-rose-500 p-4 rounded-lg text-sm font-medium">{aiError}</div>) : (<div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-sky-500 prose-strong:text-slate-800 dark:prose-strong:text-gray-100" dangerouslySetInnerHTML={{ __html: aiAnalysis || '' }}/>)}</div><div className="p-4 bg-slate-50 dark:bg-gray-800/50 flex justify-end"><button onClick={() => setIsAiModalOpen(false)} className="px-6 py-2 bg-sky-600 text-white font-bold rounded-lg text-xs">Fechar</button></div></div></div>)}
+      */}
     </div>
   );
 };
