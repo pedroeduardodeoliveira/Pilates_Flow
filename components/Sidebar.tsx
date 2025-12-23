@@ -32,10 +32,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isDarkMode, toggleTheme, isOpen, setIsOpen }) => {
   const { state, dispatch } = useContext(AppContext);
-  const { user, instructors, superAdminSettings, passwordJustChanged } = state;
+  const { user, instructors, superAdminSettings, passwordJustChanged, subscriptionPlans } = state;
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const isAdmin = user?.role === 'admin';
+  const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
+  const isFinancialModuleEnabled = !!currentPlan?.features.financialModule;
   
   // Busca os dados completos do instrutor logado para pegar a foto
   const currentUserData = !isAdmin ? instructors.find(i => i.id === user?.id) : null;
@@ -48,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
     { id: 'alunos', label: 'Alunos', icon: <Users size={20} />, visible: true },
     { id: 'instrutores', label: 'Instrutores', icon: <GraduationCap size={20} />, visible: isAdmin },
     { id: 'sala', label: 'Sala / Aparelhos', icon: <Dumbbell size={20} />, visible: isAdmin },
-    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={20} />, visible: isAdmin },
+    { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={20} />, visible: isAdmin && isFinancialModuleEnabled },
   ].filter(item => item.visible);
 
   const handleLogout = () => {

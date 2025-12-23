@@ -2,6 +2,8 @@ import React, { useState, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { Fingerprint, Lock, LogIn, Loader2, Eye, EyeOff, AlertCircle, Info } from 'lucide-react';
 import NeuralNetworkBackground from './NeuralNetworkBackground';
+import { superAdminClients } from '../superAdminMockData';
+import { Client, License, UserSession } from '../types';
 
 const Login: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -50,37 +52,77 @@ const Login: React.FC = () => {
       
       // Validação Super Admin
       if (cleanDocument === '99999999999' && password === 'super') {
+        const userSession: UserSession = { 
+            id: 'superadmin', 
+            name: 'Super Admin', 
+            role: 'superadmin', 
+            license: { status: 'active', expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString() } 
+        };
+        dispatch({ type: 'LOGIN', payload: { user: userSession } });
+        setIsLoading(false);
+        return;
+      }
+
+      // Validação Admin de Cliente
+      const client = superAdminClients.find(c => {
+        const clientDoc = c.settings.document?.replace(/\D/g, '');
+        return clientDoc === cleanDocument && c.adminPassword === password;
+      });
+
+      if (client) {
+        const licenseStatusMap: { [key in Client['licenseStatus']]: License['status'] } = { 'Ativa': 'active', 'Teste': 'trial', 'Expirada': 'expired', 'Pendente': 'expiring_soon' };
+        const [day, month, year] = client.expiresAt.split('/');
+        const isoDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
+        
+        const userSession: UserSession = {
+          id: client.id,
+          name: client.adminName,
+          role: 'admin',
+          license: {
+            status: licenseStatusMap[client.licenseStatus],
+            expiresAt: isoDate,
+          },
+          subscriptionPlanId: client.subscriptionPlanId,
+        };
+
         dispatch({
           type: 'LOGIN',
-          payload: { id: 'superadmin', name: 'Super Admin', role: 'superadmin', license: { status: 'active', expiresAt: new Date(new Date().setFullYear(new Date().getFullYear() + 5)).toISOString() } }
+          payload: { user: userSession, settings: client.settings },
         });
         setIsLoading(false);
         return;
       }
 
-      // Validação Admin (Hardcoded para exemplo)
-      if (cleanDocument === '00000000000' && password === 'admin123') {
-        dispatch({ 
-          type: 'LOGIN', 
-          payload: { id: 'admin', name: 'Administrador', role: 'admin', license: { status: 'active', expiresAt: '' } } 
-        });
-        setIsLoading(false);
-        return;
-      }
 
       // Validação Instrutor
       const instructor = instructors.find(i => {
         const iCpf = i.cpf?.replace(/\D/g, '');
-        // Se o instrutor não tem senha cadastrada, usamos '123456' como padrão
         const iPass = i.password || '123456';
         return iCpf === cleanDocument && iPass === password;
       });
 
       if (instructor) {
-        dispatch({ 
-          type: 'LOGIN', 
-          payload: { id: instructor.id, name: instructor.name, role: 'instructor', license: { status: 'active', expiresAt: '' } } 
-        });
+        // Encontra o cliente ao qual o instrutor pertence para buscar a licença
+        const ownerClient = superAdminClients.find(c => c.id === instructor.clientId);
+        
+        if (!ownerClient) {
+            setError('Estúdio do instrutor não encontrado ou inativo.');
+            setIsLoading(false);
+            return;
+        }
+        
+        const licenseStatusMap: { [key in Client['licenseStatus']]: License['status'] } = { 'Ativa': 'active', 'Teste': 'trial', 'Expirada': 'expired', 'Pendente': 'expiring_soon' };
+        const [day, month, year] = ownerClient.expiresAt.split('/');
+        const isoDate = new Date(`${year}-${month}-${day}T00:00:00Z`).toISOString();
+
+        const userSession: UserSession = {
+           id: instructor.id,
+           name: instructor.name,
+           role: 'instructor',
+           license: { status: licenseStatusMap[ownerClient.licenseStatus], expiresAt: isoDate },
+           subscriptionPlanId: ownerClient.subscriptionPlanId,
+        };
+        dispatch({ type: 'LOGIN', payload: { user: userSession, settings: ownerClient.settings } });
       } else {
         setError('Documento ou senha inválidos. Tente novamente.');
       }

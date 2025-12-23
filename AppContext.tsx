@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
 import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession, StudioSettings, SubscriptionPlan } from './types';
 import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
-import { superAdminSubscriptionPlans } from './superAdminMockData';
+import { superAdminClients, superAdminSubscriptionPlans } from './superAdminMockData';
 
 // --- TIPOS ---
 interface SettingsData extends StudioSettings {
@@ -47,7 +47,7 @@ type Action =
   | { type: 'UPDATE_SUBSCRIPTION_PLANS'; payload: SubscriptionPlan[] }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' }
-  | { type: 'LOGIN'; payload: UserSession }
+  | { type: 'LOGIN'; payload: { user: UserSession, settings?: StudioSettings } }
   | { type: 'LOGOUT' }
   | { type: 'IMPERSONATE'; payload: { user: UserSession, settings: StudioSettings } }
   | { type: 'STOP_IMPERSONATING' }
@@ -180,18 +180,15 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'TOGGLE_THEME':
       return { ...state, settings: { ...state.settings, isDarkMode: !state.settings.isDarkMode } };
     case 'LOGIN':
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 25);
-      
-      return { 
-        ...state, 
-        isAuthenticated: true, 
-        user: {
-          ...action.payload,
-          license: action.payload.role === 'admin' 
-            ? { status: 'expiring_soon', expiresAt: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString() }
-            : { status: 'active', expiresAt: expirationDate.toISOString() }
-        }
+      return {
+        ...state,
+        isAuthenticated: true,
+        user: action.payload.user,
+        settings: action.payload.settings
+          ? { ...action.payload.settings, isDarkMode: state.settings.isDarkMode }
+          : state.settings,
+        activeTab: 'painel',
+        passwordJustChanged: false,
       };
     case 'LOGOUT':
       return { ...initialState, settings: state.settings, isAuthenticated: false, user: null, impersonatingFrom: null, passwordJustChanged: false };

@@ -51,10 +51,10 @@ export const mockStudentsData: Student[] = [
 ];
 
 export const mockInstructorsData: Instructor[] = [
-    { id: '1', name: 'Ana Silva', initials: 'AS', studentsCount: 0, phone: '(11) 91111-1111', specialties: 'Fisioterapia, Pilates Clássico', avatarColor: 'bg-rose-600', cpf: '111.111.111-11', password: '123456', workingDays: ['Seg', 'Qua', 'Sex'], workStart: '07:00', workEnd: '12:00', classDuration: 50 },
-    { id: '2', name: 'Bruno Santos', initials: 'BS', studentsCount: 0, phone: '(11) 92222-2222', specialties: 'Ed. Física, Pilates Contemporâneo', avatarColor: 'bg-blue-600', cpf: '222.222.222-22', password: '123456', workingDays: ['Ter', 'Qui'], workStart: '08:00', workEnd: '21:00', classDuration: 60 },
-    { id: '3', name: 'Carla Dias', initials: 'CD', studentsCount: 0, phone: '(11) 93333-3333', specialties: 'Fisioterapia', avatarColor: 'bg-orange-500', cpf: '333.333.333-33', password: '123456', workingDays: ['Seg', 'Qua'], workStart: '14:00', workEnd: '20:00', classDuration: 50 },
-    { id: '4', name: 'Daniel Oliveira', initials: 'DO', studentsCount: 0, phone: '(11) 94444-4444', specialties: 'Ed. Física', avatarColor: 'bg-emerald-600', cpf: '444.444.444-44', password: '123456', workingDays: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'], workStart: '07:00', workEnd: '21:00', classDuration: 50 }
+    { id: '1', name: 'Ana Silva', initials: 'AS', studentsCount: 0, phone: '(11) 91111-1111', specialties: 'Fisioterapia, Pilates Clássico', avatarColor: 'bg-rose-600', cpf: '111.111.111-11', password: '123456', clientId: 'CLI-001', workingDays: ['Seg', 'Qua', 'Sex'], workStart: '07:00', workEnd: '12:00', classDuration: 50 },
+    { id: '2', name: 'Bruno Santos', initials: 'BS', studentsCount: 0, phone: '(11) 92222-2222', specialties: 'Ed. Física, Pilates Contemporâneo', avatarColor: 'bg-blue-600', cpf: '222.222.222-22', password: '123456', clientId: 'CLI-001', workingDays: ['Ter', 'Qui'], workStart: '08:00', workEnd: '21:00', classDuration: 60 },
+    { id: '3', name: 'Carla Dias', initials: 'CD', studentsCount: 0, phone: '(11) 93333-3333', specialties: 'Fisioterapia', avatarColor: 'bg-orange-500', cpf: '333.333.333-33', password: '123456', clientId: 'CLI-003', workingDays: ['Seg', 'Qua'], workStart: '14:00', workEnd: '20:00', classDuration: 50 },
+    { id: '4', name: 'Daniel Oliveira', initials: 'DO', studentsCount: 0, phone: '(11) 94444-4444', specialties: 'Ed. Física', avatarColor: 'bg-emerald-600', cpf: '444.444.444-44', password: '123456', clientId: 'CLI-003', workingDays: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'], workStart: '07:00', workEnd: '21:00', classDuration: 50 }
 ];
 
 export const mockRoomsData: Room[] = [

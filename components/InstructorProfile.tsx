@@ -5,7 +5,7 @@ import { Instructor } from '../types';
 
 const InstructorProfile: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, students, user, settings } = state;
+  const { instructors, students, user, settings, subscriptionPlans } = state;
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isLoadingCep, setIsLoadingCep] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +17,9 @@ const InstructorProfile: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
+
+  const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
+  const isFinancialModuleEnabled = !!currentPlan?.features.financialModule;
 
   // Busca o instrutor correspondente ao usuário logado
   const currentInstructor = instructors.find(i => i.id === user?.id);
@@ -260,38 +263,40 @@ const InstructorProfile: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1">Meu Faturamento Bruto</p>
-                  <p className="text-xl font-bold text-slate-800 dark:text-gray-100">{formatCurrency(financialData.totalRevenue)}</p>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-emerald-500">
-                  <TrendingUp size={14} />
-                  <span className="text-[10px] font-bold uppercase">Referente a alunos ativos</span>
-              </div>
-          </div>
-          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between border-l-4 border-l-sky-500">
-              <div>
-                  <p className="text-[10px] font-bold text-sky-500 uppercase tracking-widest mb-1">Minha Comissão ({settings.commission}%)</p>
-                  <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">{formatCurrency(financialData.estimatedEarnings)}</p>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-slate-400">
-                  <DollarSign size={14} />
-                  <span className="text-[10px] font-bold uppercase">Ganho mensal estimado</span>
-              </div>
-          </div>
-          <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
-              <div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1">Meus Alunos Ativos</p>
-                  <p className="text-xl font-bold text-slate-800 dark:text-gray-100">{financialData.activeStudents}</p>
-              </div>
-              <div className="mt-4 flex items-center gap-2 text-slate-400">
-                  <Users size={14} />
-                  <span className="text-[10px] font-bold uppercase">Base de cálculo atual</span>
-              </div>
-          </div>
-      </div>
+      {isFinancialModuleEnabled && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1">Meu Faturamento Bruto</p>
+                    <p className="text-xl font-bold text-slate-800 dark:text-gray-100">{formatCurrency(financialData.totalRevenue)}</p>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-emerald-500">
+                    <TrendingUp size={14} />
+                    <span className="text-[10px] font-bold uppercase">Referente a alunos ativos</span>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between border-l-4 border-l-sky-500">
+                <div>
+                    <p className="text-[10px] font-bold text-sky-500 uppercase tracking-widest mb-1">Minha Comissão ({settings.commission}%)</p>
+                    <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">{formatCurrency(financialData.estimatedEarnings)}</p>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-slate-400">
+                    <DollarSign size={14} />
+                    <span className="text-[10px] font-bold uppercase">Ganho mensal estimado</span>
+                </div>
+            </div>
+            <div className="bg-white dark:bg-gray-900/40 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1">Meus Alunos Ativos</p>
+                    <p className="text-xl font-bold text-slate-800 dark:text-gray-100">{financialData.activeStudents}</p>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-slate-400">
+                    <Users size={14} />
+                    <span className="text-[10px] font-bold uppercase">Base de cálculo atual</span>
+                </div>
+            </div>
+        </div>
+      )}
 
       <div className="space-y-8">
         {/* Cabeçalho de Perfil */}

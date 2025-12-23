@@ -89,6 +89,7 @@ export interface Instructor {
   password?: string;
   birthDate?: string;
   regDate?: string;
+  clientId?: string;
   image?: string | null;
   address?: {
     cep: string;
