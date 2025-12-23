@@ -30,7 +30,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
         selectedAddons[addon.id as keyof typeof selectedAddons] && !previousAddons[addon.id as keyof typeof previousAddons]
     );
 
-    // Constrói a mensagem
+    // Constrói a mensagem com formatação Markdown
     let message = `*Alteração de Plano Solicitada*\n\n`;
     message += `*Cliente:* ${user?.name}\n`;
     message += `*${settings.documentType}:* ${settings.document}\n\n`;
@@ -52,9 +52,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose }
 
     message += `*Total Mensal Atualizado:* ${formatCurrency(totalPrice)}`;
 
-    // Extrai o número de telefone do link de suporte
-    const supportPhoneMatch = superAdminSettings.supportLink.match(/\d+/g);
-    const supportPhone = supportPhoneMatch ? supportPhoneMatch.join('') : '5511999999999'; // Fallback
+    // Define o número de suporte correto
+    const supportPhone = '5564993407329';
     
     const whatsappUrl = `https://wa.me/${supportPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
