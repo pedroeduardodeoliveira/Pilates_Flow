@@ -38,8 +38,8 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
   const isAdmin = user?.role === 'admin';
   const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
   
-  // Acesso ao financeiro pode ser pelo plano ou por cortesia
-  const isFinancialModuleEnabled = !!currentPlan?.features.financialModule || !!settings.courtesyFeatures?.financialModule;
+  // Acesso ao financeiro pode ser pelo plano, por cortesia ou comprado
+  const isFinancialModuleEnabled = !!currentPlan?.features.financialModule || !!settings.courtesyFeatures?.financialModule || !!settings.purchasedAddons?.financialModule;
   
   // Busca os dados completos do instrutor logado para pegar a foto
   const currentUserData = !isAdmin ? instructors.find(i => i.id === user?.id) : null;

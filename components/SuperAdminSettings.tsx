@@ -5,20 +5,23 @@ import { SubscriptionPlan, SuperAdminSettings as SuperAdminSettingsType } from '
 
 const SuperAdminSettings: React.FC = () => {
     const { state, dispatch } = useContext(AppContext);
-    const { subscriptionPlans, superAdminSettings } = state;
+    const { subscriptionPlans, superAdminSettings, addons } = state;
 
     const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
     const [systemSettings, setSystemSettings] = useState<SuperAdminSettingsType>(superAdminSettings);
+    const [localAddons, setLocalAddons] = useState(addons);
     const [showFeatures, setShowFeatures] = useState(true);
     const [isLinkCopied, setIsLinkCopied] = useState(false);
 
     const plansDebounceTimeout = useRef<number | null>(null);
     const systemSettingsDebounceTimeout = useRef<number | null>(null);
+    const addonsDebounceTimeout = useRef<number | null>(null);
 
     useEffect(() => {
         setPlans(JSON.parse(JSON.stringify(subscriptionPlans)));
         setSystemSettings(superAdminSettings);
-    }, [subscriptionPlans, superAdminSettings]);
+        setLocalAddons(JSON.parse(JSON.stringify(addons)));
+    }, [subscriptionPlans, superAdminSettings, addons]);
 
     const handlePlanChange = (planId: string, field: 'price' | 'studentLimit' | keyof SubscriptionPlan['features'], value: any) => {
         const updatedPlans = plans.map(p => {
@@ -41,6 +44,18 @@ const SuperAdminSettings: React.FC = () => {
             dispatch({ type: 'UPDATE_SUBSCRIPTION_PLANS', payload: updatedPlans });
         }, 500);
     };
+    
+    const handleAddonPriceChange = (addonId: 'financialModule' | 'whatsappBot', value: string) => {
+      const updatedAddons = localAddons.map(a => 
+          a.id === addonId ? { ...a, price: parseFloat(value) || 0 } : a
+      );
+      setLocalAddons(updatedAddons);
+
+      if (addonsDebounceTimeout.current) clearTimeout(addonsDebounceTimeout.current);
+      addonsDebounceTimeout.current = window.setTimeout(() => {
+          dispatch({ type: 'UPDATE_ADDONS', payload: updatedAddons });
+      }, 500);
+    }
 
     const handleSystemSettingsChange = (field: keyof SuperAdminSettingsType, value: string | number) => {
         const newSettings = { ...systemSettings, [field]: value };
@@ -125,6 +140,33 @@ const SuperAdminSettings: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-[#111827]/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl">
+                <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
+                    <Zap size={16} className="text-sky-500" />
+                    <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Módulos Adicionais (Add-ons)</h3>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {localAddons.map(addon => (
+                        <div key={addon.id} className="bg-slate-50 dark:bg-[#0d121d] border border-slate-200 dark:border-gray-800 rounded-xl p-4 flex flex-col">
+                            <div>
+                                <p className="font-bold text-sm text-slate-700 dark:text-gray-200">{addon.name}</p>
+                                <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 mb-4">{addon.description}</p>
+                            </div>
+                            <div className="relative mt-auto">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">R$</span>
+                                <input 
+                                    type="number" 
+                                    value={addon.price} 
+                                    onChange={(e) => handleAddonPriceChange(addon.id, e.target.value)} 
+                                    className="w-full bg-white dark:bg-[#111827] border border-slate-300 dark:border-gray-700 rounded-lg pl-10 pr-16 py-2 text-sm font-medium focus:border-sky-500 focus:ring-0 outline-none" 
+                                />
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-gray-500">/mês</span>
                             </div>
                         </div>
                     ))}

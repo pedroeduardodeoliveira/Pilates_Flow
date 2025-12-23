@@ -145,6 +145,13 @@ export interface Transaction {
   sourceType?: 'student_payment' | 'manual'; // Origem do lançamento
 }
 
+export interface Addon {
+  id: 'financialModule' | 'whatsappBot';
+  name: string;
+  description: string;
+  price: number;
+}
+
 export interface StudioSettings {
   appName: string;
   logo: string | null;
@@ -171,6 +178,10 @@ export interface StudioSettings {
     financialModule?: boolean;
     whatsappBot?: boolean;
   };
+  purchasedAddons?: {
+    financialModule?: boolean;
+    whatsappBot?: boolean;
+  };
 }
 
 // Para o Painel Super Admin
@@ -194,6 +205,10 @@ export interface Client {
   subscriptionPlanId: string;
   settings: StudioSettings;
   courtesyFeatures?: {
+    financialModule?: boolean;
+    whatsappBot?: boolean;
+  };
+  purchasedAddons?: {
     financialModule?: boolean;
     whatsappBot?: boolean;
   };

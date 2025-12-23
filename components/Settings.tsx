@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { Palette, DollarSign, Bell, Save, UploadCloud, Image, Loader2, CheckCircle, Phone, Mail, MapPin, FileText, AlertTriangle, ShieldAlert, CreditCard, Lock, Eye, EyeOff, RefreshCw, X, KeySquare, Info, Zap, Bot, LayoutGrid, Calendar, Layers, Users, GraduationCap, Dumbbell, XCircle } from 'lucide-react';
+import SubscriptionModal from './SubscriptionModal';
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -17,6 +18,10 @@ const Settings: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showNewPassword, setShowNewPassword] = useState(false);
+
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+
+  const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
 
   const featureList: { key: keyof (typeof subscriptionPlans)[0]['features']; label: string; icon: React.ReactNode; }[] = [
     { key: 'dashboard', label: 'Painel Gerencial', icon: <LayoutGrid size={14} /> },
@@ -173,7 +178,6 @@ const Settings: React.FC = () => {
           {user?.license && (() => {
             const { license } = user;
             const expiresDate = new Date(license.expiresAt);
-            const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
 
             let config = {
                 icon: <CheckCircle size={24} />,
@@ -204,20 +208,55 @@ const Settings: React.FC = () => {
                         <div className="my-4 pt-4 border-t border-slate-200 dark:border-gray-700 space-y-3">
                             <p className="text-xs font-bold text-slate-500 dark:text-gray-400">Seu Plano: <span className="text-sky-500">{currentPlan.name}</span><span className="ml-2 font-medium text-slate-400">(Até {currentPlan.studentLimit === 'unlimited' ? 'alunos ilimitados' : `${currentPlan.studentLimit} alunos`})</span></p>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-                                {featureList.map(feature => {
-                                  const isEnabled = currentPlan.features[feature.key];
-                                  return (
-                                    <li key={feature.key} className={`flex items-center gap-2 text-xs font-medium ${isEnabled ? 'text-slate-600 dark:text-gray-300' : 'text-slate-400 dark:text-gray-500'}`}>
-                                      {isEnabled ? <CheckCircle size={14} className="text-emerald-500" /> : <XCircle size={14} className="text-rose-500" />}
-                                      {feature.label}
-                                    </li>
-                                  );
+                               {featureList.map(feature => {
+                                    const featureKey = feature.key as keyof typeof settings.purchasedAddons;
+                                    const isIncludedInPlan = !!currentPlan?.features[featureKey];
+                                    const isPurchased = !!settings.purchasedAddons?.[featureKey];
+                                    const isCourtesy = !!settings.courtesyFeatures?.[featureKey];
+                                    const isEnabled = isIncludedInPlan || isPurchased || isCourtesy;
+
+                                    let icon;
+                                    if (isIncludedInPlan) {
+                                        icon = <CheckCircle size={14} className="text-emerald-500" />;
+                                    } else if (isCourtesy) {
+                                        icon = <CheckCircle size={14} className="text-amber-500" />;
+                                    } else if (isPurchased) {
+                                        icon = <CheckCircle size={14} className="text-sky-500" />;
+                                    } else {
+                                        icon = <XCircle size={14} className="text-rose-500/50" />;
+                                    }
+
+                                    return (
+                                        <li key={feature.key} className={`flex items-center text-xs font-medium ${isEnabled ? 'text-slate-600 dark:text-gray-300' : 'text-slate-400 dark:text-gray-500 line-through'}`}>
+                                            <div className="flex items-center gap-2">
+                                                {icon}
+                                                <span>{feature.label}</span>
+                                            </div>
+                                        </li>
+                                    );
                                 })}
                             </ul>
+                            <div className="!mt-5 pt-3 border-t border-slate-100 dark:border-gray-800">
+                                <p className="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-2">Legenda:</p>
+                                <div className="space-y-1.5 text-xs text-slate-500 dark:text-gray-400 font-medium">
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle size={12} className="text-emerald-500" />
+                                        <span>Incluso no Plano</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle size={12} className="text-amber-500" />
+                                        <span>Cortesia</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle size={12} className="text-sky-500" />
+                                        <span>Avulso (Contratado)</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
-                    <button className={`mt-auto w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}><CreditCard size={14} /> {config.buttonText}</button>
+                    <button onClick={() => setIsSubscriptionModalOpen(true)} className={`mt-auto w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 ${config.buttonClass}`}><CreditCard size={14} /> {config.buttonText}</button>
                 </div>
             );
           })()}
@@ -264,7 +303,7 @@ const Settings: React.FC = () => {
                 </div>
                 <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-gray-800">
                     <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Senha de Acesso do Administrador</label>
-                    <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/><input type={showPassword ? 'text' : 'password'} value={settings.adminPassword} readOnly className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 dark:text-gray-500 focus:outline-none cursor-not-allowed" /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>
+                    <div className="relative"><Lock className="absolute left-4 top-1/2 -translate-y-1.2 text-slate-400" size={16}/><input type={showPassword ? 'text' : 'password'} value={settings.adminPassword} readOnly className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-400 dark:text-gray-500 focus:outline-none cursor-not-allowed" /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-500">{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></div>
                      <div className="flex items-center gap-2 pt-1"><button onClick={() => setIsPasswordModalOpen(true)} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300"><KeySquare size={14}/> Alterar Manualmente</button><button onClick={handleGeneratePassword} className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-gray-300"><RefreshCw size={14}/> Gerar Aleatória</button></div>
                 </div>
             </div>
@@ -301,6 +340,10 @@ const Settings: React.FC = () => {
           </div>
         </div>
       )}
+      <SubscriptionModal 
+        isOpen={isSubscriptionModalOpen} 
+        onClose={() => setIsSubscriptionModalOpen(false)}
+      />
     </div>
   );
 };

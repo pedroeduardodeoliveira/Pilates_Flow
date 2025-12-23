@@ -10,7 +10,7 @@ import { superAdminClients } from '../superAdminMockData';
 
 const SuperAdminDashboard: React.FC = () => {
     const { state, dispatch } = useContext(AppContext);
-    const { settings: appSettings, user, superAdminSettings, subscriptionPlans } = state;
+    const { settings: appSettings, user, superAdminSettings, subscriptionPlans, addons } = state;
     const { isDarkMode } = appSettings;
 
     const [clients, setClients] = useState<Client[]>(superAdminClients);
@@ -59,6 +59,7 @@ const SuperAdminDashboard: React.FC = () => {
                 expiresAt: client.expiresAt.split('/').reverse().join('-'),
                 settings: { ...client.settings },
                 courtesyFeatures: client.courtesyFeatures || {},
+                purchasedAddons: client.purchasedAddons || {},
             });
         } else {
             const trialDays = superAdminSettings.defaultTrialDays;
@@ -77,6 +78,7 @@ const SuperAdminDashboard: React.FC = () => {
               commission: String(superAdminSettings.defaultCommission),
               alertDays: String(superAdminSettings.defaultAlertDays), 
               autoInactiveDays: '30', instructorSeesAllStudents: false,
+              courtesyFeatures: {}, purchasedAddons: {}
             };
             setFormData({
                 studioName: 'Novo Estúdio', adminName: '', licenseStatus: 'Teste', mrr: 0, adminPassword: '',
@@ -84,6 +86,7 @@ const SuperAdminDashboard: React.FC = () => {
                 subscriptionPlanId: 'trial',
                 settings: defaultSettings,
                 courtesyFeatures: {},
+                purchasedAddons: {},
             });
         }
         setIsModalOpen(true);
@@ -92,11 +95,11 @@ const SuperAdminDashboard: React.FC = () => {
     const handlePlanSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const planId = e.target.value;
         if (planId === 'trial') {
-            setFormData(prev => ({...prev!, subscriptionPlanId: 'trial', mrr: 0, licenseStatus: 'Teste'}));
+            setFormData(prev => ({...prev!, subscriptionPlanId: 'trial', licenseStatus: 'Teste'}));
         } else {
             const selectedPlan = subscriptionPlans.find(p => p.id === planId);
             if (selectedPlan) {
-                setFormData(prev => ({...prev!, subscriptionPlanId: planId, mrr: selectedPlan.price, licenseStatus: 'Ativa'}));
+                setFormData(prev => ({...prev!, subscriptionPlanId: planId, licenseStatus: 'Ativa'}));
             }
         }
     };
@@ -135,16 +138,23 @@ const SuperAdminDashboard: React.FC = () => {
             password = editingClient.adminPassword;
         }
         
+        const planPrice = subscriptionPlans.find(p => p.id === formData.subscriptionPlanId)?.price || 0;
+        let addonsPrice = 0;
+        if (formData.purchasedAddons?.financialModule) { addonsPrice += addons.find(a => a.id === 'financialModule')?.price || 0; }
+        if (formData.purchasedAddons?.whatsappBot) { addonsPrice += addons.find(a => a.id === 'whatsappBot')?.price || 0; }
+        const finalMrr = formData.licenseStatus === 'Teste' ? 0 : planPrice + addonsPrice;
+
         const formattedExpiresAt = formData.expiresAt ? new Date(formData.expiresAt + 'T00:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '';
         const finalClientData: Client = {
             id: editingClient?.id || `CLI-${Math.floor(100 + Math.random() * 900)}`,
             studioName: formData.studioName, adminName: formData.adminName, adminPassword: password,
             licenseStatus: formData.licenseStatus || 'Teste', expiresAt: formattedExpiresAt,
-            mrr: formData.mrr || 0, studentCount: editingClient?.studentCount || 0,
+            mrr: finalMrr, studentCount: editingClient?.studentCount || 0,
             instructorCount: editingClient?.instructorCount || 0,
             subscriptionPlanId: formData.subscriptionPlanId || 'trial',
             settings: { ...formData.settings, appName: formData.studioName } as StudioSettings,
             courtesyFeatures: formData.courtesyFeatures,
+            purchasedAddons: formData.purchasedAddons,
         };
 
         if (editingClient) { 
@@ -183,7 +193,7 @@ const SuperAdminDashboard: React.FC = () => {
             license: { status: licenseStatusMap[client.licenseStatus], expiresAt: isoDate },
             subscriptionPlanId: client.subscriptionPlanId,
         };
-        const settingsForImpersonation = { ...client.settings, courtesyFeatures: client.courtesyFeatures };
+        const settingsForImpersonation = { ...client.settings, courtesyFeatures: client.courtesyFeatures, purchasedAddons: client.purchasedAddons };
         dispatch({ 
             type: 'IMPERSONATE', 
             payload: { user: impersonatedUser, settings: settingsForImpersonation } 
@@ -207,8 +217,36 @@ const SuperAdminDashboard: React.FC = () => {
             setTimeout(() => setCredentialsCopySuccess(false), 2000);
         });
     };
+    
+    const handleAddonSelection = (key: 'financialModule' | 'whatsappBot', type: 'none' | 'purchased' | 'courtesy') => {
+        if (!formData) return;
+        const newPurchased = { ...formData.purchasedAddons };
+        const newCourtesy = { ...formData.courtesyFeatures };
 
-    const filteredClients = clients.filter(c => c.studioName.toLowerCase().includes(searchTerm.toLowerCase()) || c.adminName.toLowerCase().includes(searchTerm.toLowerCase()));
+        if (type === 'none') {
+            newPurchased[key] = false;
+            newCourtesy[key] = false;
+        } else if (type === 'purchased') {
+            newPurchased[key] = true;
+            newCourtesy[key] = false;
+        } else if (type === 'courtesy') {
+            newPurchased[key] = false;
+            newCourtesy[key] = true;
+        }
+        
+        setFormData(prev => ({ ...prev!, purchasedAddons: newPurchased, courtesyFeatures: newCourtesy }));
+    };
+
+    const clientsWithCalculatedMrr = clients.map(c => {
+        const planPrice = subscriptionPlans.find(p => p.id === c.subscriptionPlanId)?.price || 0;
+        let addonsPrice = 0;
+        if (c.purchasedAddons?.financialModule) { addonsPrice += addons.find(a => a.id === 'financialModule')?.price || 0; }
+        if (c.purchasedAddons?.whatsappBot) { addonsPrice += addons.find(a => a.id === 'whatsappBot')?.price || 0; }
+        const totalMrr = c.licenseStatus === 'Teste' ? 0 : planPrice + addonsPrice;
+        return { ...c, mrr: totalMrr };
+    });
+
+    const filteredClients = clientsWithCalculatedMrr.filter(c => c.studioName.toLowerCase().includes(searchTerm.toLowerCase()) || c.adminName.toLowerCase().includes(searchTerm.toLowerCase()));
     const summary = { mrr: filteredClients.reduce((acc, client) => acc + (client.licenseStatus === 'Ativa' || client.licenseStatus === 'Pendente' ? client.mrr : 0), 0), totalClients: filteredClients.length, activeSubscriptions: filteredClients.filter(c => c.licenseStatus === 'Ativa').length };
     
     const statusStyles: { [key in Client['licenseStatus']]: string } = { 'Ativa': 'bg-emerald-500/10 text-emerald-500', 'Teste': 'bg-sky-500/10 text-sky-500', 'Expirada': 'bg-rose-500/10 text-rose-500', 'Pendente': 'bg-amber-500/10 text-amber-500' };
@@ -247,11 +285,11 @@ const SuperAdminDashboard: React.FC = () => {
                         <div className="animate-in fade-in">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Receita Mensal (MRR)</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{formatCurrency(summary.mrr)}</p></div><div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center"><DollarSign size={20}/></div></div></div><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Total de Clientes</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{summary.totalClients}</p></div><div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center"><Users size={20}/></div></div></div><div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-lg"><div className="flex justify-between items-start"><div><p className="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Assinaturas Ativas</p><p className="text-3xl font-bold text-slate-800 dark:text-white mt-1">{summary.activeSubscriptions}</p></div><div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center"><Activity size={20}/></div></div></div></div>
                             <div className="bg-white dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-2xl overflow-hidden"><div className="p-4 border-b border-slate-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4"><div className="relative w-full md:w-80"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="Buscar estúdio ou administrador..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl py-2 pl-10 pr-4 text-sm" /></div><button onClick={() => handleOpenModal(null)} className="w-full md:w-auto flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 px-4 rounded-xl text-xs shadow-lg"><Plus size={14} /> Novo Cliente</button></div>
-                                <div className="overflow-x-auto"><table className="w-full text-left"><thead className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-800"><tr><th className="px-6 py-4">Estúdio</th><th className="px-6 py-4">Status da Licença</th><th className="px-6 py-4">Expira em</th><th className="px-6 py-4 text-center">Alunos</th><th className="px-6 py-4 text-center">Instrutores</th><th className="px-6 py-4 text-right">Ações</th></tr></thead>
+                                <div className="overflow-x-auto"><table className="w-full text-left"><thead className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-800"><tr><th className="px-6 py-4">Estúdio</th><th className="px-6 py-4">Status da Licença</th><th className="px-6 py-4">Expira em</th><th className="px-6 py-4">MRR</th><th className="px-6 py-4 text-center">Alunos</th><th className="px-6 py-4 text-center">Instrutores</th><th className="px-6 py-4 text-right">Ações</th></tr></thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-gray-800">{filteredClients.map(client => (<tr key={client.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5">
                                         <td className="px-6 py-4"><p className="text-sm font-bold text-slate-800 dark:text-gray-100">{client.studioName}</p><p className="text-xs text-slate-500 dark:text-gray-400">{client.adminName}</p></td>
                                         <td className="px-6 py-4"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${statusStyles[client.licenseStatus]}`}>{client.licenseStatus}</span></td>
-                                        <td className="px-6 py-4 text-xs font-medium text-slate-600 dark:text-gray-300">{client.expiresAt}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.studentCount}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.instructorCount}</td>
+                                        <td className="px-6 py-4 text-xs font-medium text-slate-600 dark:text-gray-300">{client.expiresAt}</td><td className="px-6 py-4 text-xs font-bold text-emerald-500">{formatCurrency(client.mrr)}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.studentCount}</td><td className="px-6 py-4 text-center text-sm font-bold">{client.instructorCount}</td>
                                         <td className="px-6 py-4"><div className="flex justify-end gap-2"><button onClick={() => handleOpenModal(client)} className="p-2 text-slate-400 hover:text-sky-500" title="Gerenciar"><Settings2 size={14}/></button><button onClick={() => handleImpersonate(client)} className="p-2 text-slate-400 hover:text-amber-500" title="Personificar"><ShieldQuestion size={14}/></button><button onClick={() => handleDeleteClick(client)} className="p-2 text-slate-400 hover:text-rose-500" title="Remover"><Trash2 size={14}/></button></div></td>
                                     </tr>))}</tbody>
                                 </table></div>
@@ -269,37 +307,41 @@ const SuperAdminDashboard: React.FC = () => {
                 <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95">
                   <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center"><h3 className="font-bold text-slate-800 dark:text-gray-100">{editingClient ? 'Editar Cliente' : 'Novo Cliente'}</h3><button onClick={() => setIsModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-rose-500"><X size={20} /></button></div>
                   <div className="p-8 overflow-y-auto custom-scrollbar space-y-8">
-                    <div className="space-y-4"><h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><CreditCard size={14} /> Informações Principais</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label><input value={formData.studioName} onChange={e => setFormValue('studioName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Admin</label><input value={formData.adminName} onChange={e => setFormValue('adminName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Plano de Assinatura</label><select value={formData.subscriptionPlanId} onChange={handlePlanSelectionChange} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm"><option value="trial">Plano de Teste - {formatCurrency(0)}</option>{subscriptionPlans.map(plan => (<option key={plan.id} value={plan.id}>{plan.name} - {formatCurrency(plan.price)}</option>))}</select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><DollarSign size={12}/> MRR (R$)</label><input type="number" value={formData.mrr} disabled className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Status da Licença</label><input value={formData.licenseStatus} disabled className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500"/></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Calendar size={12}/> Data de Expiração</label><input type="date" value={formData.expiresAt} onChange={e => setFormValue('expiresAt', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div></div>
+                    <div className="space-y-4"><h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><CreditCard size={14} /> Informações Principais</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Estúdio</label><input value={formData.studioName} onChange={e => setFormValue('studioName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Nome do Admin</label><input value={formData.adminName} onChange={e => setFormValue('adminName', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Plano de Assinatura</label><select value={formData.subscriptionPlanId} onChange={handlePlanSelectionChange} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm"><option value="trial">Plano de Teste - {formatCurrency(0)}</option>{subscriptionPlans.map(plan => (<option key={plan.id} value={plan.id}>{plan.name} - {formatCurrency(plan.price)}</option>))}</select></div><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Award size={12}/> Status da Licença</label><input value={formData.licenseStatus} disabled className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500"/></div><div className="col-span-1 md:col-span-2 space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Calendar size={12}/> Data de Expiração</label><input type="date" value={formData.expiresAt} onChange={e => setFormValue('expiresAt', e.target.value)} className="w-full md:w-1/2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" /></div></div></div>
                     {(() => {
                         const selectedPlan = subscriptionPlans.find(p => p.id === formData.subscriptionPlanId);
                         const planFeatures = selectedPlan?.features || { financialModule: false, whatsappBot: false };
                         return (
-                          <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-gray-800">
-                            <h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Zap size={14}/> Funcionalidades Adicionais</h4>
-                            <div className="grid grid-cols-1 gap-4">
-                              {featuresToToggle.map(feature => {
-                                const isIncludedInPlan = !!planFeatures[feature.key as keyof typeof planFeatures];
-                                const isCourtesy = !!formData.courtesyFeatures?.[feature.key as keyof typeof formData.courtesyFeatures];
-                                return (
-                                  <div key={feature.key} className="flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${isIncludedInPlan || isCourtesy ? 'bg-sky-500/10 text-sky-500' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>{feature.icon}</span>
-                                      <div>
-                                        <p className="text-sm font-bold text-slate-700 dark:text-gray-200">{feature.label}</p>
-                                        {isIncludedInPlan && <p className="text-[10px] font-bold text-emerald-500">INCLUSO NO PLANO SELECIONADO</p>}
-                                      </div>
+                            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-gray-800">
+                              <h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Zap size={14}/> Funcionalidades Adicionais</h4>
+                              <div className="grid grid-cols-1 gap-4">
+                                {featuresToToggle.map(feature => {
+                                  const featureKey = feature.key as 'financialModule' | 'whatsappBot';
+                                  const isIncludedInPlan = !!planFeatures[featureKey];
+                                  const isPurchased = !!formData.purchasedAddons?.[featureKey];
+                                  const isCourtesy = !!formData.courtesyFeatures?.[featureKey];
+                                  
+                                  return (
+                                    <div key={feature.key} className="flex flex-col md:flex-row items-start md:items-center justify-between bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${isIncludedInPlan || isPurchased || isCourtesy ? 'bg-sky-500/10 text-sky-500' : 'bg-slate-100 dark:bg-white/5 text-slate-400'}`}>{feature.icon}</span>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-700 dark:text-gray-200">{feature.label}</p>
+                                                {isIncludedInPlan && <p className="text-[10px] font-bold text-emerald-500">INCLUSO NO PLANO</p>}
+                                            </div>
+                                        </div>
+                                        {!isIncludedInPlan && (
+                                            <div className="flex items-center bg-slate-100 dark:bg-gray-800 rounded-lg border border-slate-200 dark:border-gray-700 p-1">
+                                                <button onClick={() => handleAddonSelection(featureKey, 'none')} className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${!isPurchased && !isCourtesy ? 'bg-white dark:bg-gray-700/50 text-slate-600 dark:text-gray-200' : 'text-slate-500 dark:text-gray-400 hover:bg-white/50'}`}>Nenhum</button>
+                                                <button onClick={() => handleAddonSelection(featureKey, 'purchased')} className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${isPurchased ? 'bg-sky-500 text-white shadow' : 'text-slate-500 dark:text-gray-400 hover:bg-white/50'}`}>Contratado (+{formatCurrency(addons.find(a => a.id === featureKey)?.price || 0)})</button>
+                                                <button onClick={() => handleAddonSelection(featureKey, 'courtesy')} className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all ${isCourtesy ? 'bg-amber-500 text-white shadow' : 'text-slate-500 dark:text-gray-400 hover:bg-white/50'}`}>Cortesia</button>
+                                            </div>
+                                        )}
                                     </div>
-                                    {!isIncludedInPlan && (
-                                      <div className="flex items-center gap-3">
-                                        <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase">Ativar Cortesia</label>
-                                        <button type="button" role="switch" aria-checked={isCourtesy} onClick={() => { setFormValue('courtesyFeatures', { ...formData.courtesyFeatures, [feature.key]: !isCourtesy }); }} className={`${isCourtesy ? 'bg-sky-500' : 'bg-slate-300 dark:bg-gray-600'} relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out`}><span aria-hidden="true" className={`${isCourtesy ? 'translate-x-5' : 'translate-x-0'} pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}/></button>
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              })}
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
                         );
                     })()}
                     {editingClient && (<div className="space-y-4 pt-4 border-t border-slate-100 dark:border-gray-800"><h4 className="flex items-center gap-2 text-sky-500 font-bold text-xs uppercase tracking-widest"><Lock size={14}/> Acesso do Administrador</h4><div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end"><div className="space-y-1.5"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Senha de Acesso</label><div className="relative"><input type="text" readOnly value={formData.adminPassword || ''} className="w-full bg-slate-100 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-400 dark:text-gray-500 pr-10 cursor-not-allowed" /><button onClick={handleCopyPassword} className="absolute right-0 top-0 h-full px-3 flex items-center text-slate-400 hover:text-sky-500">{passwordCopySuccess ? <Check size={16} className="text-emerald-500" /> : <Copy size={14}/>}</button></div></div><button onClick={() => setFormValue('adminPassword', generateRandomPassword())} className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 dark:text-gray-300"><RefreshCw size={14}/> Gerar Nova Senha</button></div></div>)}

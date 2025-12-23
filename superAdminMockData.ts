@@ -1,4 +1,4 @@
-import { Client, StudioSettings, SubscriptionPlan } from './types';
+import { Client, StudioSettings, SubscriptionPlan, Addon } from './types';
 
 const createDefaultSettings = (appName: string): StudioSettings => ({
   appName,
@@ -22,6 +22,8 @@ const createDefaultSettings = (appName: string): StudioSettings => ({
   alertDays: '7',
   autoInactiveDays: '30',
   instructorSeesAllStudents: false,
+  courtesyFeatures: {},
+  purchasedAddons: {},
 });
 
 export const superAdminClients: Client[] = [
@@ -40,6 +42,7 @@ export const superAdminClients: Client[] = [
         courtesyFeatures: {
             financialModule: true,
         },
+        purchasedAddons: {},
     },
     {
         id: 'CLI-002',
@@ -52,7 +55,9 @@ export const superAdminClients: Client[] = [
         instructorCount: 2,
         mrr: 0,
         subscriptionPlanId: 'trial',
-        settings: createDefaultSettings('Studio Zen Pilates')
+        settings: createDefaultSettings('Studio Zen Pilates'),
+        courtesyFeatures: {},
+        purchasedAddons: {},
     },
     {
         id: 'CLI-003',
@@ -65,7 +70,9 @@ export const superAdminClients: Client[] = [
         instructorCount: 7,
         mrr: 199.90,
         subscriptionPlanId: 'plan_pro',
-        settings: createDefaultSettings('Corpo & Mente Pilates')
+        settings: createDefaultSettings('Corpo & Mente Pilates'),
+        courtesyFeatures: {},
+        purchasedAddons: {},
     },
     {
         id: 'CLI-004',
@@ -78,7 +85,9 @@ export const superAdminClients: Client[] = [
         instructorCount: 3,
         mrr: 159.90,
         subscriptionPlanId: 'plan_intermediate',
-        settings: createDefaultSettings('Vitality Studio')
+        settings: createDefaultSettings('Vitality Studio'),
+        courtesyFeatures: {},
+        purchasedAddons: {},
     },
     {
         id: 'CLI-005',
@@ -89,9 +98,13 @@ export const superAdminClients: Client[] = [
         expiresAt: '12/12/2025',
         studentCount: 41,
         instructorCount: 4,
-        mrr: 119.90,
+        mrr: 159.90, // 119.90 (plano) + 40.00 (addon financeiro)
         subscriptionPlanId: 'plan_basic',
-        settings: createDefaultSettings('Studio Harmonia')
+        settings: createDefaultSettings('Studio Harmonia'),
+        courtesyFeatures: {},
+        purchasedAddons: {
+            financialModule: true,
+        },
     },
     {
         id: 'CLI-006',
@@ -104,7 +117,9 @@ export const superAdminClients: Client[] = [
         instructorCount: 10,
         mrr: 299.90,
         subscriptionPlanId: 'plan_premium',
-        settings: createDefaultSettings('Pilates Premium')
+        settings: createDefaultSettings('Pilates Premium'),
+        courtesyFeatures: {},
+        purchasedAddons: {},
     },
 ];
 
@@ -177,4 +192,19 @@ export const superAdminSubscriptionPlans: SubscriptionPlan[] = [
             whatsappBot: true,
         }
     }
+];
+
+export const superAdminAddons: Addon[] = [
+  {
+    id: 'financialModule',
+    name: 'Módulo Financeiro',
+    description: 'Controle total de receitas, despesas, fluxo de caixa e comissões de instrutores.',
+    price: 39.90
+  },
+  {
+    id: 'whatsappBot',
+    name: 'Chatbot WhatsApp',
+    description: 'Automatize agendamentos, confirmações e lembretes de aulas diretamente pelo WhatsApp.',
+    price: 39.90
+  }
 ];

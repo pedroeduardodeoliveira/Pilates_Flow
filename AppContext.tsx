@@ -1,7 +1,7 @@
 import React, { createContext, useReducer, useEffect, ReactNode, Dispatch } from 'react';
-import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession, StudioSettings, SubscriptionPlan } from './types';
+import { Student, Instructor, Room, Equipment, Transaction, EscalaItem, AgendaItem, UserSession, StudioSettings, SubscriptionPlan, Addon } from './types';
 import { mockStudentsData, mockInstructorsData, mockRoomsData, mockEquipmentsData, mockTransactionsData, mockEscalaData, mockAgendaData } from './mockData';
-import { superAdminClients, superAdminSubscriptionPlans } from './superAdminMockData';
+import { superAdminClients, superAdminSubscriptionPlans, superAdminAddons } from './superAdminMockData';
 
 // --- TIPOS ---
 interface SettingsData extends StudioSettings {
@@ -29,6 +29,7 @@ interface AppState {
   settings: SettingsData;
   superAdminSettings: SuperAdminSettings;
   subscriptionPlans: SubscriptionPlan[];
+  addons: Addon[];
   activeTab: string;
   passwordJustChanged: boolean;
 }
@@ -45,13 +46,15 @@ type Action =
   | { type: 'UPDATE_SETTINGS'; payload: Partial<SettingsData> }
   | { type: 'UPDATE_SUPER_ADMIN_SETTINGS'; payload: Partial<SuperAdminSettings> }
   | { type: 'UPDATE_SUBSCRIPTION_PLANS'; payload: SubscriptionPlan[] }
+  | { type: 'UPDATE_ADDONS'; payload: Addon[] }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'LOGIN'; payload: { user: UserSession, settings?: StudioSettings } }
   | { type: 'LOGOUT' }
   | { type: 'IMPERSONATE'; payload: { user: UserSession, settings: StudioSettings } }
   | { type: 'STOP_IMPERSONATING' }
-  | { type: 'PASSWORD_CHANGED' };
+  | { type: 'PASSWORD_CHANGED' }
+  | { type: 'UPDATE_SUBSCRIPTION'; payload: { planId: string, purchasedAddons: StudioSettings['purchasedAddons'] } };
 
 
 interface AppContextType {
@@ -125,6 +128,8 @@ const initialSettings: SettingsData = {
   alertDays: '7',
   autoInactiveDays: '30',
   instructorSeesAllStudents: false, // Valor padrão
+  courtesyFeatures: {},
+  purchasedAddons: {},
 };
 
 const initialState: AppState = {
@@ -146,6 +151,7 @@ const initialState: AppState = {
     supportLink: 'https://wa.me/qr/NPA2GMI23V4PJ1',
   },
   subscriptionPlans: superAdminSubscriptionPlans,
+  addons: superAdminAddons,
   activeTab: 'painel',
   passwordJustChanged: false,
 };
@@ -175,6 +181,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
       return { ...state, superAdminSettings: { ...state.superAdminSettings, ...action.payload } };
     case 'UPDATE_SUBSCRIPTION_PLANS':
       return { ...state, subscriptionPlans: action.payload };
+    case 'UPDATE_ADDONS':
+      return { ...state, addons: action.payload };
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
     case 'TOGGLE_THEME':
@@ -185,7 +193,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         isAuthenticated: true,
         user: action.payload.user,
         settings: action.payload.settings
-          ? { ...action.payload.settings, isDarkMode: state.settings.isDarkMode }
+          ? { ...initialSettings, ...action.payload.settings, isDarkMode: state.settings.isDarkMode }
           : state.settings,
         activeTab: 'painel',
         passwordJustChanged: false,
@@ -198,7 +206,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             isAuthenticated: true,
             impersonatingFrom: state.user,
             user: action.payload.user,
-            settings: { ...action.payload.settings, isDarkMode: state.settings.isDarkMode },
+            settings: { ...initialSettings, ...action.payload.settings, isDarkMode: state.settings.isDarkMode },
             activeTab: 'painel',
         };
     case 'STOP_IMPERSONATING':
@@ -214,6 +222,13 @@ const appReducer = (state: AppState, action: Action): AppState => {
         };
     case 'PASSWORD_CHANGED':
         return { ...state, passwordJustChanged: true };
+    case 'UPDATE_SUBSCRIPTION':
+      if (!state.user) return state;
+      return {
+        ...state,
+        user: { ...state.user, subscriptionPlanId: action.payload.planId },
+        settings: { ...state.settings, purchasedAddons: action.payload.purchasedAddons }
+      };
     default:
       return state;
   }
