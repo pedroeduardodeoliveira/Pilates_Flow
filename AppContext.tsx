@@ -130,6 +130,7 @@ const initialSettings: SettingsData = {
   alertDays: '7',
   autoInactiveDays: '30',
   instructorSeesAllStudents: false, // Valor padrão
+  metaFaturamento: 10000,
   courtesyFeatures: {},
   purchasedAddons: {},
   chatbotSettings: {

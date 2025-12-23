@@ -1,5 +1,6 @@
 import { Client, StudioSettings, SubscriptionPlan, Addon } from './types';
 
+// FIX: Added missing metaFaturamento property to satisfy the StudioSettings type.
 const createDefaultSettings = (appName: string): StudioSettings => ({
   appName,
   logo: null,
@@ -24,6 +25,7 @@ const createDefaultSettings = (appName: string): StudioSettings => ({
   alertDays: '7',
   autoInactiveDays: '30',
   instructorSeesAllStudents: false,
+  metaFaturamento: 10000,
   courtesyFeatures: {},
   purchasedAddons: {},
 });

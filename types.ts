@@ -205,6 +205,7 @@ export interface StudioSettings {
   alertDays: string;
   autoInactiveDays: string;
   instructorSeesAllStudents: boolean;
+  metaFaturamento: number;
   courtesyFeatures?: {
     financialModule?: boolean;
     whatsappBot?: boolean;

@@ -66,6 +66,7 @@ const SuperAdminDashboard: React.FC = () => {
             const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + trialDays);
 
+            // FIX: Added missing metaFaturamento property to satisfy the StudioSettings type.
             const defaultSettings: StudioSettings = {
               appName: 'Novo Estúdio', logo: null, phone: '', email: '',
               documentType: 'CNPJ', document: '',
@@ -78,6 +79,7 @@ const SuperAdminDashboard: React.FC = () => {
               commission: String(superAdminSettings.defaultCommission),
               alertDays: String(superAdminSettings.defaultAlertDays), 
               autoInactiveDays: '30', instructorSeesAllStudents: false,
+              metaFaturamento: 10000,
               courtesyFeatures: {}, purchasedAddons: {}
             };
             setFormData({
