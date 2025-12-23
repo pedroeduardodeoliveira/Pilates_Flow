@@ -167,8 +167,17 @@ export interface ChatbotSettings {
   birthdayMessage: {
     isEnabled: boolean;
     template: string;
+    sendTime: string;
   };
   paymentConfirmation: {
+    isEnabled: boolean;
+    template: string;
+  };
+  welcomeMessage: {
+    isEnabled: boolean;
+    template: string;
+  };
+  rescheduleNotification: {
     isEnabled: boolean;
     template: string;
   };

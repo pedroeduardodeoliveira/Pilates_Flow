@@ -144,11 +144,20 @@ const initialSettings: SettingsData = {
     },
     birthdayMessage: {
       isEnabled: false,
-      template: "Feliz aniversário, {aluno}! 🎂 A equipe {estudio} deseja a você um dia maravilhoso e cheio de alegrias. 🎉"
+      template: "Feliz aniversário, {aluno}! 🎂 A equipe {estudio} deseja a você um dia maravilhoso e cheio de alegrias. 🎉",
+      sendTime: '09:00',
     },
     paymentConfirmation: {
       isEnabled: true,
       template: "Olá {aluno}! Recebemos seu pagamento. Sua mensalidade foi renovada com sucesso. Obrigado! ✅"
+    },
+    welcomeMessage: {
+        isEnabled: false,
+        template: "Olá {aluno}, seja bem-vindo(a) ao {estudio}! 😊 Sua primeira aula está agendada para {proxima_aula}. Estamos ansiosos para te ver!"
+    },
+    rescheduleNotification: {
+        isEnabled: false,
+        template: "Olá {aluno}, sua aula foi remarcada. O novo horário é {novo_horario}. Até lá! 😉"
     }
   }
 };

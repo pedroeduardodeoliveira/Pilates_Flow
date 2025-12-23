@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { AppContext } from '../AppContext';
-import { Bot, Power, Clock, Calendar, Cake, CheckCircle, Save, CheckCircle2 } from 'lucide-react';
+import { Bot, Power, Clock, Calendar, Cake, CheckCircle, Save, CheckCircle2, PartyPopper, History } from 'lucide-react';
 import { ChatbotSettings } from '../types';
 
 const BotAvisos: React.FC = () => {
@@ -12,8 +12,10 @@ const BotAvisos: React.FC = () => {
         isEnabled: false,
         classReminder: { isEnabled: false, hoursBefore: 0, template: '' },
         expiryWarning: { isEnabled: false, daysBefore: 0, template: '' },
-        birthdayMessage: { isEnabled: false, template: '' },
+        birthdayMessage: { isEnabled: false, template: '', sendTime: '09:00' },
         paymentConfirmation: { isEnabled: false, template: '' },
+        welcomeMessage: { isEnabled: false, template: '' },
+        rescheduleNotification: { isEnabled: false, template: '' },
     };
 
     const [localSettings, setLocalSettings] = useState<ChatbotSettings>(initialChatbotSettings);
@@ -40,8 +42,6 @@ const BotAvisos: React.FC = () => {
         showSaveSuccess();
     };
 
-    // FIX: Constrain the generic type T to only include keys of ChatbotSettings that correspond to object values, excluding 'isEnabled'.
-    // This resolves the TypeScript error "Spread types may only be created from object types" because localSettings[key] will always be an object.
     const handleSubSettingChange = <T extends keyof Omit<ChatbotSettings, 'isEnabled'>>(key: T, value: Partial<ChatbotSettings[T]>) => {
         handleSettingsChange({ [key]: { ...localSettings[key], ...value } });
     };
@@ -95,6 +95,20 @@ const BotAvisos: React.FC = () => {
                 />
                 <div className={`space-y-8 transition-opacity ${!localSettings.isEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
                     <AutomationCard
+                        icon={<PartyPopper size={20} />}
+                        title="Mensagem de Boas-Vindas"
+                        description="Envie uma saudação para novos alunos com os detalhes da sua primeira aula."
+                        isEnabled={localSettings.welcomeMessage.isEnabled}
+                        onToggle={(enabled) => handleSubSettingChange('welcomeMessage', { isEnabled: enabled })}
+                    >
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
+                            <textarea value={localSettings.welcomeMessage.template} onChange={(e) => handleSubSettingChange('welcomeMessage', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
+                            <p className="text-[10px] text-slate-400 dark:text-gray-500 ml-1">Use as variáveis <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{aluno}'}</code>, <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{estudio}'}</code> e <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{proxima_aula}'}</code>.</p>
+                        </div>
+                    </AutomationCard>
+
+                    <AutomationCard
                         icon={<Clock size={20} />}
                         title="Lembretes de Aula"
                         description="Envie um lembrete automático antes de cada aula agendada."
@@ -110,6 +124,33 @@ const BotAvisos: React.FC = () => {
                                 <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
                                 <textarea value={localSettings.classReminder.template} onChange={(e) => handleSubSettingChange('classReminder', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
                             </div>
+                        </div>
+                    </AutomationCard>
+
+                    <AutomationCard
+                        icon={<History size={20} />}
+                        title="Aviso de Remarcação de Aula"
+                        description="Notifique o aluno imediatamente quando uma aula for remarcada."
+                        isEnabled={localSettings.rescheduleNotification.isEnabled}
+                        onToggle={(enabled) => handleSubSettingChange('rescheduleNotification', { isEnabled: enabled })}
+                    >
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
+                            <textarea value={localSettings.rescheduleNotification.template} onChange={(e) => handleSubSettingChange('rescheduleNotification', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
+                            <p className="text-[10px] text-slate-400 dark:text-gray-500 ml-1">Use as variáveis <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{aluno}'}</code> e <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{novo_horario}'}</code>.</p>
+                        </div>
+                    </AutomationCard>
+                    
+                    <AutomationCard
+                        icon={<CheckCircle size={20} />}
+                        title="Confirmação de Pagamento"
+                        description="Envie uma mensagem de agradecimento ao marcar um aluno como pago."
+                        isEnabled={localSettings.paymentConfirmation.isEnabled}
+                        onToggle={(enabled) => handleSubSettingChange('paymentConfirmation', { isEnabled: enabled })}
+                    >
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
+                            <textarea value={localSettings.paymentConfirmation.template} onChange={(e) => handleSubSettingChange('paymentConfirmation', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
                         </div>
                     </AutomationCard>
 
@@ -132,19 +173,6 @@ const BotAvisos: React.FC = () => {
                         </div>
                     </AutomationCard>
 
-                     <AutomationCard
-                        icon={<CheckCircle size={20} />}
-                        title="Confirmação de Pagamento"
-                        description="Envie uma mensagem de agradecimento ao marcar um aluno como pago."
-                        isEnabled={localSettings.paymentConfirmation.isEnabled}
-                        onToggle={(enabled) => handleSubSettingChange('paymentConfirmation', { isEnabled: enabled })}
-                    >
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
-                            <textarea value={localSettings.paymentConfirmation.template} onChange={(e) => handleSubSettingChange('paymentConfirmation', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
-                        </div>
-                    </AutomationCard>
-
                     <AutomationCard
                         icon={<Cake size={20} />}
                         title="Mensagens de Aniversário"
@@ -152,10 +180,16 @@ const BotAvisos: React.FC = () => {
                         isEnabled={localSettings.birthdayMessage.isEnabled}
                         onToggle={(enabled) => handleSubSettingChange('birthdayMessage', { isEnabled: enabled })}
                     >
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
-                            <textarea value={localSettings.birthdayMessage.template} onChange={(e) => handleSubSettingChange('birthdayMessage', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
-                            <p className="text-[10px] text-slate-400 dark:text-gray-500 ml-1">Use as variáveis <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{aluno}'}</code> e <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{estudio}'}</code> para personalizar.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                             <div className="md:col-span-1 space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Horário de Envio</label>
+                                <input type="time" value={localSettings.birthdayMessage.sendTime} onChange={(e) => handleSubSettingChange('birthdayMessage', { sendTime: e.target.value })} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm" />
+                            </div>
+                            <div className="md:col-span-2 space-y-1.5">
+                                <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Modelo da Mensagem</label>
+                                <textarea value={localSettings.birthdayMessage.template} onChange={(e) => handleSubSettingChange('birthdayMessage', { template: e.target.value })} rows={3} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm resize-none" />
+                                <p className="text-[10px] text-slate-400 dark:text-gray-500 ml-1">Use as variáveis <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{aluno}'}</code> e <code className="bg-slate-200 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-sky-500">{'{estudio}'}</code> para personalizar.</p>
+                            </div>
                         </div>
                     </AutomationCard>
                 </div>
