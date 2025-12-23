@@ -4,7 +4,9 @@ import { Plus, Pencil, Trash2, X, AlertTriangle, ArrowUpRight, ArrowDownLeft, Do
 import { Transaction } from '../types';
 import FinancialChart from './FinancialChart';
 import CategoryPieChart from './CategoryPieChart';
+// @ts-ignore
 import { GoogleGenAI } from '@google/genai';
+// @ts-ignore
 import { marked } from 'marked';
 
 const Financial: React.FC = () => {
@@ -148,6 +150,7 @@ const Financial: React.FC = () => {
   const handleAiAnalysis = async () => {
     setIsAiModalOpen(true); setIsAiLoading(true); setAiError(null); setAiAnalysis(null);
     try {
+        // @ts-ignore
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
         
         let dataSummary = "Dados financeiros dos últimos 3 meses:\n";
