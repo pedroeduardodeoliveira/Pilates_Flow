@@ -152,6 +152,28 @@ export interface Addon {
   price: number;
 }
 
+export interface ChatbotSettings {
+  isEnabled: boolean;
+  classReminder: {
+    isEnabled: boolean;
+    hoursBefore: number;
+    template: string;
+  };
+  expiryWarning: {
+    isEnabled: boolean;
+    daysBefore: number;
+    template: string;
+  };
+  birthdayMessage: {
+    isEnabled: boolean;
+    template: string;
+  };
+  paymentConfirmation: {
+    isEnabled: boolean;
+    template: string;
+  };
+}
+
 export interface StudioSettings {
   appName: string;
   logo: string | null;
@@ -182,6 +204,7 @@ export interface StudioSettings {
     financialModule?: boolean;
     whatsappBot?: boolean;
   };
+  chatbotSettings?: ChatbotSettings;
 }
 
 // Para o Painel Super Admin

@@ -16,7 +16,8 @@ import {
   UserCircle,
   ShieldCheck,
   User,
-  AlertTriangle
+  AlertTriangle,
+  Bot
 } from 'lucide-react';
 import { AppContext } from '../AppContext';
 
@@ -38,8 +39,8 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
   const isAdmin = user?.role === 'admin';
   const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
   
-  // Acesso ao financeiro pode ser pelo plano, por cortesia ou comprado
   const isFinancialModuleEnabled = !!currentPlan?.features.financialModule || !!settings.courtesyFeatures?.financialModule || !!settings.purchasedAddons?.financialModule;
+  const isWhatsappBotEnabled = !!currentPlan?.features.whatsappBot || !!settings.courtesyFeatures?.whatsappBot || !!settings.purchasedAddons?.whatsappBot;
   
   // Busca os dados completos do instrutor logado para pegar a foto
   const currentUserData = !isAdmin ? instructors.find(i => i.id === user?.id) : null;
@@ -53,6 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isD
     { id: 'instrutores', label: 'Instrutores', icon: <GraduationCap size={20} />, visible: isAdmin },
     { id: 'sala', label: 'Sala / Aparelhos', icon: <Dumbbell size={20} />, visible: isAdmin },
     { id: 'financeiro', label: 'Financeiro', icon: <DollarSign size={20} />, visible: isAdmin && isFinancialModuleEnabled },
+    { id: 'botavisos', label: 'Bot Avisos', icon: <Bot size={20} />, visible: isAdmin && isWhatsappBotEnabled },
   ].filter(item => item.visible);
 
   const handleLogout = () => {

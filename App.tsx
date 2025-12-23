@@ -11,6 +11,7 @@ import InstructorProfile from './components/InstructorProfile';
 import RoomsAndEquipment from './components/RoomsAndEquipment';
 import Financial from './components/Financial';
 import Settings from './components/Settings';
+import BotAvisos from './components/BotAvisos';
 import NeuralNetworkBackground from './components/NeuralNetworkBackground';
 import Login from './components/Login';
 import SuperAdminDashboard from './components/SuperAdminDashboard';
@@ -44,6 +45,7 @@ const App: React.FC = () => {
     perfil: 'Meu Perfil Profissional',
     sala: 'Salas & Aparelhos',
     financeiro: 'Controle Financeiro',
+    botavisos: 'Configurações do Chatbot',
     configuracoes: 'Ajustes Gerais',
   };
 
@@ -73,6 +75,8 @@ const App: React.FC = () => {
         return <RoomsAndEquipment />;
       case 'financeiro':
         return <Financial />;
+      case 'botavisos':
+        return <BotAvisos />;
       case 'configuracoes':
         return <Settings />;
       default:

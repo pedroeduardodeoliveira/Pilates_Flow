@@ -130,6 +130,27 @@ const initialSettings: SettingsData = {
   instructorSeesAllStudents: false, // Valor padrão
   courtesyFeatures: {},
   purchasedAddons: {},
+  chatbotSettings: {
+    isEnabled: true,
+    classReminder: {
+      isEnabled: true,
+      hoursBefore: 2,
+      template: "Olá {aluno}! 😊 Só passando para lembrar da sua aula de Pilates hoje às {hora}. Esperamos por você!"
+    },
+    expiryWarning: {
+      isEnabled: true,
+      daysBefore: 3,
+      template: "Olá {aluno}! Sua mensalidade de Pilates está próxima do vencimento. Para não perder suas aulas, renove seu plano. 😉"
+    },
+    birthdayMessage: {
+      isEnabled: false,
+      template: "Feliz aniversário, {aluno}! 🎂 A equipe {estudio} deseja a você um dia maravilhoso e cheio de alegrias. 🎉"
+    },
+    paymentConfirmation: {
+      isEnabled: true,
+      template: "Olá {aluno}! Recebemos seu pagamento. Sua mensalidade foi renovada com sucesso. Obrigado! ✅"
+    }
+  }
 };
 
 const initialState: AppState = {
