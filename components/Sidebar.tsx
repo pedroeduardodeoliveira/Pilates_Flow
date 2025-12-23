@@ -32,12 +32,14 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ appName, activeTab, setActiveTab, isDarkMode, toggleTheme, isOpen, setIsOpen }) => {
   const { state, dispatch } = useContext(AppContext);
-  const { user, instructors, superAdminSettings, passwordJustChanged, subscriptionPlans } = state;
+  const { user, instructors, superAdminSettings, passwordJustChanged, subscriptionPlans, settings } = state;
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const isAdmin = user?.role === 'admin';
   const currentPlan = subscriptionPlans.find(p => p.id === user?.subscriptionPlanId);
-  const isFinancialModuleEnabled = !!currentPlan?.features.financialModule;
+  
+  // Acesso ao financeiro pode ser pelo plano ou por cortesia
+  const isFinancialModuleEnabled = !!currentPlan?.features.financialModule || !!settings.courtesyFeatures?.financialModule;
   
   // Busca os dados completos do instrutor logado para pegar a foto
   const currentUserData = !isAdmin ? instructors.find(i => i.id === user?.id) : null;

@@ -167,6 +167,10 @@ export interface StudioSettings {
   alertDays: string;
   autoInactiveDays: string;
   instructorSeesAllStudents: boolean;
+  courtesyFeatures?: {
+    financialModule?: boolean;
+    whatsappBot?: boolean;
+  };
 }
 
 // Para o Painel Super Admin
@@ -189,6 +193,10 @@ export interface Client {
   mrr: number;
   subscriptionPlanId: string;
   settings: StudioSettings;
+  courtesyFeatures?: {
+    financialModule?: boolean;
+    whatsappBot?: boolean;
+  };
 }
 
 export interface SubscriptionPlan {

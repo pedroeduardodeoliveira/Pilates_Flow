@@ -1,6 +1,6 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { AppContext } from '../AppContext';
-import { CreditCard, Users, Bot, Zap, DollarSign, LayoutGrid, Calendar, Layers, GraduationCap, Dumbbell, Settings2 } from 'lucide-react';
+import { CreditCard, Users, Bot, Zap, DollarSign, LayoutGrid, Calendar, Layers, GraduationCap, Dumbbell, Settings2, ChevronUp, ChevronDown, Copy, Check } from 'lucide-react';
 import { SubscriptionPlan, SuperAdminSettings as SuperAdminSettingsType } from '../types';
 
 const SuperAdminSettings: React.FC = () => {
@@ -9,6 +9,8 @@ const SuperAdminSettings: React.FC = () => {
 
     const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
     const [systemSettings, setSystemSettings] = useState<SuperAdminSettingsType>(superAdminSettings);
+    const [showFeatures, setShowFeatures] = useState(true);
+    const [isLinkCopied, setIsLinkCopied] = useState(false);
 
     const plansDebounceTimeout = useRef<number | null>(null);
     const systemSettingsDebounceTimeout = useRef<number | null>(null);
@@ -50,6 +52,15 @@ const SuperAdminSettings: React.FC = () => {
         }, 500);
     };
 
+     const handleCopySupportLink = () => {
+      if (systemSettings.supportLink) {
+        navigator.clipboard.writeText(systemSettings.supportLink).then(() => {
+          setIsLinkCopied(true);
+          setTimeout(() => setIsLinkCopied(false), 2000);
+        });
+      }
+    };
+
     const featureList: { key: keyof SubscriptionPlan['features']; label: string; icon: React.ReactNode; isToggle: boolean; }[] = [
         { key: 'dashboard', label: 'Painel Gerencial', icon: <LayoutGrid size={14} />, isToggle: false },
         { key: 'detailedAgenda', label: 'Agenda Detalhada', icon: <Calendar size={14} />, isToggle: false },
@@ -86,26 +97,34 @@ const SuperAdminSettings: React.FC = () => {
             </div>
             
             <div className="bg-white dark:bg-[#111827]/40 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl">
-                <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center gap-3">
-                    <CreditCard size={16} className="text-sky-500" />
-                    <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Planos de Assinatura</h3>
+                <div className="p-6 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CreditCard size={16} className="text-sky-500" />
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-gray-300 uppercase tracking-wider">Planos de Assinatura</h3>
+                    </div>
+                    <button onClick={() => setShowFeatures(!showFeatures)} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-gray-400 hover:text-sky-500 transition-colors">
+                        {showFeatures ? 'Ocultar Funcionalidades' : 'Mostrar Funcionalidades'}
+                        {showFeatures ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
                 </div>
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     {plans.map(plan => (
-                        <div key={plan.id} className="bg-slate-50 dark:bg-[#0d121d] border border-slate-200 dark:border-gray-800 rounded-2xl p-6 space-y-6">
+                        <div key={plan.id} className="bg-slate-50 dark:bg-[#0d121d] border border-slate-200 dark:border-gray-800 rounded-2xl p-6 flex flex-col gap-6">
                             <p className="font-bold text-slate-800 dark:text-gray-100">{plan.name}</p>
                             <div className="space-y-4">
                                 <div className="relative"><span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 dark:text-gray-500">R$</span><input type="number" value={plan.price} onChange={(e) => handlePlanChange(plan.id, 'price', e.target.value)} className="w-full bg-white dark:bg-[#111827] border border-slate-300 dark:border-gray-700 rounded-lg pl-10 pr-16 py-3 text-sm font-medium focus:border-sky-500 focus:ring-0 outline-none" /><span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 dark:text-gray-500">/mês</span></div>
                                 <div className="space-y-1"><label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1 flex items-center gap-1.5"><Users size={12}/> Limite de Alunos</label><input type="text" value={plan.studentLimit} onChange={(e) => handlePlanChange(plan.id, 'studentLimit', e.target.value)} className="w-full bg-white dark:bg-[#111827] border border-slate-300 dark:border-gray-700 rounded-lg px-4 py-3 text-sm font-medium focus:border-sky-500 focus:ring-0 outline-none" placeholder="Nº ou 'unlimited'" /></div>
                             </div>
-                            <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-gray-700">
-                                <p className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Funcionalidades Inclusas</p>
-                                {featureList.map(feature => (
-                                    <div key={feature.key} className="flex items-center justify-between">
-                                        <label className="text-sm font-medium text-slate-600 dark:text-gray-300 flex items-center gap-2">{feature.icon} {feature.label}</label>
-                                        {feature.isToggle ? (<Toggle active={plan.features[feature.key]} onClick={() => handlePlanChange(plan.id, feature.key, !plan.features[feature.key])} />) : (<StaticToggleOn />)}
-                                    </div>
-                                ))}
+                            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showFeatures ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-gray-700">
+                                    <p className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Funcionalidades Inclusas</p>
+                                    {featureList.map(feature => (
+                                        <div key={feature.key} className="flex items-center justify-between">
+                                            <label className="text-sm font-medium text-slate-600 dark:text-gray-300 flex items-center gap-2">{feature.icon} {feature.label}</label>
+                                            {feature.isToggle ? (<Toggle active={plan.features[feature.key]} onClick={() => handlePlanChange(plan.id, feature.key, !plan.features[feature.key])} />) : (<StaticToggleOn />)}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -132,7 +151,16 @@ const SuperAdminSettings: React.FC = () => {
                     </div>
                     <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase ml-1">Link de Suporte (WhatsApp)</label>
-                        <input type="text" value={systemSettings.supportLink} onChange={(e) => handleSystemSettingsChange('supportLink', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500" placeholder="https://wa.me/..." />
+                        <div className="relative">
+                            <input type="text" value={systemSettings.supportLink} onChange={(e) => handleSystemSettingsChange('supportLink', e.target.value)} className="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 pr-12 text-sm text-slate-700 dark:text-gray-200 outline-none focus:border-sky-500" placeholder="https://wa.me/..." />
+                            <button
+                                onClick={handleCopySupportLink}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 dark:text-gray-500 hover:bg-slate-200 dark:hover:bg-gray-700 transition-colors"
+                                title="Copiar link"
+                            >
+                                {isLinkCopied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -36,7 +36,10 @@ export const superAdminClients: Client[] = [
         instructorCount: 4,
         mrr: 119.90,
         subscriptionPlanId: 'plan_basic',
-        settings: createDefaultSettings('Pilates Flow - Moema')
+        settings: createDefaultSettings('Pilates Flow - Moema'),
+        courtesyFeatures: {
+            financialModule: true,
+        },
     },
     {
         id: 'CLI-002',
