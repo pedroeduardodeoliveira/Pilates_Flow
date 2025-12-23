@@ -43,7 +43,7 @@ const Students: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const instructorsList = useMemo(() => instructors.map(i => i.name), [instructors]);
-  const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -182,7 +182,7 @@ const Students: React.FC = () => {
         updatedAgenda = updatedAgenda.filter(item => item.student !== originalStudent.name);
       }
     }
-    const dayMap: { [key: string]: number } = { 'Seg': 0, 'Ter': 1, 'Qua': 2, 'Qui': 3, 'Sex': 4, 'Sáb': 5 };
+    const dayMap: { [key: string]: number } = { 'Seg': 0, 'Ter': 1, 'Qua': 2, 'Qui': 3, 'Sex': 4, 'Sáb': 5, 'Dom': 6 };
     const colorMap: { [key: string]: 'orange' | 'blue' | 'pink' | 'green' } = { 'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green' };
     const studentInstructor = instructors.find(i => i.name === studentData.instructor);
     if (studentInstructor) {
@@ -235,7 +235,7 @@ const Students: React.FC = () => {
     if (newStatus === 'Inativo') {
       updatedAgenda = updatedAgenda.filter(item => item.student !== student.name);
     } else {
-      const dayMap: { [key: string]: number } = { 'Seg': 0, 'Ter': 1, 'Qua': 2, 'Qui': 3, 'Sex': 4, 'Sáb': 5 };
+      const dayMap: { [key: string]: number } = { 'Seg': 0, 'Ter': 1, 'Qua': 2, 'Qui': 3, 'Sex': 4, 'Sáb': 5, 'Dom': 6 };
       const colorMap: { [key: string]: 'orange' | 'blue' | 'pink' | 'green' } = { 'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green' };
       const studentInstructor = instructors.find(i => i.name === student.instructor);
       if (studentInstructor) {

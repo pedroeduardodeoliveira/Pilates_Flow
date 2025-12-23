@@ -47,7 +47,7 @@ export const mockStudentsData: Student[] = [
     { id: 'AL-6667', name: 'Helena Matos', initials: 'HM', status: 'Ativo', level: 'Intermediário', expiryDate: '17/12/2025', daysToExpiry: -1, isExpired: true, schedule: ['Seg - 21:00'], instructor: 'Daniel Oliveira', phone: '(11) 92727-3838', planType: '1x na semana' },
     { id: 'AL-6869', name: 'Anderson Leal', initials: 'AL', status: 'Inativo', level: 'Avançado', expiryDate: '01/09/2025', daysToExpiry: -108, isExpired: true, schedule: ['Ter - 21:00'], instructor: 'Ana Silva', phone: '(11) 93939-5050', planType: '1x na semana' },
     { id: 'AL-7071', name: 'Laura Barreto', initials: 'LB', status: 'Ativo', level: 'Iniciante', expiryDate: '10/01/2026', daysToExpiry: 23, schedule: ['Qua - 20:00'], instructor: 'Bruno Santos', phone: '(11) 95151-6262', planType: '1x na semana' },
-    { id: 'AL-7273', name: 'Roberto Juncos', initials: 'RJ', status: 'Ativo', level: 'Intermediário', expiryDate: '01/01/2026', daysToExpiry: 14, schedule: ['Qui - 06:00', 'Sáb - 12:00'], instructor: 'Carla Dias', phone: '(11) 96363-7474', planType: '2x na semana' }
+    { id: 'AL-7273', name: 'Roberto Juncos', initials: 'RJ', status: 'Ativo', level: 'Intermediário', expiryDate: '01/01/2026', daysToExpiry: 14, schedule: ['Qui - 06:00', 'Sáb - 12:00', 'Dom - 10:00'], instructor: 'Carla Dias', phone: '(11) 96363-7474', planType: '3x na semana' }
 ];
 
 export const mockInstructorsData: Instructor[] = [
@@ -94,6 +94,7 @@ export const mockAgendaData: AgendaItem[] = [
     { id: '9', time: '09:00', day: 1, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
     { id: '10', time: '09:00', day: 3, student: 'Lucas Souza', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
     { id: '11', time: '18:00', day: 1, student: 'Carlos Mendes', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '12', time: '10:00', day: 6, student: 'Roberto Juncos', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
 ];
 
 export const mockEscalaData: EscalaItem[] = [
@@ -108,4 +109,5 @@ export const mockEscalaData: EscalaItem[] = [
     { id: '9', time: '09:00', day: 1, equipment: 'Cadillac', roomName: 'Sala Principal', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
     { id: '10', time: '09:00', day: 3, equipment: 'Chair', roomName: 'Sala Zen', instructor: 'Daniel Oliveira', instructorInitials: 'DO', color: 'green' },
     { id: '11', time: '18:00', day: 1, equipment: 'Ladder Barrel', roomName: 'Sala Zen', instructor: 'Bruno Santos', instructorInitials: 'BS', color: 'blue' },
+    { id: '12', time: '10:00', day: 6, equipment: 'Mat (Tapete)', roomName: 'Sala de Mat', instructor: 'Carla Dias', instructorInitials: 'CD', color: 'orange' },
 ];

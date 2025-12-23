@@ -26,7 +26,7 @@ export interface ClassItem {
 export interface AgendaItem {
   id: string;
   time: string;
-  day: number; // 0 (SEG) to 5 (SÁB)
+  day: number; // 0 (SEG) to 6 (DOM)
   student: string;
   instructor: string;
   instructorInitials: string;
@@ -40,7 +40,7 @@ export interface AgendaItem {
 export interface EscalaItem {
   id: string;
   time: string;
-  day: number; // 0 (SEG) to 5 (SÁB)
+  day: number; // 0 (SEG) to 6 (DOM)
   equipment: string;
   roomName: string;
   instructor: string;

@@ -17,6 +17,8 @@ const createDefaultSettings = (appName: string): StudioSettings => ({
     { label: 'Valor para 3 aulas por semana', value: '320' },
     { label: 'Valor para 4 aulas por semana', value: '380' },
     { label: 'Valor para 5 aulas por semana', value: '420' },
+    { label: 'Valor para 6 aulas por semana', value: '440' },
+    { label: 'Valor para 7 aulas por semana', value: '450' },
   ],
   commission: '40',
   alertDays: '7',
