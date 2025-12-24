@@ -9,8 +9,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
-  preview: {
-    port: 80, // Porta para o servidor de preview (simulando o Nginx no Docker)
-    strictPort: true, // Garante que a porta 80 será usada se disponível
-  },
+  // A seção de preview pode ser removida ou simplificada se não for usada localmente
+  // Nginx cuidará do serviço da build em produção na porta 80
 });

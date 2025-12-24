@@ -2,9 +2,6 @@ version: '3.8'
 services:
   pilates-flow:
     build: .
-    ports:
-      - "80:80" # Mapeia a porta 80 do container (Nginx) para a porta 80 do host
-    # Variáveis de ambiente como API_KEY devem ser configuradas diretamente no Easypanel ou no .env do docker-compose
     # O Easypanel geralmente tem uma interface para gerenciar variáveis de ambiente por serviço.
     # Se você quiser que o docker-compose lide com isso localmente, use um arquivo .env
     # environment:
