@@ -3,10 +3,11 @@ import { AppContext } from '../AppContext';
 import { ChevronLeft, ChevronRight, Users, Clock, Check, Plus, AlertTriangle, X } from 'lucide-react';
 import GroupedAgendaCard from './GroupedAgendaCard';
 import { AgendaItem } from '../types';
+import { sendWhatsAppMessage } from '../chatbotUtils'; // Importa a função do chatbot
 
 const Agenda: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
-  const { instructors, students, agenda: appointments, escala: escalaItems, user } = state;
+  const { instructors, students, agenda: appointments, escala: escalaItems, user, settings } = state;
 
   const isAdmin = user?.role === 'admin';
   
@@ -37,6 +38,37 @@ const Agenda: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Simulação de Lembretes de Aula
+  useEffect(() => {
+    if (settings.chatbotSettings?.isEnabled && settings.chatbotSettings.classReminder.isEnabled) {
+      const today = new Date();
+      const todayDayIndex = today.getDay() === 0 ? 6 : today.getDay() - 1;
+      const currentHour = today.getHours();
+      const hoursBefore = settings.chatbotSettings.classReminder.hoursBefore;
+
+      appointments.filter(a => a.day === todayDayIndex).forEach(async (item) => {
+        const [itemHour, itemMinute] = item.time.split(':').map(Number);
+        const classTime = itemHour * 60 + itemMinute;
+        const currentTime = currentHour * 60; // Ignorando minutos atuais por simplificação
+
+        if (classTime > currentTime && (classTime - currentTime) <= (hoursBefore * 60)) {
+          const student = students.find(s => s.name === item.student);
+          if (student) {
+            await sendWhatsAppMessage({
+              student: student,
+              templateKey: 'classReminder',
+              studioSettings: settings,
+              agendaItems: appointments,
+              allStudents: students,
+              additionalVars: { hora: item.time },
+            });
+          }
+        }
+      });
+    }
+  }, [currentDate, appointments, settings, students]); // Roda quando a data ou agenda mudam (simula verificação diária)
+
 
   const timeSlots = Array.from({ length: 17 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
@@ -104,7 +136,7 @@ const Agenda: React.FC = () => {
     setIsModalOpen(true);
   };
   
-  const handleSave = () => {
+  const handleSave = async () => { // Adicionado 'async' aqui
     if (!formData.student || !formData.instructor) return;
 
     const selectedInst = instructors.find(i => i.name === formData.instructor);
@@ -112,7 +144,16 @@ const Agenda: React.FC = () => {
         'Ana Silva': 'pink', 'Bruno Santos': 'blue', 'Carla Dias': 'orange', 'Daniel Oliveira': 'green'
     };
 
+    let isReschedule = false; // Flag para o chatbot
+    let originalStudentName = '';
+    let newScheduleTime = '';
+
+
     if (editingItem) {
+        isReschedule = true;
+        originalStudentName = editingItem.student;
+        newScheduleTime = `${getDayName(new Date(2025,11,15 + formData.day), 'full')} às ${formData.time}`;
+
         // Ação de Reposição/Remarcação
         // 1. Achar a aula original (raiz da corrente de remarcações).
         let rootOriginalId = editingItem.id;
@@ -165,6 +206,21 @@ const Agenda: React.FC = () => {
         setAppointments([...appointments, newItem]);
     }
     setIsModalOpen(false);
+
+    // Lógica do Chatbot para notificação de remarcação
+    if (isReschedule && settings.chatbotSettings?.rescheduleNotification.isEnabled) {
+      const studentToNotify = students.find(s => s.name === originalStudentName);
+      if (studentToNotify) {
+        await sendWhatsAppMessage({
+          student: studentToNotify,
+          templateKey: 'rescheduleNotification',
+          studioSettings: settings,
+          agendaItems: appointments,
+          allStudents: students,
+          additionalVars: { novo_horario: newScheduleTime },
+        });
+      }
+    }
   };
 
   const handleDeleteClick = (item: AgendaItem) => {

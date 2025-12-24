@@ -1,17 +1,12 @@
 version: '3.8'
 services:
   pilates-flow:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
+    build: .
     ports:
-      - "80:80"
-    environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - "80:80" # Mapeia a porta 80 do container (Nginx) para a porta 80 do host
+    # Variáveis de ambiente como API_KEY devem ser configuradas diretamente no Easypanel ou no .env do docker-compose
+    # O Easypanel geralmente tem uma interface para gerenciar variáveis de ambiente por serviço.
+    # Se você quiser que o docker-compose lide com isso localmente, use um arquivo .env
+    # environment:
+    #   - GEMINI_API_KEY=${GEMINI_API_KEY} 
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s

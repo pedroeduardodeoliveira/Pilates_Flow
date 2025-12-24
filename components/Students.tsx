@@ -4,6 +4,7 @@ import { Search, List, LayoutGrid, Download, Plus, Pencil, Trash2, X, User, Awar
 import StudentCard from './StudentCard';
 import { Student, AgendaItem, Transaction } from '../types';
 import * as XLSX from 'xlsx';
+import { sendWhatsAppMessage } from '../chatbotUtils'; // Importa a função do chatbot
 
 const Students: React.FC = () => {
   const { state, dispatch } = useContext(AppContext);
@@ -108,7 +109,7 @@ const Students: React.FC = () => {
 
   const removeSchedule = (idx: number) => setFormData(prev => ({ ...prev, schedule: prev.schedule.filter((_, i) => i !== idx) }));
 
-  const handleMarkAsPaid = (studentId: string) => {
+  const handleMarkAsPaid = async (studentId: string) => { // Adicionado 'async' aqui
     const student = mockStudents.find(s => s.id === studentId);
     if (!student) return;
 
@@ -155,12 +156,23 @@ const Students: React.FC = () => {
       dispatch({ type: 'UPDATE_TRANSACTIONS', payload: [newTransaction, ...transactions] });
     }
 
+    // Lógica do Chatbot para confirmação de pagamento
+    if (settings.chatbotSettings?.paymentConfirmation.isEnabled) {
+      await sendWhatsAppMessage({
+        student: student,
+        templateKey: 'paymentConfirmation',
+        studioSettings: settings,
+        agendaItems: agenda,
+        allStudents: mockStudents,
+      });
+    }
+
     // 3. Feedback visual
     setPaymentSuccessId(studentId);
     setTimeout(() => setPaymentSuccessId(null), 3000);
   };
 
-  const handleSaveStudent = () => {
+  const handleSaveStudent = async () => { // Adicionado 'async' aqui
     if (!formData.name || !formData.instructor) return;
     const initials = formData.name.split(' ').map(n => n[0]).join('').toUpperCase();
     const formattedExpiry = formData.expiryDate.split('-').reverse().join('/');
@@ -205,6 +217,16 @@ const Students: React.FC = () => {
       setMockStudents(prev => prev.map(s => s.id === editingStudentId ? studentData : s));
     } else {
       setMockStudents(prev => [studentData, ...prev]);
+      // Lógica do Chatbot para mensagem de boas-vindas
+      if (settings.chatbotSettings?.welcomeMessage.isEnabled) {
+        await sendWhatsAppMessage({
+          student: studentData,
+          templateKey: 'welcomeMessage',
+          studioSettings: settings,
+          agendaItems: updatedAgenda, // Passa a agenda atualizada para buscar próxima aula
+          allStudents: mockStudents,
+        });
+      }
     }
     setIsModalOpen(false); setEditingStudentId(null); setFormData(initialFormState);
   };
@@ -300,7 +322,7 @@ const Students: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl shadow-2xl z-[70] overflow-hidden py-2 animate-in fade-in zoom-in-95">
+        <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl shadow-2xl z-[70] overflow-hidden py-2 animate-in fade-in zoom-in-95 duration-150">
           {options.map((opt: any) => (
             <button key={opt.value} onClick={() => { onSelect(opt.value); setIsOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 text-[10px] font-bold uppercase transition-colors ${(value === opt.value || (opt.value === null && value === 'Todos')) ? 'text-sky-500 bg-sky-500/5' : 'text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-sky-500'}`}>
               <span>{opt.label}</span>
@@ -482,5 +504,5 @@ const Students: React.FC = () => {
     </div>
   );
 };
-
+// FIX: Changed export from InstructorProfile to Instructors
 export default Students;

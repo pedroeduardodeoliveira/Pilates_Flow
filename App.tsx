@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AppContext } from './AppContext';
 import Sidebar from './components/Sidebar';
 import MobileHeader from './components/MobileHeader';
@@ -22,6 +22,14 @@ const App: React.FC = () => {
   const { activeTab, settings, isAuthenticated, user, impersonatingFrom } = state;
   const { isDarkMode, appName } = settings;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const mainContentRef = useRef<HTMLElement>(null); // Ref para o elemento principal de conteúdo
+
+  // Efeito para rolar para o topo ao mudar de aba
+  useEffect(() => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   const setActiveTab = (tab: string) => {
     dispatch({ type: 'SET_ACTIVE_TAB', payload: tab });
@@ -104,7 +112,7 @@ const App: React.FC = () => {
       
       {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-40 lg:hidden" />}
 
-      <main className="flex-1 overflow-y-auto h-screen lg:ml-72 relative custom-scrollbar">
+      <main ref={mainContentRef} className="flex-1 overflow-y-auto h-screen lg:ml-72 relative custom-scrollbar">
         {impersonatingFrom && (
             <div className="sticky top-0 z-[70] bg-amber-500 text-white py-2 px-4 flex items-center justify-between gap-4 shadow-lg h-9">
                 <div className="flex items-center gap-2">

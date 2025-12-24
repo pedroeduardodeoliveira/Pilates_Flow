@@ -173,11 +173,11 @@ export interface ChatbotSettings {
     isEnabled: boolean;
     template: string;
   };
-  welcomeMessage: {
+  welcomeMessage: { // Novo
     isEnabled: boolean;
     template: string;
   };
-  rescheduleNotification: {
+  rescheduleNotification: { // Novo
     isEnabled: boolean;
     template: string;
   };

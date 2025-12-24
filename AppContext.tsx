@@ -146,7 +146,7 @@ const initialSettings: SettingsData = {
       template: "Olá {aluno}! Sua mensalidade de Pilates está próxima do vencimento. Para não perder suas aulas, renove seu plano. 😉"
     },
     birthdayMessage: {
-      isEnabled: false,
+      isEnabled: true,
       template: "Feliz aniversário, {aluno}! 🎂 A equipe {estudio} deseja a você um dia maravilhoso e cheio de alegrias. 🎉",
       sendTime: '09:00',
     },
@@ -155,11 +155,11 @@ const initialSettings: SettingsData = {
       template: "Olá {aluno}! Recebemos seu pagamento. Sua mensalidade foi renovada com sucesso. Obrigado! ✅"
     },
     welcomeMessage: {
-        isEnabled: false,
+        isEnabled: true, // Habilitado por padrão
         template: "Olá {aluno}, seja bem-vindo(a) ao {estudio}! 😊 Sua primeira aula está agendada para {proxima_aula}. Estamos ansiosos para te ver!"
     },
     rescheduleNotification: {
-        isEnabled: false,
+        isEnabled: true, // Habilitado por padrão
         template: "Olá {aluno}, sua aula foi remarcada. O novo horário é {novo_horario}. Até lá! 😉"
     }
   }
@@ -281,6 +281,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const savedState = localStorage.getItem('pilatesFlowData');
           if (savedState) {
               const parsedState = JSON.parse(savedState);
+              // Certifica que chatbotSettings tem todos os campos padrão se estiver faltando
+              if (parsedState.settings && !parsedState.settings.chatbotSettings) {
+                parsedState.settings.chatbotSettings = initialValue.settings.chatbotSettings;
+              } else if (parsedState.settings && parsedState.settings.chatbotSettings) {
+                // Mescla as configurações existentes com as padrão para garantir novas propriedades
+                parsedState.settings.chatbotSettings = { 
+                  ...initialValue.settings.chatbotSettings, 
+                  ...parsedState.settings.chatbotSettings 
+                };
+              }
+
               finalState = { ...initialValue, ...parsedState, settings: { ...initialValue.settings, ...parsedState.settings }};
           } else {
               finalState = initialValue;

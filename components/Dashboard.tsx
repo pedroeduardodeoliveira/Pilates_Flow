@@ -1,8 +1,9 @@
-import React, { useMemo, useContext } from 'react';
+import React, { useMemo, useContext, useEffect } from 'react';
 import { AppContext } from '../AppContext';
 import StatCard from './StatCard';
 import LicenseStatusBanner from './LicenseStatusBanner';
 import { Users, UserX, Medal, Activity, Cake, Clock, Ban, AlertTriangle } from 'lucide-react';
+import { sendWhatsAppMessage } from '../chatbotUtils';
 
 const Dashboard: React.FC = () => {
   const { state } = useContext(AppContext);
@@ -57,6 +58,43 @@ const Dashboard: React.FC = () => {
       .filter(a => a.day === todayDayIndex)
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [filteredAgendaBase, currentDate]);
+
+  // Efeitos do Chatbot
+  useEffect(() => {
+    // Mensagens de Aniversário
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    monthlyBirthdays.forEach(s => {
+      if (s.birthDate) {
+        const birthDate = new Date(s.birthDate);
+        birthDate.setHours(0, 0, 0, 0);
+        if (birthDate.getUTCMonth() === today.getUTCMonth() && birthDate.getUTCDate() === today.getUTCDate()) {
+          sendWhatsAppMessage({
+            student: s,
+            templateKey: 'birthdayMessage',
+            studioSettings: settings,
+            agendaItems: agenda,
+            allStudents: students,
+          });
+        }
+      }
+    });
+
+    // Avisos de Vencimento
+    const alertDays = parseInt(settings.alertDays, 10);
+    expiringStudents.forEach(s => {
+      if (s.daysToExpiry === alertDays) { // Enviar alerta X dias antes
+        sendWhatsAppMessage({
+          student: s,
+          templateKey: 'expiryWarning',
+          studioSettings: settings,
+          agendaItems: agenda,
+          allStudents: students,
+        });
+      }
+    });
+  }, [monthlyBirthdays, expiringStudents, settings, agenda, students]);
+
 
   return (
     <div className="space-y-8 pt-8">
