@@ -72,8 +72,10 @@ const SuperAdminDashboard: React.FC = () => {
               documentType: 'CNPJ', document: '',
               address: { cep: '', street: '', number: '', neighborhood: '', city: '', state: '', complement: '' },
               plans: [
-                { label: 'Valor para 1 aula por semana', value: '150' }, { label: 'Valor para 2 aulas por semana', value: '250' },
-                { label: 'Valor para 3 aulas por semana', value: '320' }, { label: 'Valor para 4 aulas por semana', value: '380' },
+                { label: 'Valor para 1 aula por semana', value: '150' },
+                { label: 'Valor para 2 aulas por semana', value: '250' },
+                { label: 'Valor para 3 aulas por semana', value: '320' },
+                { label: 'Valor para 4 aulas por semana', value: '380' },
                 { label: 'Valor para 5 aulas por semana', value: '420' },
               ],
               commission: String(superAdminSettings.defaultCommission),
@@ -121,7 +123,7 @@ const SuperAdminDashboard: React.FC = () => {
             if (!data.erro) {
                 setFormData(prev => ({...prev!, settings: {...prev!.settings!, address: {
                     ...prev!.settings!.address!,
-                    street: data.logouro, neighborhood: data.bairro, city: data.localidade, state: data.uf,
+                    street: data.logradouro, neighborhood: data.bairro, city: data.localidade, state: data.uf,
                 }}}));
             }
           } catch (e) { console.error("Erro ao buscar CEP"); } finally { setIsLoadingCep(false); }
@@ -320,8 +322,9 @@ const SuperAdminDashboard: React.FC = () => {
                                 {featuresToToggle.map(feature => {
                                   const featureKey = feature.key as 'financialModule' | 'whatsappBot';
                                   const isIncludedInPlan = !!planFeatures[featureKey];
-                                  const isPurchased = !!formData.purchasedAddons?.[featureKey];
                                   const isCourtesy = !!formData.courtesyFeatures?.[featureKey];
+                                  // FIX: Access purchasedAddons from formData
+                                  const isPurchased = !!formData.purchasedAddons?.[featureKey];
                                   
                                   return (
                                     <div key={feature.key} className="flex flex-col md:flex-row items-start md:items-center justify-between bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-xl px-4 py-3 gap-4">

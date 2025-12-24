@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { Student, StudioSettings, AgendaItem } from './types';
 
 // Função para substituir variáveis no template
@@ -23,28 +22,9 @@ export const replaceVariablesInTemplate = (
 
 // Função para gerar uma mensagem mais natural com a API Gemini
 export const generateChatbotMessage = async (promptText: string): Promise<string> => {
-  try {
-    // Always use `const ai = new GoogleGenAI({apiKey: process.env.API_KEY});`
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
-    // When using generate content for text answers, do *not* define the model first and call generate content later.
-    // You must use `ai.models.generateContent` to query GenAI with both the model name and prompt.
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', // Basic Text Tasks: 'gemini-3-flash-preview'
-      contents: promptText,
-      config: {
-        systemInstruction: "Você é um assistente de chatbot amigável para um estúdio de Pilates. Reformule a mensagem do usuário para que soe como um WhatsApp mais natural, conversacional e acolhedor, mantendo o contexto e as informações chave. Use emojis relevantes.",
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-      },
-    });
-    // The `GenerateContentResponse` object features a `text` property (not a method, so do not call `text()`)
-    // that directly returns the string output.
-    return response.text || "Não foi possível gerar a mensagem.";
-  } catch (error) {
-    console.error("Erro ao comunicar com a API Gemini:", error);
-    return `Olá ${promptText.substring(promptText.indexOf('Olá ') + 4, promptText.indexOf('!'))}! Houve um erro ao gerar a mensagem. Mas a intenção era: ${promptText.slice(promptText.indexOf('!') + 1)}.`;
-  }
+  // A API Gemini foi removida.
+  // Retornando a mensagem original com um emoji para simular um tom amigável.
+  return `${promptText} 😊`;
 };
 
 interface ChatbotMessagePayload {
