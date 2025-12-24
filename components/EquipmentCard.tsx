@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Pencil, Trash2, Box, Home } from 'lucide-react';
 import { Equipment } from '../types';

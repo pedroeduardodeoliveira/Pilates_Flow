@@ -1,37 +1,35 @@
-# Stage 1: Build the React app
-# Utiliza uma imagem Node.js leve para instalar dependências e compilar a aplicação.
-FROM node:20-alpine AS builder
+# Stage 1: Build the React application
+FROM node:20-alpine as builder
 
-# Define o diretório de trabalho dentro do container.
 WORKDIR /app
 
-# Copia os arquivos de configuração do projeto (package.json e package-lock.json)
-# para que as dependências sejam instaladas de forma otimizada.
+# Copy package.json and package-lock.json first to leverage Docker cache
 COPY package.json package-lock.json ./
 
-# Instala as dependências do projeto de forma "limpa" para builds de produção.
+# Install dependencies
 RUN npm ci
 
-# Copia todo o código-fonte da sua aplicação para o diretório de trabalho.
+# Copy the rest of the application code
 COPY . .
 
-# Compila a aplicação React para produção. Os arquivos estáticos serão gerados na pasta 'dist'.
+# Build the React application
 RUN npm run build
 
-# Stage 2: Serve the app with Nginx
-# Utiliza uma imagem Nginx super leve para servir os arquivos estáticos da aplicação.
-FROM nginx:alpine AS production-stage
+# Add a check to ensure index.html exists in the dist directory
+# This helps catch build failures that might otherwise be cached
+RUN test -f /app/dist/index.html || (echo "ERRO: /app/dist/index.html não encontrado após o build!" && exit 1)
 
-# Copia a sua configuração Nginx personalizada (nginx.conf) para sobrescrever a padrão do Nginx.
-# ISSO É CRUCIAL PARA APLICAÇÕES SPA COMO O REACT.
+# Stage 2: Serve the application with Nginx
+FROM nginx:alpine
+
+# Copy the Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copia os arquivos de build da sua aplicação (gerados no estágio 'builder')
-# para o diretório padrão do Nginx que serve conteúdo web.
+# Copy the built React application from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expõe a porta 80, que é a porta HTTP padrão onde o Nginx estará escutando.
+# Expose port 80
 EXPOSE 80
 
-# Comando padrão para iniciar o Nginx e mantê-lo em execução em foreground.
+# Command to run Nginx when the container starts
 CMD ["nginx", "-g", "daemon off;"]

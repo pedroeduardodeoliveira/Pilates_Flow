@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useContext } from 'react';
 import { AppContext } from '../AppContext';
 import { Home, Plus, Pencil, Trash2, Box, AlertTriangle, X } from 'lucide-react';
