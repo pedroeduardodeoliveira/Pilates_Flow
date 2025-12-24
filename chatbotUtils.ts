@@ -25,7 +25,7 @@ export const replaceVariablesInTemplate = (
 export const generateChatbotMessage = async (promptText: string): Promise<string> => {
   try {
     // Always use `const ai = new GoogleGenAI({apiKey: process.env.API_KEY});`
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
     // When using generate content for text answers, do *not* define the model first and call generate content later.
     // You must use `ai.models.generateContent` to query GenAI with both the model name and prompt.
     const response = await ai.models.generateContent({
